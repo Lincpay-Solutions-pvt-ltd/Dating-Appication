@@ -36,3 +36,4 @@ const styles = StyleSheet.create({
     textAlign: "center", // Ensures text is centered if it wraps
   },
 });
+// my comments
