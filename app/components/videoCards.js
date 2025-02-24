@@ -13,10 +13,14 @@ const videos = [
   { id: "9", title: "Product 9", price: "Rs. 900" },
   
 ];
-const ProductCard = ({ title, price }) => {
+const VideoCard = ({ title, price }) => {
   return (
     <View style={styles.card}>
-      <Image style = {styles.image} source={require("../../assets/images/google.png")}></Image>
+      <Image 
+        style={styles.image} 
+        source={require("../../assets/images/flower.jpg")} 
+// or "contain"
+      />
     </View>
   );
 };
@@ -27,7 +31,8 @@ const VideoList = () => {
       data={videos}
       keyExtractor={(item) => item.id}
       numColumns={2}
-      renderItem={({ item }) => <ProductCard title={item.title} price={item.price} />}
+      renderItem={({ item }) => <VideoCard title={item.title} price={item.price} />}
+      // contentContainerStyle={{ padding: 10 }}
     />
   );
 };
@@ -35,20 +40,14 @@ const VideoList = () => {
 const styles = StyleSheet.create({
   card: {
     display: 'flex',
-    width: '48%',  // Adjust width to fit the screen better
-    padding: 0,
-    margin: "auto",
-    marginBottom: 10,
-    minHeight: 350,
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
+    justifyContent: 'space-between',
     alignItems: 'center',
+    width: "50%",  // Adjust width to fit the screen better
+    height  : 300,
+    padding: 10,
+    margin: "auto",
+    minHeight: 350,
+    backgroundColor: '#fff',
   },
   text: {
     fontWeight: 'bold',
@@ -56,8 +55,9 @@ const styles = StyleSheet.create({
     flexWrap: 'nowrap'
   },
   image: {
-    width: 100,
-    height: 100
+    width: "100%",
+    height: "100%",
+    objectFit:"cover",
   },
 
 });
