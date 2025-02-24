@@ -11,7 +11,7 @@ export default function Footer() {
       <Icon name="home" size={24} color="#fff" />
       <Icon name="search" size={24} color="#fff" />
       <Icon name="notifications" size={24} color="#fff" />
-      <TouchableOpacity onPress={() => router.push("../pages/about")}>
+      <TouchableOpacity onPress={() => router.push("../pages/profile")}>
        <Icon name="person" size={24} color="#fff" />
       </TouchableOpacity>
     </View>
