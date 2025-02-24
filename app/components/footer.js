@@ -15,7 +15,7 @@ export default function Footer() {
           </TouchableOpacity>
           <MaterialIcon name="search" size={24} color="#fff" />
           <MaterialIcon name="stars" size={24} color="#fff" />
-          <TouchableOpacity onPress={() => router.push("../pages/about")}>
+          <TouchableOpacity onPress={() => router.push("../pages/profile")}>
             <MaterialCommunityIcons name="chat-processing-outline" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
