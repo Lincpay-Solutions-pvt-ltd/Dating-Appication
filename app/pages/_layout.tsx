@@ -1,12 +1,11 @@
-import { StatusBar } from "expo-status-bar";
+import { Stack } from 'expo-router/stack';
 import { Provider } from "react-redux";
-import store from "./Redux/store";
-import App from "./app";
+import store from "../Redux/store";
 
 export default function Layout() {
   return (
     <Provider store={store}>
-      <App />
+      <Stack screenOptions={{ headerShown: false }} />
     </Provider>
   );
 }

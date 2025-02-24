@@ -34,10 +34,13 @@ const VideoList = () => {
 
 const styles = StyleSheet.create({
   card: {
-    flex: '2',
-    width: '40%',  // Adjust width to fit the screen better
-    padding: 100,
-    margin: 5,
+    display: 'flex',
+    width: '48%',  // Adjust width to fit the screen better
+    padding: 0,
+    margin: "auto",
+    marginBottom: 10,
+    minHeight: 350,
+    justifyContent: 'center',
     backgroundColor: '#fff',
     borderRadius: 20,
     shadowColor: '#000',

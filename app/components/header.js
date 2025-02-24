@@ -15,7 +15,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 export default function HeaderForm() {
   return (
     <View style={styles.container}>
-      <StatusBar style="auto" />
+      {/* <StatusBar style="auto" /> */}
       <Text style={styles.headerText}>Tango</Text>
       <Ionicons style={styles.icon} name="menu" size={24} color="black" />
       <Ionicons style={styles.icon} name="search" size={24} color="black" />
@@ -36,3 +36,4 @@ const styles = StyleSheet.create({
     textAlign: "center", // Ensures text is centered if it wraps
   },
 });
+// my comments
