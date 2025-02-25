@@ -2,19 +2,23 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, Image, Button } from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons";
+import MaterialIcon from "react-native-vector-icons/MaterialIcons";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 export default function Footer() {
   const router = useRouter();
     return (
         <View style={styles.container}>
-      <Icon name="home" size={24} color="#fff" />
-      <Icon name="search" size={24} color="#fff" />
-      <Icon name="notifications" size={24} color="#fff" />
-      <TouchableOpacity onPress={() => router.push("../pages/profile")}>
-       <Icon name="person" size={24} color="#fff" />
-      </TouchableOpacity>
-    </View>
+          <MaterialIcon name="thumb-up" size={24} color="#fff" />
+          <TouchableOpacity onPress={() => router.push("../pages/Following")}>
+            <MaterialIcon name="people" size={24} color="#fff" />
+          </TouchableOpacity>
+          <MaterialIcon name="search" size={24} color="#fff" />
+          <MaterialIcon name="stars" size={24} color="#fff" />
+          <TouchableOpacity onPress={() => router.push("../pages/profile")}>
+            <MaterialCommunityIcons name="chat-processing-outline" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
     );
 };
 
