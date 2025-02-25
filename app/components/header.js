@@ -34,65 +34,65 @@ export default function HeaderForm() {
   return (
     <>
       {/* Normal Header Bar */}
-      <View style={styles.header}>
-        <View style={styles.leftSection}>
+      <View style={stylesHeader.header}>
+        <View style={stylesHeader.leftSection}>
           {/* Profile Image (Click to open menu) */}
-          <TouchableOpacity onPress={toggleMenu} style={styles.profileContainer}>
+          <TouchableOpacity onPress={toggleMenu} style={stylesHeader.profileContainer}>
             <Image
               source={require("../../assets/images/profile.jpg")}
-              style={styles.profileImage}
+              style={stylesHeader.profileImage}
             />
           </TouchableOpacity>
 
           {/* Coins and Add Button */}
-          <View style={styles.coinContainer}>
+          <View style={stylesHeader.coinContainer}>
             <Ionicons name="star" size={16} color="gold" />
-            <Text style={styles.coinText}>0</Text>
-            <TouchableOpacity style={styles.addButton}>
+            <Text style={stylesHeader.coinText}>0</Text>
+            <TouchableOpacity style={stylesHeader.addButton}>
               <Ionicons name="add" size={16} color="black" />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Right Side: Notification Bell */}
-        <TouchableOpacity style={styles.notificationIcon}>
-          <Ionicons name="notifications-outline" size={24} color="white" />
+        <TouchableOpacity style={stylesHeader.notificationIcon}>
+          <Ionicons name="notifications-outline" size={30} color="black" />
         </TouchableOpacity>
       </View>
 
       
 
       {/* Sidebar Menu */}
-      <Animated.View style={[styles.menu, { transform: [{ translateX }] }]}>
+      <Animated.View style={[stylesHeader.menu, { transform: [{ translateX }] }]}>
         {/* Back Icon to Close Sidebar */}
-        <TouchableOpacity style={styles.backIcon} onPress={toggleMenu}>
+        <TouchableOpacity style={stylesHeader.backIcon} onPress={toggleMenu}>
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
         {/* Profile Section */}
-        <View style={styles.profileSection}>
-          <View style={styles.profileRowContainer}>
+        <View style={stylesHeader.profileSection}>
+          <View style={stylesHeader.profileRowContainer}>
             {/* Profile Row */}
-            <TouchableOpacity style={styles.profileRow} onPress={() => console.log("Open Profile Page")}>
+            <TouchableOpacity style={stylesHeader.profileRow} onPress={() => console.log("Open Profile Page")}>
               <Image
                 source={require("../../assets/images/profile.jpg")}
-                style={styles.profileImageLarge}
+                style={stylesHeader.profileImageLarge}
               />
-              <View style={styles.profileInfoContainer}>
-                <Text style={styles.profileName}>Dancing Giraffe</Text>
+              <View style={stylesHeader.profileInfoContainer}>
+                <Text style={stylesHeader.profileName}>Dancing Giraffe</Text>
                 {/* Stats Row Below Profile Name */}
-                <View style={styles.statsRow}>
+                <View style={stylesHeader.statsRow}>
                   <Ionicons name="diamond-outline" size={16} color="gray" />
-                  <Text style={styles.statsText}>0</Text>
+                  <Text style={stylesHeader.statsText}>0</Text>
                   <Ionicons name="people-outline" size={16} color="gray" />
-                  <Text style={styles.statsText}>0</Text>
+                  <Text style={stylesHeader.statsText}>0</Text>
                   <Ionicons name="star-outline" size={16} color="gray" />
-                  <Text style={styles.statsText}>0</Text>
+                  <Text style={stylesHeader.statsText}>0</Text>
                 </View>
               </View>
             </TouchableOpacity>
 
             {/* Broadcast Button (Shifted to Right) */}
-            <TouchableOpacity style={styles.broadcastButton}>
+            <TouchableOpacity style={stylesHeader.broadcastButton}>
               <Ionicons name="videocam" size={24} color="white" />
             </TouchableOpacity>
           </View>
@@ -100,43 +100,43 @@ export default function HeaderForm() {
 
 
         {/* Horizontal Line */}
-        <View style={styles.divider} />
+        <View style={stylesHeader.divider} />
 
         {/* Menu Items */}
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={stylesHeader.menuItem}>
           <Ionicons name="phone-portrait-outline" size={24} color="white" />
           <View>
-            <Text style={styles.menuText}>Get Tango App</Text>
-            <Text style={styles.subText}>Stay connected with your friends anywhere!</Text>
+            <Text style={stylesHeader.menuText}>Get Tango App</Text>
+            <Text style={stylesHeader.subText}>Stay connected with your friends anywhere!</Text>
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={stylesHeader.menuItem}>
           <Ionicons name="briefcase-outline" size={24} color="white" />
-          <Text style={styles.menuText}>Agency Program</Text>
+          <Text style={stylesHeader.menuText}>Agency Program</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={stylesHeader.menuItem}>
           <Ionicons name="heart-outline" size={24} color="white" />
-          <Text style={styles.menuText}>My Fans</Text>
+          <Text style={stylesHeader.menuText}>My Fans</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={stylesHeader.menuItem}>
           <Ionicons name="card-outline" size={24} color="white" />
-          <Text style={styles.menuText}>Tango Cards Auction</Text>
+          <Text style={stylesHeader.menuText}>Tango Cards Auction</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={stylesHeader.menuItem}>
           <Ionicons name="game-controller-outline" size={24} color="white" />
-          <Text style={styles.menuText}>Social Games</Text>
+          <Text style={stylesHeader.menuText}>Social Games</Text>
         </TouchableOpacity>
 
         {/* Horizontal Line */}
-        <View style={styles.divider} />
+        <View style={stylesHeader.divider} />
 
         {/* Logout Button */}
         <TouchableOpacity 
-            style={[styles.menuItem]} 
+            style={[stylesHeader.menuItem]} 
             onPress={async () => {
               // Close the sidebar first
               Animated.timing(translateX, {
@@ -159,25 +159,25 @@ export default function HeaderForm() {
               });
             }}>
             <Ionicons name="log-out-outline" size={24} color="white" />
-            <Text style={styles.menuText}>Logout</Text>
+            <Text style={stylesHeader.menuText}>Logout</Text>
         </TouchableOpacity>
 
       </Animated.View>
 
       {/* Overlay when menu is open */}
-      {menuOpen && <TouchableOpacity style={styles.overlay} onPress={toggleMenu} />}
+      {menuOpen && <TouchableOpacity style={stylesHeader.overlay} onPress={toggleMenu} />}
     </>
   );
 }
 
-const styles = StyleSheet.create({
+const stylesHeader = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 15,
     paddingVertical: 10,
-    backgroundColor: "#000",
+    backgroundColor: "#fff",
   },
     leftSection: {
     flexDirection: "row",
@@ -207,14 +207,15 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   profileContainer: {
-    width: 40,
-    height: 40,
+    width: 50,
+    height: 50,
     borderRadius: 20,
     overflow: "hidden",
   },
   profileImage: {
     width: "100%",
     height: "100%",
+    objectFit: "cover",
   },
   menu: {
     position: "absolute",

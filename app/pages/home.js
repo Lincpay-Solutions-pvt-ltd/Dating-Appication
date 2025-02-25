@@ -14,18 +14,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-    <Header />
-      <Button
-        title="Logout"
-        onPress={async () => {
-          await AsyncStorage.removeItem("Authenticated");
-          await AsyncStorage.removeItem("User");
-          dispatch(logout());
-
-          router.navigate("./login");
-        }}
-      />
-
+      <Header />
       <VideoCards />
       <Footer />
     </View>

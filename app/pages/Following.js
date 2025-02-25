@@ -1,42 +1,84 @@
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView, Image } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView, Image, FlatList } from "react-native";
 import MaterialIcon from "react-native-vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Header from "../components/header";
-import VideoList from "../components/videoCards";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Footer from '../components/footer';
+
 
 
 export default function FollowingScreen() {
+    const [videos, setVideos] = useState([]);
+    const [msg, setMsg] = useState("loading...");
+
+    useEffect(() => {
+        const fetchVideos = async () => {
+            setVideos([
+                { id: "1", title: "Product 1", price: "Rs. 100" },
+                { id: "2", title: "Product 2", price: "Rs. 200" },
+                { id: "3", title: "Product 3", price: "Rs. 300" },
+                { id: "4", title: "Product 4", price: "Rs. 400" },
+                { id: "5", title: "Product 5", price: "Rs. 500" },
+                { id: "6", title: "Product 6", price: "Rs. 600" },
+                { id: "7", title: "Product 7", price: "Rs. 700" },
+                { id: "8", title: "Product 8", price: "Rs. 800" },
+                { id: "9", title: "Product 9", price: "Rs. 900" },
+
+            ]);
+            setMsg("No related videos found");
+        }
+        fetchVideos();
+    }, []);
+
+
+
+    const VideoList = () => {
+        return (
+            !videos.length ? <Text style={styles.textMsg}>{msg}</Text> :
+                <>
+                    <FlatList
+                        data={videos}
+                        keyExtractor={(item) => item.id}
+                        numColumns={2}
+                        renderItem={({ item }) => (
+                            <View style={styles.card}>
+                                <Image
+                                    style={styles.image}
+                                    source={require("../../assets/images/flower.jpg")}
+                                />
+                            </View>)}
+                    />
+                </>
+        );
+    };
+
     return (
         <>
-            <View>
-                <Header />
-            </View>
-            <ScrollView>
-                <View>
-                    <View style={styles.containerTop}>
-                        <MaterialIcon style={styles.icon} name="thumb-up" size={24} color="#000" />
-                        <Text style={styles.text} >No one you're following is live</Text>
-                        {/* <Button title="Go Back" onPress={() => router.back()} /> */}
-                    </View>
 
-                    <View style={styles.containerMid}>
-                        <Text style={styles.text} >
-                            You may also like
-                        </Text>
-                    </View>
-                    <View>
-                        <VideoList />
-                    </View>
-                </View>
-            </ScrollView>
+            <Header />
+           
+            <FlatList
+                ListHeaderComponent={
+                    <SafeAreaView>
+                        <View style={styles.containerTop}>
+                            <MaterialIcon style={styles.icon} name="thumb-up" size={24} color="#000" />
+                            <Text style={styles.text}>No one you're following is live</Text>
+                        </View>
+                        <View style={styles.containerMid}>
+                            <Text style={styles.text}>You may also like</Text>
+                        </View>
+                    </SafeAreaView>
+                }
+                data={[{ key: "VideoList" }]} // Placeholder data
+                renderItem={() => <VideoList />}
+                keyExtractor={(item) => item.key}
+            />
             <View style={styles.containerFloat}>
-                <Image
-                    style={styles.image}
-                    source={require("../../assets/images/video-camera.png")}
-                ></Image>
+                <Image style={styles.image} source={require("../../assets/images/video-camera.png")} />
             </View>
+            <Footer />
         </>
     );
 }
@@ -71,14 +113,42 @@ const styles = StyleSheet.create({
     containerFloat: {
         position: "absolute",
         bottom: 50,
-        left:"50%",
+        left: "50%",
         transform: [{ translateX: "-50%" }, { translateY: "-50%" }],
-        
+
     },
     image: {
         justifyContent: "center",
         width: 70,
         height: 70,
+    },
+    card: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        width: "50%",  // Adjust width to fit the screen better
+        height: 300,
+        padding: 10,
+        margin: "auto",
+        minHeight: 350,
+        backgroundColor: '#fff',
+    },
+    text: {
+        fontWeight: 'bold',
+        textAlign: 'center',
+        flexWrap: 'nowrap'
+    },
+    textMsg: {
+        fontWeight: 'bold',
+        textAlign: 'center',
+        flexWrap: 'nowrap',
+        fontSize: 20,
+        marginTop: 50
+    },
+    image: {
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
     },
 }
 );
