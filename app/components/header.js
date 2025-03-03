@@ -72,7 +72,7 @@ export default function HeaderForm() {
         <View style={stylesHeader.profileSection}>
           <View style={stylesHeader.profileRowContainer}>
             {/* Profile Row */}
-            <TouchableOpacity style={stylesHeader.profileRow} onPress={() => console.log("Open Profile Page")}>
+            <TouchableOpacity style={stylesHeader.profileRow} onPress={() => router.push("../pages/profile")}>
               <Image
                 source={require("../../assets/images/profile.jpg")}
                 style={stylesHeader.profileImageLarge}
@@ -111,7 +111,7 @@ export default function HeaderForm() {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={stylesHeader.menuItem}>
+        <TouchableOpacity style={stylesHeader.menuItem} onPress={() => router.push("../pages/(sidebar)/agency")}>
           <Ionicons name="briefcase-outline" size={24} color="white" />
           <Text style={stylesHeader.menuText}>Agency Program</Text>
         </TouchableOpacity>
