@@ -22,9 +22,9 @@ export default function Footer() {
       </TouchableOpacity>
       <IoniconsIcons name={currentRoute === "/pages/search" ? "search" : "search-outline"} size={28} color="#fff" />
 
-      {currentRoute === "/pages/moments" ?
+      {currentRoute === "/pages/reels" ?
         (<EntypoIcons name="folder-video" size={28} color="#fff" />) :
-        (<TouchableOpacity onPress={() => router.push("../pages/moments")}>
+        (<TouchableOpacity onPress={() => router.push("../pages/reels")}>
         <OcticonsIcons name="video" size={28} color="#fff" />
         </TouchableOpacity>)
       }
