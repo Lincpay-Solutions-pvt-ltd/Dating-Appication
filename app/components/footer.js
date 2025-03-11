@@ -16,22 +16,27 @@ export default function Footer() {
     <View style={styles.container}>
       <TouchableOpacity onPress={() => router.push("../pages/home")}>
         <MaterialCommunityIcons name={currentRoute === "/pages/home" ? "thumb-up" : "thumb-up-outline"} size={28} color="#fff" />
+        <Text style={ styles.footerText }>Home</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => router.push("../pages/Following")}>
         <MaterialIcon name={currentRoute === "/pages/Following" ? "person" : "person-outline"} size={28} color="#fff" />
+        <Text style={ styles.footerText }>Following</Text>
       </TouchableOpacity>
-      <IoniconsIcons name={currentRoute === "/pages/search" ? "search" : "search-outline"} size={28} color="#fff" />
-
+      <TouchableOpacity onPress={() => router.push("../pages/explore")}>
+        <IoniconsIcons name={currentRoute === "/pages/explore" ? "search" : "search-outline"} size={28} color="#fff" />
+        <Text style={ styles.footerText }>Explore</Text>
+      </TouchableOpacity>
       {currentRoute === "/pages/reels" ?
         (<EntypoIcons name="folder-video" size={28} color="#fff" />) :
         (<TouchableOpacity onPress={() => router.push("../pages/reels")}>
-        <OcticonsIcons name="video" size={28} color="#fff" />
+          <OcticonsIcons name="video" size={28} color="#fff" />
+          <Text style={ styles.footerText }>Moments</Text>
         </TouchableOpacity>)
       }
-      <MaterialIcon name={currentRoute === "/pages/notifications" ? "notifications" : "notifications-none"} size={28} color="#fff" />
 
       <TouchableOpacity onPress={() => router.push("../pages/chatList")}>
         <MaterialCommunityIcons name={currentRoute === "/pages/chatList" ? "chat" : "chat-outline"} size={28} color="#fff" />
+        <Text style={ styles.footerText }>Chats</Text>
       </TouchableOpacity>
     </View>
   );
@@ -45,7 +50,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around", // Evenly spaces icons
     alignItems: "center", // Centers icons vertically
-    paddingVertical: 20,
+    paddingVertical: 10,
     backgroundColor: "#000000A0",
   },
+  footerText:{
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "bold",
+    top:4,
+    justifyContent:"center",
+    alignItems:"center"
+  }
 });
