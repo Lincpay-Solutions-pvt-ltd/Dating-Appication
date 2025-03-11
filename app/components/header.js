@@ -13,10 +13,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import { login, logout } from "../Redux/authSlice";
+import { StatusBar } from "expo-status-bar";
 
 const screenWidth = Dimensions.get("window").width;
 
-export default function HeaderForm() {
+export default function HeaderForm({ showStatusBar, isTransparent = false }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const translateX = useState(new Animated.Value(-screenWidth))[0];
 
@@ -34,10 +35,13 @@ export default function HeaderForm() {
   return (
     <>
       {/* Normal Header Bar */}
-      <View style={stylesHeader.header}>
+      <View style={isTransparent ?stylesHeader.headerTransparent : stylesHeader.header}>
         <View style={stylesHeader.leftSection}>
           {/* Profile Image (Click to open menu) */}
-          <TouchableOpacity onPress={toggleMenu} style={stylesHeader.profileContainer}>
+          <TouchableOpacity
+            onPress={toggleMenu}
+            style={stylesHeader.profileContainer}
+          >
             <Image
               source={require("../../assets/images/profile.jpg")}
               style={stylesHeader.profileImage}
@@ -60,10 +64,10 @@ export default function HeaderForm() {
         </TouchableOpacity>
       </View>
 
-      
-
       {/* Sidebar Menu */}
-      <Animated.View style={[stylesHeader.menu, { transform: [{ translateX }] }]}>
+      <Animated.View
+        style={[stylesHeader.menu, { transform: [{ translateX }] }]}
+      >
         {/* Back Icon to Close Sidebar */}
         <TouchableOpacity style={stylesHeader.backIcon} onPress={toggleMenu}>
           <Ionicons name="arrow-back" size={24} color="white" />
@@ -72,7 +76,10 @@ export default function HeaderForm() {
         <View style={stylesHeader.profileSection}>
           <View style={stylesHeader.profileRowContainer}>
             {/* Profile Row */}
-            <TouchableOpacity style={stylesHeader.profileRow} onPress={() => console.log("Open Profile Page")}>
+            <TouchableOpacity
+              style={stylesHeader.profileRow}
+              onPress={() => console.log("Open Profile Page")}
+            >
               <Image
                 source={require("../../assets/images/profile.jpg")}
                 style={stylesHeader.profileImageLarge}
@@ -98,7 +105,6 @@ export default function HeaderForm() {
           </View>
         </View>
 
-
         {/* Horizontal Line */}
         <View style={stylesHeader.divider} />
 
@@ -107,7 +113,9 @@ export default function HeaderForm() {
           <Ionicons name="phone-portrait-outline" size={24} color="white" />
           <View>
             <Text style={stylesHeader.menuText}>Get Tango App</Text>
-            <Text style={stylesHeader.subText}>Stay connected with your friends anywhere!</Text>
+            <Text style={stylesHeader.subText}>
+              Stay connected with your friends anywhere!
+            </Text>
           </View>
         </TouchableOpacity>
 
@@ -135,37 +143,39 @@ export default function HeaderForm() {
         <View style={stylesHeader.divider} />
 
         {/* Logout Button */}
-        <TouchableOpacity 
-            style={[stylesHeader.menuItem]} 
-            onPress={async () => {
-              // Close the sidebar first
-              Animated.timing(translateX, {
-                toValue: -screenWidth,
-                duration: 300,
-                useNativeDriver: true,
-              }).start(() => {
-                // After animation completes, perform logout
-                setMenuOpen(false); // Ensure menu state is updated
+        <TouchableOpacity
+          style={[stylesHeader.menuItem]}
+          onPress={async () => {
+            // Close the sidebar first
+            Animated.timing(translateX, {
+              toValue: -screenWidth,
+              duration: 300,
+              useNativeDriver: true,
+            }).start(() => {
+              // After animation completes, perform logout
+              setMenuOpen(false); // Ensure menu state is updated
 
-                // Clear AsyncStorage
-                AsyncStorage.removeItem("Authenticated");
-                AsyncStorage.removeItem("User");
+              // Clear AsyncStorage
+              AsyncStorage.removeItem("Authenticated");
+              AsyncStorage.removeItem("User");
 
-                // Dispatch logout action
-                dispatch(logout());
+              // Dispatch logout action
+              dispatch(logout());
 
-                // Navigate to login page
-                router.navigate("../pages/login");
-              });
-            }}>
-            <Ionicons name="log-out-outline" size={24} color="white" />
-            <Text style={stylesHeader.menuText}>Logout</Text>
+              // Navigate to login page
+              router.navigate("../pages/login");
+            });
+          }}
+        >
+          <Ionicons name="log-out-outline" size={24} color="white" />
+          <Text style={stylesHeader.menuText}>Logout</Text>
         </TouchableOpacity>
-
       </Animated.View>
 
       {/* Overlay when menu is open */}
-      {menuOpen && <TouchableOpacity style={stylesHeader.overlay} onPress={toggleMenu} />}
+      {menuOpen && (
+        <TouchableOpacity style={stylesHeader.overlay} onPress={toggleMenu} />
+      )}
     </>
   );
 }
@@ -179,7 +189,15 @@ const stylesHeader = StyleSheet.create({
     paddingVertical: 10,
     backgroundColor: "#fff",
   },
-    leftSection: {
+  headerTransparent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    backgroundColor:"#ffffff50",
+  },
+  leftSection: {
     flexDirection: "row",
     alignItems: "center",
   },
@@ -190,7 +208,7 @@ const stylesHeader = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    marginLeft: 10
+    marginLeft: 10,
   },
   coinText: {
     color: "white",
@@ -236,8 +254,8 @@ const stylesHeader = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between", // Pushes broadcastButton to the right
-    width: "100%", 
-  },  
+    width: "100%",
+  },
   profileRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -260,7 +278,7 @@ const stylesHeader = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: 5,
-    marginLeft: 10
+    marginLeft: 10,
   },
   statsText: {
     color: "gray",
