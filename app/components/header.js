@@ -14,10 +14,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import { login, logout } from "../Redux/authSlice";
+import { StatusBar } from "expo-status-bar";
 
 const screenWidth = Dimensions.get("window").width;
 
-export default function HeaderForm() {
+export default function HeaderForm({ showStatusBar, isTransparent = false }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const translateX = useState(new Animated.Value(-screenWidth))[0];
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -55,10 +56,13 @@ export default function HeaderForm() {
   return (
     <>
       {/* Normal Header Bar */}
-      <View style={stylesHeader.header}>
+      <View style={isTransparent ?stylesHeader.headerTransparent : stylesHeader.header}>
         <View style={stylesHeader.leftSection}>
           {/* Profile Image (Click to open menu) */}
-          <TouchableOpacity onPress={toggleMenu} style={stylesHeader.profileContainer}>
+          <TouchableOpacity
+            onPress={toggleMenu}
+            style={stylesHeader.profileContainer}
+          >
             <Image
               source={require("../../assets/images/profile.jpg")}
               style={stylesHeader.profileImage}
@@ -81,10 +85,10 @@ export default function HeaderForm() {
         </TouchableOpacity>
       </View>
 
-
-
       {/* Sidebar Menu */}
-      <Animated.View style={[stylesHeader.menu, { transform: [{ translateX }] }]}>
+      <Animated.View
+        style={[stylesHeader.menu, { transform: [{ translateX }] }]}
+      >
         {/* Back Icon to Close Sidebar */}
         <TouchableOpacity style={stylesHeader.backIcon} onPress={toggleMenu}>
           <Ionicons name="arrow-back" size={24} color="white" />
@@ -119,7 +123,6 @@ export default function HeaderForm() {
           </View>
         </View>
 
-
         {/* Horizontal Line */}
         <View style={stylesHeader.divider} />
 
@@ -128,7 +131,9 @@ export default function HeaderForm() {
           <Ionicons name="phone-portrait-outline" size={24} color="white" />
           <View>
             <Text style={stylesHeader.menuText}>Get Tango App</Text>
-            <Text style={stylesHeader.subText}>Stay connected with your friends anywhere!</Text>
+            <Text style={stylesHeader.subText}>
+              Stay connected with your friends anywhere!
+            </Text>
           </View>
         </TouchableOpacity>
 
@@ -178,11 +183,11 @@ export default function HeaderForm() {
               // Navigate to login page
               router.navigate("../pages/login");
             });
-          }}>
+          }}
+        >
           <Ionicons name="log-out-outline" size={24} color="white" />
           <Text style={stylesHeader.menuText}>Logout</Text>
         </TouchableOpacity>
-
       </Animated.View>
 
       {/* Overlay when menu is open */}
@@ -212,6 +217,14 @@ const stylesHeader = StyleSheet.create({
     paddingVertical: 10,
     backgroundColor: "#fff",
   },
+  headerTransparent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    backgroundColor:"#ffffff50",
+  },
   leftSection: {
     flexDirection: "row",
     alignItems: "center",
@@ -223,7 +236,7 @@ const stylesHeader = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    marginLeft: 10
+    marginLeft: 10,
   },
   coinText: {
     color: "white",
@@ -293,7 +306,7 @@ const stylesHeader = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: 5,
-    marginLeft: 10
+    marginLeft: 10,
   },
   statsText: {
     color: "gray",

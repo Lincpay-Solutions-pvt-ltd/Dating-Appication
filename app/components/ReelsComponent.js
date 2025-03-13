@@ -17,7 +17,6 @@ import { Video, ResizeMode } from "expo-av";
 import { FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import Entypo from "@expo/vector-icons/Entypo";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-
 import { Database } from "./Database";
 import { usePathname } from "expo-router";
 
@@ -26,6 +25,7 @@ const { width, height } = Dimensions.get("window");
 const ReelItem = ({ item, shouldPlay, likedVideos, setLikedVideos, setShowCommentModal, setShowOptionsModal, openShareOptions }) => {
   const video = useRef(null);
   const [status, setStatus] = useState(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!video.current) return;
@@ -38,6 +38,15 @@ const ReelItem = ({ item, shouldPlay, likedVideos, setLikedVideos, setShowCommen
     }
   }, [shouldPlay]);
 
+  // Cleanup function to stop video when component unmounts or route changes
+  useEffect(() => {
+    return () => {
+      if (video.current) {
+        video.current.pauseAsync();
+        video.current.setPositionAsync(0);
+      }
+    };
+  }, [pathname]); 
   return (
     <View style={styles.videoContainer}>
       <Pressable
@@ -93,6 +102,7 @@ const ReelItem = ({ item, shouldPlay, likedVideos, setLikedVideos, setShowCommen
   );
 };
 
+// ... (rest of the code remains the same)
 const LikeIcon = ({ item, likedVideos, setLikedVideos }) => {
   const isLiked = likedVideos[item.video] || false;
 
