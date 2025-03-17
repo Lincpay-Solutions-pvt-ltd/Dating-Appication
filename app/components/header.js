@@ -14,7 +14,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import { login, logout } from "../Redux/authSlice";
-import { StatusBar } from "expo-status-bar";
+import FansPage from "../pages/fanPage";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -42,14 +42,6 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
     setNotificationOpen(!notificationOpen);
   }
 
-  // const toggleFollower = () => {
-  //   Animated.timing(translateZ, {
-  //     toValue: followerOpen ? -screenWidth : 0,
-  //     duration: 300,
-  //     useNativeDriver: true,
-  //   }).start();
-  //   setFollowerOpen(!followerOpen);
-  // }
   const router = useRouter();
   const dispatch = useDispatch();
 
@@ -142,7 +134,7 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
           <Text style={stylesHeader.menuText}>Agency Program</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={stylesHeader.menuItem}>
+        <TouchableOpacity style={stylesHeader.menuItem} onPress={() => router.push("../pages/fanPage")}>
           <Ionicons name="heart-outline" size={24} color="white" />
           <Text style={stylesHeader.menuText}>My Fans</Text>
         </TouchableOpacity>
