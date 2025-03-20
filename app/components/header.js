@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,16 +14,17 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import { login, logout } from "../Redux/authSlice";
-import FansPage from "../pages/fanPage";
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function HeaderForm({ showStatusBar, isTransparent = false }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState({});
   const translateX = useState(new Animated.Value(-screenWidth))[0];
   const [notificationOpen, setNotificationOpen] = useState(false);
   const translateZ = useState(new Animated.Value(-screenWidth))[0];
 
+  
   const toggleMenu = () => {
     Animated.timing(translateX, {
       toValue: menuOpen ? -screenWidth : 0,
@@ -44,7 +45,14 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
 
   const router = useRouter();
   const dispatch = useDispatch();
-
+  useEffect(() => {
+    const getUser = async () => {
+      const User = await AsyncStorage.getItem("User");
+      setUser(JSON.parse(User));
+    };
+    getUser();
+    console.log(user);
+  }, []);
   return (
     <>
       {/* Normal Header Bar */}
@@ -95,7 +103,7 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
                 style={stylesHeader.profileImageLarge}
               />
               <View style={stylesHeader.profileInfoContainer}>
-                <Text style={stylesHeader.profileName}>Dancing Giraffe</Text>
+                <Text style={stylesHeader.profileName}>{user.userFirstName}</Text>
                 {/* Stats Row Below Profile Name */}
                 <View style={stylesHeader.statsRow}>
                   <Ionicons name="diamond-outline" size={16} color="gray" />
