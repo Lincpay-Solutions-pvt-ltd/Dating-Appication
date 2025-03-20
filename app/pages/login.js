@@ -13,6 +13,7 @@ import {
   Image,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import axios from 'axios';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -38,26 +39,43 @@ export default function LoginScreen() {
     setError("");
     await login_(email, password);
   };
+
   const login_ = async (email, password) => {
-    if (email === "testing@dev.com" && password === "testing@dev.com") {
-      await AsyncStorage.setItem("Authenticated", "true");
-      await AsyncStorage.setItem(
-        "User",
-        JSON.stringify({ name: "John Doe", email: email })
-      );
-      Alert.alert("Login Successful!", `Welcome, ${email}`);
-      dispatch(login({ name: "John Doe", email: email }));
-      router.replace("./home");
-    } else {
-      Alert.alert("Login Failed", "Invalid email or password");
-    }
-    setIsValidating(false);
-    return true;
+    let data = JSON.stringify({
+      "userEmail": email,
+      "userPassword": password
+    });
+
+    await axios.post('http://192.168.0.100:5000/api/v1/users/login', data, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).then(async function (response) {
+      console.log(response.data);
+      if (response.data.status === true) {
+        console.log("\n", response.data.data.UserData, "\n");
+        await AsyncStorage.setItem("Authenticated", "true");
+        await AsyncStorage.setItem("accessToken", JSON.stringify(response.data.data.accessToken));
+        await AsyncStorage.setItem("refreshToken", JSON.stringify(response.data.data.refreshToken));
+        await AsyncStorage.setItem(
+          "User",
+          JSON.stringify(response.data.data.UserData)
+        );
+        router.replace("./home");
+      }
+      else {
+        Alert.alert("Login Failed", "Invalid email or password");
+      }
+      setIsValidating(false);
+    }).catch(function (error) {
+      console.log(error);
+      setIsValidating(false);
+    })
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      <Text style={styles.title}>Sign-In</Text>
 
       {/* Email Input */}
       <TextInput
@@ -109,13 +127,14 @@ export default function LoginScreen() {
       }
 
       {/* Forgot Password */}
-      <TouchableOpacity>
-        <Text style={styles.forgotText}>Forgot Password?</Text>
-      </TouchableOpacity>
-
+      <View>
+        <TouchableOpacity>
+          <Text style={styles.forgotText}>Forgot Password?</Text>
+        </TouchableOpacity>
+      </View>
       {/* <Ionicons name="logo-google" size={40} color="red"/> */}
       <View style={styles.loginButton}>
-        <TouchableOpacity>
+        {/* <TouchableOpacity>
           <Image
             style={styles.image}
             source={require("../../assets/images/facebook.png")}
@@ -132,8 +151,14 @@ export default function LoginScreen() {
             style={styles.image}
             source={require("../../assets/images/twitter.png")}
           ></Image>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
+
+
+        {/* Sign Up Button */}
       </View>
+      <TouchableOpacity style={styles.signUpButton} onPress={() => router.push("./signUp")}>
+        <Text style={styles.signUpButtonText}>Can't login ? , Create an Account</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -141,33 +166,36 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    gap: 10,
     justifyContent: "center",
     alignItems: "center",
     padding: 30,
-    backgroundColor: "#fff",
+    backgroundColor: "black",
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
+    color: "white",
   },
   input: {
     width: "100%",
     height: 50,
-    borderColor: "gray",
+    borderColor: "white",
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 30,
     paddingHorizontal: 10,
     fontSize: 16,
     marginBottom: 10,
+    color: "white",
   },
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
     width: "100%",
-    borderColor: "gray",
+    borderColor: "white",
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 30,
     marginBottom: 10,
     paddingRight: 10,
   },
@@ -176,29 +204,39 @@ const styles = StyleSheet.create({
     height: 50,
     paddingHorizontal: 10,
     fontSize: 16,
+    color: "white",
   },
   eyeIcon: {
     padding: 10,
+    color: "white",
   },
   error: {
     color: "red",
     marginBottom: 10,
   },
   button: {
-    backgroundColor: "#007AFF",
-    padding: 15,
+    backgroundColor: "black",
+    padding: 20,
     width: "100%",
+    borderRadius: 30,
+    borderColor: "white",
     alignItems: "center",
-    borderRadius: 8,
+    width: "100%",
+    borderColor: "white",
+    borderWidth: 1,
+    borderRadius: 30,
+    marginBottom: 10,
   },
   buttonText: {
     color: "white",
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "bold",
   },
   forgotText: {
     marginTop: 10,
-    color: "blue",
+    fontSize: 16,
+    textAlign: "right",
+    color: "white",
   },
   image: {
     top: 30,
@@ -212,4 +250,26 @@ const styles = StyleSheet.create({
     marginTop: 20,
     justifyContent: "space-between",
   },
+  signUpButton: {
+    padding: 10,
+    color: "black",
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    top: 40,
+    left: 30,
+    marginTop: 30,
+    justifyContent: "space-between",
+  },
+  signUpButtonText: {
+    color: "white",
+    fontFamily: "courier",
+    fontSize: 26,
+    fontWeight: "bold",
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    marginTop: 20,
+    justifyContent: "space-between",
+  }
 });
