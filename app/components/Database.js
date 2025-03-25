@@ -2,6 +2,7 @@
 
 export const Database = [
     {
+      id:1,
       video: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
       postProfile: require('../../assets/images/post1.jpg'),
       title: 'Ram_Charan',
@@ -10,6 +11,7 @@ export const Database = [
       isLike: false,
     },
     {
+      id:2,
       video: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
       postProfile: require('../../assets/images/post2.jpg'),
       title: 'The_Groot',
@@ -18,6 +20,7 @@ export const Database = [
       isLike: false,
     },
     {
+      id:3,
       video: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
       postProfile: require('../../assets/images/post3.jpg'),
       title: 'loverland',
@@ -26,13 +29,14 @@ export const Database = [
       isLike: false,
     },
     {
+      id:4,
       video: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
       postProfile: require('../../assets/images/post4.jpg'),
       title: 'mr. bean',
       description: 'How cute it is !!',
       likes: '876k',
       isLike: false,
-    },
+    }
   ];
   
   // Friends Profile Data
