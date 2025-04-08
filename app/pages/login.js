@@ -127,14 +127,14 @@ export default function LoginScreen() {
       }
 
       {/* Forgot Password */}
-      <View>
+      <View style={styles.forgotContainer}>
         <TouchableOpacity>
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
       </View>
       {/* <Ionicons name="logo-google" size={40} color="red"/> */}
       <View style={styles.loginButton}>
-        {/* <TouchableOpacity>
+        <TouchableOpacity>
           <Image
             style={styles.image}
             source={require("../../assets/images/facebook.png")}
@@ -151,13 +151,13 @@ export default function LoginScreen() {
             style={styles.image}
             source={require("../../assets/images/twitter.png")}
           ></Image>
-        </TouchableOpacity> */}
+        </TouchableOpacity>
 
 
         {/* Sign Up Button */}
       </View>
       <TouchableOpacity style={styles.signUpButton} onPress={() => router.push("./signUp")}>
-        <Text style={styles.signUpButtonText}>Can't login ? , Create an Account</Text>
+        <Text>Can't login ? , </Text><Text style = {styles.signUpButtonText}> Create an Account</Text>
       </TouchableOpacity>
     </View>
   );
@@ -170,30 +170,30 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 30,
-    backgroundColor: "black",
+    backgroundColor: "#fff",
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
-    color: "white",
+    color: "#000",
   },
   input: {
     width: "100%",
     height: 50,
-    borderColor: "white",
+    borderColor: "#000",
     borderWidth: 1,
     borderRadius: 30,
     paddingHorizontal: 10,
     fontSize: 16,
     marginBottom: 10,
-    color: "white",
+    color: "#000",
   },
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
     width: "100%",
-    borderColor: "white",
+    borderColor: "#000",
     borderWidth: 1,
     borderRadius: 30,
     marginBottom: 10,
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     height: 50,
     paddingHorizontal: 10,
     fontSize: 16,
-    color: "white",
+    color: "#000",
   },
   eyeIcon: {
     padding: 10,
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     borderColor: "white",
     alignItems: "center",
     width: "100%",
-    borderColor: "white",
+    borderColor: "#000",
     borderWidth: 1,
     borderRadius: 30,
     marginBottom: 10,
@@ -232,11 +232,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
   },
+  forgotContainer:{
+    padding:10
+  },
   forgotText: {
     marginTop: 10,
-    fontSize: 16,
-    textAlign: "right",
-    color: "white",
+    fontSize: 20,
+    left:80,
+    color: "#000",
   },
   image: {
     top: 30,
@@ -262,14 +265,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   signUpButtonText: {
-    color: "white",
+    color: "red",
     fontFamily: "courier",
-    fontSize: 26,
+    fontSize: 20,
     fontWeight: "bold",
     flexDirection: "row",
     alignItems: "center",
     width: "100%",
-    marginTop: 20,
     justifyContent: "space-between",
   }
 });

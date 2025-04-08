@@ -1,39 +1,46 @@
 import React from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity,FlatList } from "react-native";
+import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, Pressable } from "react-native";
+import { Video, ResizeMode } from "expo-av";
+import { useState } from "react";
+import { Database } from "./Database";
+import { router, useRouter } from "expo-router";
 
-const videos = [
-  { id: "1", title: "Product 1", price: "Rs. 100" },
-  { id: "2", title: "Product 2", price: "Rs. 200" },
-  { id: "3", title: "Product 3", price: "Rs. 300" },
-  { id: "4", title: "Product 4", price: "Rs. 400" },
-  { id: "5", title: "Product 5", price: "Rs. 500" },
-  { id: "6", title: "Product 6", price: "Rs. 600" },
-  { id: "7", title: "Product 7", price: "Rs. 700" },
-  { id: "8", title: "Product 8", price: "Rs. 800" },
-  { id: "9", title: "Product 9", price: "Rs. 900" },
+
+const VideoCard = ({ url }) => {
+
+  const router = useRouter();
+  const [status, setStatus] = useState(null);
   
-];
-const VideoCard = ({ title, price }) => {
   return (
+
     <View style={styles.card}>
-      <Image 
-        style={styles.image} 
-        source={require("../../assets/images/flower.jpg")} 
-// or "contain"
+      <Video
+        source={{ uri: url }}
+        style={styles.image}
+        isLooping
+        resizeMode={ResizeMode.COVER}
+        useNativeControls={false}
+        onPlaybackStatusUpdate={(status) => setStatus(() => status)}
       />
+      {/* </TouchableOpacity> */}
     </View>
   );
 };
 
 const VideoList = () => {
+  const onVideoHover = () => {
+    router.push("../../pages/livePage");
+  }
   return (
-    <FlatList
-      data={videos}
-      keyExtractor={(item) => item.id}
-      numColumns={2}
-      renderItem={({ item }) => <VideoCard title={item.title} price={item.price} />}
-      // contentContainerStyle={{ padding: 10 }}
-    />
+    
+      <FlatList
+        data={Database}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        renderItem={({ item }) => <VideoCard url={item.video} />}
+        onTouchEndCapture={onVideoHover}
+      />
+    
   );
 };
 
@@ -43,8 +50,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     width: "50%",  // Adjust width to fit the screen better
-    height  : 300,
-    padding: 10,
+    height: 300,
+    padding: 2,
     margin: "auto",
     minHeight: 350,
     backgroundColor: '#fff',
@@ -57,9 +64,8 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "100%",
-    objectFit:"cover",
+    objectFit: "cover",
   },
-
 });
 
 
