@@ -6,7 +6,7 @@ export default function LivePage() {
   return (
     <View style={{ flex: 1 }}>
       <WebView 
-        source={{ uri: "https://makends.com" }} 
+        source={{ uri: "https://google.com" }} 
         style={{ flex: 1 }} 
         allowsInlineMediaPlayback={true}
         mediaPlaybackRequiresUserAction={false}

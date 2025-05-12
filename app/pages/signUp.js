@@ -4,7 +4,6 @@ import { useRouter } from "expo-router";
 import { Alert } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import DatePicker from 'react-native-date-picker';
 
 export default function SignUpScreen() {
   const router = useRouter(); // Expo Router hook for navigation
@@ -27,7 +26,7 @@ export default function SignUpScreen() {
       "userPassword": password
     });
 
-    await axios.post('http://192.168.0.100:5000/api/v1/users/login', data, {
+    await axios.post('http://192.168.0.104:5000/api/v1/users/login', data, {
       headers: {
         'Content-Type': 'application/json'
       }
@@ -99,7 +98,7 @@ export default function SignUpScreen() {
         userRoleID: 1,
         userAccountApproved: 1,
       });
-      await axios.post('http://192.168.0.100:5000/api/v1/users/signup', data, {
+      await axios.post('http://192.168.0.104:5000/api/v1/users/signup', data, {
         headers: {
           'Content-Type': 'application/json'
         }

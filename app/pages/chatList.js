@@ -66,11 +66,12 @@ const ChatList = () => {
                 </View>
 
                 {/* Chat List */}
-                <TouchableOpacity onPress={() => router.push("../pages/chats")}>
+                
                     <FlatList
                         data={messages}
                         keyExtractor={(item) => item.id}
                         renderItem={({ item }) => (
+                            <TouchableOpacity onPress={() => router.push("../pages/chats")}>
                             <View style={styles.messageItem}>
                                 <Image source={require("../../assets/images/profile.jpg")} style={styles.messageAvatar} />
                                 <View style={styles.messageContent}>
@@ -79,9 +80,9 @@ const ChatList = () => {
                                 </View>
                                 <Text style={styles.messageTime}>{item.time}</Text>
                             </View>
+                            </TouchableOpacity>
                         )}
                     />
-                </TouchableOpacity>
             </View>
             <Footer />
         </>

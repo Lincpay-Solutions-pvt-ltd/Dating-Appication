@@ -23,7 +23,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 
 // API key for Giphy (in a real app, you'd store this in an environment variable)
-const GIPHY_API_KEY = 'your_giphy_api_key_here'; // Replace with your actual Giphy API key
+const GIPHY_API_KEY = 'https://api.giphy.com/v1/gifs/trending?api_key=&limit=25&offset=0&rating=g&bundle=messaging_non_clips'; // Replace with your actual Giphy API key
 
 const ChatFooter = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -74,12 +74,7 @@ const ChatFooter = () => {
 
   // Sample trending GIFs (would normally come from the Giphy API)
   const trendingGifs = [
-    { id: '1', url: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcDFtcXp5c2lqeWszOGhpeWQ2c2ZtMjlkZXV3MThkNmE4M25qaDRpYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l3q2K5jinAlChoCLS/giphy.gif' },
-    { id: '2', url: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcTNpYXg3NGRpbXMwdnZuYWwxYzZlbmx0NGVheXB5bTluNm52aDFlZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oEjHAUOqG3lSS0f1C/giphy.gif' },
-    { id: '3', url: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExeWZtcWQ5ZHMzaWJibGZ3dHVpczVpcDA0NzAyZDFjYW1jaml2b2g3YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l41lPd4rlOlw1lRqU/giphy.gif' },
-    { id: '4', url: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbXViY3pyMXpxanZ5cW9paWI0eTg0M2JqOHlmb3EyaGo2NnR2MnplMSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/mGK1g88HZRa2FlKGbz/giphy.gif' },
-    { id: '5', url: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExY3E2czZwd2s2OTl2b2ZmZ3ZqbHkxOWtwZ2pneDU0MXF1ZDUzbGlsNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/KzDqC8LvVC4lshCcGK/giphy.gif' },
-    { id: '6', url: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExajkxMDdhZzlpaXJsN3ZicG1ydjY3MzJlZWxzanphNXMxNGZ1dzRmciZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/mlvseq9yvZhba/giphy.gif' },
+    { id: '1', source: require('../../assets/gif/rocket.json') },
   ];
 
   useEffect(() => {
@@ -110,19 +105,18 @@ const ChatFooter = () => {
 
     setIsLoadingGifs(true);
     try {
-      // In a real implementation, you would use the actual Giphy API
-      // const response = await fetch(
-      //   `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(term)}&limit=20`
-      // );
-      // const data = await response.json();
-      // const formattedResults = data.data.map(gif => ({
-      //   id: gif.id,
-      //   url: gif.images.fixed_height.url
-      // }));
-      
+      const response = await fetch(
+        `https://api.giphy.com/v1/gifs/search?api_key=https://api.giphy.com/v1/gifs/random?api_key=&tag=&rating=g&q=${encodeURIComponent(term)}&limit=20`
+      );
+      const data = await response.json();
+      const formattedResults = data.data.map(gif => ({
+        id: gif.id,
+        url: gif.images.fixed_height.url
+      }));
+
       // For demo purposes, we'll just filter the trending gifs by term
       setTimeout(() => {
-        const filtered = trendingGifs.filter(gif => 
+        const filtered = trendingGifs.filter(gif =>
           Math.random() > 0.3 // Just to simulate some gifs matching and some not
         );
         setGiphyResults(filtered.length > 0 ? filtered : trendingGifs);
@@ -229,7 +223,7 @@ const ChatFooter = () => {
     setMessages([...messages, { id: messages.length.toString(), type: 'gif', url: gifUrl }]);
     setGiphyModalVisible(false);
   };
-  
+
   // Determine if we should show the action buttons or send button
   const hasText = message.trim().length > 0;
 
@@ -250,8 +244,8 @@ const ChatFooter = () => {
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === "ios" ? "padding" : "height"} 
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.keyboardAvoid}
       keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
     >
@@ -280,10 +274,10 @@ const ChatFooter = () => {
               showsHorizontalScrollIndicator={false}
             />
           )}
-          
+
           {/* Chat Input Row */}
           <View style={[
-            styles.inputBar, 
+            styles.inputBar,
             isKeyboardVisible && styles.inputBarKeyboardVisible
           ]}>
             <TouchableOpacity style={styles.iconButton} onPress={openGallery}>
@@ -301,7 +295,7 @@ const ChatFooter = () => {
             {!hasText ? (
               <>
                 {/* Show these buttons only when there's no text */}
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.gifButton}
                   onPress={() => setGiphyModalVisible(true)}
                 >
@@ -312,18 +306,18 @@ const ChatFooter = () => {
                   <Ionicons name="camera-outline" size={24} color="#888" />
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                  style={styles.iconButton} 
+                <TouchableOpacity
+                  style={styles.iconButton}
                   onPress={() => setIsRecording(prev => !prev)}
                 >
-                  <Ionicons 
-                    name={isRecording ? "mic" : "mic-outline"} 
-                    size={24} 
-                    color={isRecording ? "red" : "#888"} 
+                  <Ionicons
+                    name={isRecording ? "mic" : "mic-outline"}
+                    size={24}
+                    color={isRecording ? "red" : "#888"}
                   />
                 </TouchableOpacity>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.iconButton}
                   onPress={() => setGiftModalVisible(true)}
                 >
@@ -332,8 +326,8 @@ const ChatFooter = () => {
               </>
             ) : (
               // Show send button when there's text
-              <TouchableOpacity 
-                style={styles.sendButton} 
+              <TouchableOpacity
+                style={styles.sendButton}
                 onPress={handleSendMessage}
               >
                 <Ionicons name="send" size={24} color="#fff" />
@@ -353,7 +347,7 @@ const ChatFooter = () => {
                 {/* Modal Header */}
                 <View style={styles.giftModalHeader}>
                   <Text style={styles.giftModalTitle}>Classic</Text>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.closeButton}
                     onPress={() => setGiftModalVisible(false)}
                   >
@@ -401,7 +395,7 @@ const ChatFooter = () => {
                 {/* Giphy Modal Header */}
                 <View style={styles.giphyModalHeader}>
                   <Text style={styles.giphyModalTitle}>GIF</Text>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.closeButton}
                     onPress={() => setGiphyModalVisible(false)}
                   >
@@ -434,12 +428,12 @@ const ChatFooter = () => {
                     data={giphyResults}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => (
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         style={styles.gifItemContainer}
                         onPress={() => handleSelectGif(item.url)}
                       >
-                        <Image 
-                          source={{ uri: item.url }} 
+                        <Image
+                          source={{ uri: item.url }}
                           style={styles.gifThumbnail}
                           resizeMode="cover"
                         />
