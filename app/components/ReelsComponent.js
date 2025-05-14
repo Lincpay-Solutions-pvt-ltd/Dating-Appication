@@ -41,6 +41,8 @@ export default function ReelsComponent(props) {
   const [itemUserID, setItemUserID] = useState("");
   const [currentUserID, setCurrentUserID] = useState("");
   const [isSaved, setIsSaved] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+
 
   useEffect(() => {
     const getUser = async () => {
@@ -73,7 +75,7 @@ export default function ReelsComponent(props) {
   useEffect(() => {
     const fetchReels = async () => {
       try {
-        const response = await axios.get("http://192.168.0.104:5000/api/v1/reels/get-latest");
+        const response = await axios.get("http://192.168.0.110:5000/api/v1/reels/get-latest");
         const fetchedReels = response.data.data;
 
         let updatedReels = fetchedReels;
@@ -86,8 +88,8 @@ export default function ReelsComponent(props) {
         const initialComments = {};
         updatedReels.forEach((video) => {
           initialComments[video.video] = [
-            { user: "User1", comment: "Great video!" },
-            { user: "User2", comment: "Amazing content!" },
+            // { user: "User1", comment: "Great video!" },
+            // { user: "User2", comment: "Amazing content!" },
           ];
         });
 
@@ -100,20 +102,57 @@ export default function ReelsComponent(props) {
     fetchReels();
   }, [props]);
 
+
+  // useEffect(() => {
+  //   const checkLikes = async () => {
+  //     try {
+  //       const response = await axios.get("http://192.168.0.110:5000/api/v1/reels/interaction-status/31604509-54bf-475e-90ba-c3acf37367ab/0ddc7770-bb8f-4308-aad5-4e483770fd07");
+  //       const fetchedReels = response.data.data;
+  //       //check if the reel is liked or not
+  //       setIsLiked(fetchedReels.isLiked);
+  //       console.log("Reel isLiked = ", fetchedReels.isLiked);
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   };
+  //   checkLikes();
+  // },);
+
+
   const ReelItem = ({ item, shouldPlay, likedVideos, setLikedVideos, setShowCommentModal, setShowOptionsModal, openShareOptions,
   }) => {
-
     const video = useRef(null);
     const [status, setStatus] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const pathname = usePathname();
     const [showMoreOptionsModal, setShowMoreOptionsModal] = useState(false);
 
+    var myReelID = "";
+    useEffect(() => {
+
+      const checkLikes = async () => {
+        try {
+          const response = await axios.get(`http://192.168.0.110:5000/api/v1/reels/interaction-status/${item.reelId}/${item.userID}`);
+
+          //console.log("Response:", response);
+          setIsLiked(response.data.data.isLiked);
+          console.log("Reel isLiked = ", response.data.data.isLiked);
+        }
+        catch (error) {
+          // Log the whole error object for clarity
+          console.error("Error fetching like status:", error.message);
+        }
+      };
+
+      checkLikes();
+    }, [item.reelId]);
+
+
     useEffect(() => {
       if (!video.current) return;
       if (shouldPlay) {
         console.log("itemUserID = ", item.userID);
-        console.log("ReelItem printing ");
+        console.log("MyReelID_1 = ", item.reelId);
 
         video.current.playAsync();
 
@@ -148,12 +187,79 @@ export default function ReelsComponent(props) {
     };
 
 
+    const likeReel = async (userID, reelId) => {
+      setIsLiked(true);
 
+      let data = JSON.stringify({
+        "userID": userID,
+        "reelId": reelId
+      });
+      console.log("isLiked = ", isLiked);
 
-    const deleteReel = async () => {
-      console.log("Reel with ID:", myReelID);
+      console.log("MyReelID_2 = ", item.reelId);
       try {
-        await axios.delete(`http://192.168.0.104:5000/api/v1/reels/delete/${myReelID}`);
+        await axios.post('http://192.168.0.110:5000/api/v1/reels/like', data, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }).then(async function (response) {
+          console.log(response.data);
+          // await AsyncStorage.setItem("userID", JSON.stringify(response.data.data.userID));
+          // await AsyncStorage.setItem("reelID", JSON.stringify(response.data.data.reelId));
+        });
+        console.log("Reel liked successfully = ", item.reelId);
+      } catch (error) {
+        console.log("Cannot like the reel => ", error);
+      }
+    }
+
+    const dislikeReel = async (userID, reelId) => {
+      setIsLiked(false);
+      let data = JSON.stringify({
+        "userID": userID,
+        "reelId": reelId
+      });
+      try {
+        await axios.post('http://192.168.0.110:5000/api/v1/reels/dislike', data, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }).then(async function (response) {
+          console.log(response.data);
+          // await AsyncStorage.setItem("userID", JSON.stringify(response.data.data.userID));
+          // await AsyncStorage.setItem("reelID", JSON.stringify(response.data.data.reelId));
+        });
+        console.log("Reel disliked successfully = ", item.reelId);
+      } catch (error) {
+        console.log("Cannot dislike the reel => ", error);
+      }
+    }
+
+    const commentReel = async (userID, reelId, commentId) => {
+      try {
+        let data = JSON.stringify({
+          "userID": userID,
+          "reelId": reelId,
+          "commentId": commentId
+        });
+        await axios.post('http://localhost:5000/api/v1/reels/add-comment', data, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }).then(async function (response) {
+          console.log(response.data);
+          // await AsyncStorage.setItem("userID", JSON.stringify(response.data.data.userID));
+          // await AsyncStorage.setItem("reelID", JSON.stringify(response.data.data.reelId));
+        });
+        console.log("Reel commented successfully = ", item.reelId);
+      } catch (error) {
+        console.log("Cannot comment the reel => ", error);
+      }
+    }
+    const deleteReel = async () => {
+      console.log("Reel with ID:", item.reelId);
+      try {
+        await axios.delete(`http://192.168.0.110:5000/api/v1/reels/delete/${item.reelId}`);
         setShowMoreOptionsModal(false);
         console.log("Reel deleted successfully");
       } catch (error) {
@@ -162,13 +268,11 @@ export default function ReelsComponent(props) {
     };
 
     const ReelManagement = () => {
-      if(isSaved)
-      {
+      if (isSaved) {
         setIsSaved(false);
-        console.log("Removed from saved reels  "); 
+        console.log("Removed from saved reels  ");
       }
-      else
-      {
+      else {
         setIsSaved(true);
         console.log("Added to saved reels  ");
       }
@@ -193,7 +297,7 @@ export default function ReelsComponent(props) {
           {shouldPlay && (
             <Video
               ref={video}
-              source={{ uri: `http://192.168.0.104:5000/reels${item.filepath}` }}
+              source={{ uri: `http://192.168.0.110:5000/reels${item.filepath}` }}
               style={styles.video}
               isLooping={false}
               resizeMode={ResizeMode.COVER}
@@ -202,6 +306,7 @@ export default function ReelsComponent(props) {
               onLoadStart={() => setIsLoading(true)}
               onLoad={() => setIsLoading(false)}
               onBuffer={({ isBuffering }) => setIsLoading(isBuffering)}
+
             />
           )}
 
@@ -220,7 +325,10 @@ export default function ReelsComponent(props) {
               <Text style={styles.iconText}>Share</Text>
             </Pressable>
 
-            <LikeIcon item={item} likedVideos={likedVideos} setLikedVideos={setLikedVideos} />
+            <Pressable style={styles.iconWrapper} onPress={() => isLiked ? dislikeReel(currentUserID, item.reelId) : likeReel(currentUserID, item.reelId)}>
+              <FontAwesome name={isLiked ? "heart-o" : "heart"} size={25} color={isLiked ? "white" : "red"} />
+              <Text style={styles.iconText}>106</Text>
+            </Pressable>
 
             <Pressable style={styles.iconWrapper} onPress={() => setShowCommentModal(true)}>
               <MaterialIcons name="comment" size={25} color="white" />
@@ -260,20 +368,20 @@ export default function ReelsComponent(props) {
                   <MaterialIcons name="report" size={24} color="red" />
                   <Text style={styles.modalText}>Report</Text>
                 </TouchableOpacity>
-                </View>
+              </View>
 
-                <View style={styles.divider} />
+              <View style={styles.divider} />
 
-                <View style={styles.modalOptionRow}>
+              <View style={styles.modalOptionRow}>
                 <TouchableOpacity style={styles.optionButton} onPress={ReelManagement}>
-                  <MaterialIcons name={isSaved ?"bookmark":"bookmark-border"} size={24} color="black" />
+                  <MaterialIcons name={isSaved ? "bookmark" : "bookmark-border"} size={24} color="black" />
                   <Text style={styles.modalText}>Save</Text>
                 </TouchableOpacity>
-                </View>
-                
-                <View style={styles.divider} />
-                
-                <View style={styles.modalOptionRow}>
+              </View>
+
+              <View style={styles.divider} />
+
+              <View style={styles.modalOptionRow}>
                 {currentUserID !== "" && currentUserID === itemUserID && (
                   <TouchableOpacity style={styles.optionButton} onPress={deleteReel}>
                     <MaterialCommunityIcons name="delete-outline" size={24} color="red" />
@@ -289,21 +397,21 @@ export default function ReelsComponent(props) {
     );
   };
 
-  const LikeIcon = ({ item, likedVideos, setLikedVideos }) => {
-    const isLiked = likedVideos[item.video] || false;
-    const toggleLike = () => {
-      setLikedVideos((prev) => ({
-        ...prev,
-        [item.video]: !prev[item.video],
-      }));
-    };
-    return (
-      <Pressable style={styles.iconWrapper} onPress={toggleLike}>
-        <FontAwesome name={isLiked ? "heart" : "heart-o"} size={25} color={isLiked ? "red" : "white"} />
-        <Text style={styles.iconText}>106</Text>
-      </Pressable>
-    );
-  };
+  // const LikeIcon = ({ item, likedVideos, setLikedVideos }) => {
+  //   const isLiked = likedVideos[item.video] || false;
+  //   const toggleLike = () => {
+  //     setLikedVideos((prev) => ({
+  //       ...prev,
+  //       [item.video]: !prev[item.video],
+  //     }));
+  //   };
+  //   return (
+  //     <Pressable style={styles.iconWrapper} onPress={() => toggleLike()}>
+  //       <FontAwesome name={isLiked ? "heart" : "heart-o"} size={25} color={isLiked ? "red" : "white"} />
+  //       <Text style={styles.iconText}>106</Text>
+  //     </Pressable>
+  //   );
+  // };
 
   const FollowButton = () => {
     const [isFollowing, setIsFollowing] = useState(false);
@@ -352,21 +460,22 @@ export default function ReelsComponent(props) {
     <View style={styles.container}>
       <FlatList
         data={Database}
-        renderItem={({ item, index }) => (
-          <ReelItem
-            item={item}
-            shouldPlay={index === currentViewableItemIndex}
-            shouldLoad={
-              Math.abs(index - currentViewableItemIndex) <= 1 // load only current, previous, next
-            }
-            likedVideos={likedVideos}
-            setLikedVideos={setLikedVideos}
-            setShowCommentModal={setShowCommentModal}
-            setShowOptionsModal={setShowOptionsModal}
-            openShareOptions={openShareOptions}
-
-          />
-        )}
+        renderItem={({ item, index }) =>
+          index === currentViewableItemIndex ? (
+            <ReelItem
+              item={item}
+              shouldPlay={index === currentViewableItemIndex}
+              likedVideos={likedVideos}
+              setLikedVideos={setLikedVideos}
+              setIsLiked={setIsLiked}
+              setShowCommentModal={setShowCommentModal}
+              openShareOptions={openShareOptions}
+              currentUserID={currentUserID}
+            />
+          ) : (
+            <View style={{ height }} /> // placeholder to keep the scroll height consistent
+          )
+        }
         keyExtractor={(item) => item.filepath}
         pagingEnabled
         showsVerticalScrollIndicator={false}
@@ -374,105 +483,242 @@ export default function ReelsComponent(props) {
         snapToAlignment="start"
         decelerationRate="fast"
         snapToInterval={height}
+        windowSize={2} // Only render current + 1 screen ahead
+        initialNumToRender={1}
+        maxToRenderPerBatch={1}
+        removeClippedSubviews={true}
       />
 
+
+
       {/* You can add modals for comments/options here */}
+      {/* Comment Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showCommentModal}
+        onRequestClose={() => setShowCommentModal(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowCommentModal(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.commentModal}>
+                <Text style={styles.commentHeader}>Comments</Text>
+                <FlatList
+                  data={videoComments[Database[currentViewableItemIndex]?.video] || []}
+                  keyExtractor={(item, index) => index.toString()}
+                  renderItem={({ item }) => (
+                    <View style={styles.commentItem}>
+                      <Text style={styles.commentUser}>{item.user}:</Text>
+                      <Text style={styles.commentText}>{item.comment}</Text>
+                    </View>
+                  )}
+                  contentContainerStyle={{ paddingBottom: 40 }}
+                />
+
+                <View style={styles.commentInputContainer}>
+                  <TextInput
+                    style={styles.commentInput}
+                    placeholder="Add a comment..."
+                    value={newComment}
+                    onChangeText={setNewComment}
+                    placeholderTextColor="#aaa"
+                  />
+                  <TouchableOpacity style={styles.commentButton} onPress={addComment}>
+                    <Text style={styles.sendButtonText}>Post</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#000' },
   videoContainer: { width, height },
-  video: { width: "100%", height: "92%" },
+  video: { width: '100%', height: '92%', borderRadius: 12 },
   overlay: {
-    position: "absolute",
+    position: 'absolute',
     width,
     height,
-    justifyContent: "space-between",
-    padding: 20,
+    justifyContent: 'space-between',
+    padding: 24,
   },
   profileContainer: {
-    position: "absolute",
-    bottom: 170,
+    position: 'absolute',
+    bottom: 180,
     left: 20,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  profileTextContainer: { marginLeft: 10 },
-  profileImage: { width: 50, height: 50, borderRadius: 25, borderWidth: 2, borderColor: "white" },
-  username: { color: "white", fontWeight: "bold" },
-  description: { color: "white", fontSize: 14, marginTop: 5 },
+  profileTextContainer: { marginLeft: 12 },
+  profileImage: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 2.5,
+    borderColor: '#fff',
+  },
+  username: { color: '#fff', fontWeight: '600', fontSize: 15 },
+  description: { color: '#eaeaea', fontSize: 13, marginTop: 6 },
   iconContainer: {
-    position: "absolute",
-    bottom: 150,
-    right: 10,
-    alignItems: "center",
-    gap: 25,
+    position: 'absolute',
+    bottom: 160,
+    right: 14,
+    alignItems: 'center',
+    gap: 28,
   },
-  iconWrapper: { alignItems: "center" },
-  iconText: { color: "white", fontSize: 10, marginTop: 5, textAlign: "center" },
+  iconWrapper: { alignItems: 'center' },
+  iconText: {
+    color: '#fff',
+    fontSize: 11,
+    marginTop: 4,
+    textAlign: 'center',
+  },
   followButton: {
-    marginLeft: 10,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 5,
+    marginLeft: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 6,
+    backgroundColor: '#fff',
   },
   followButtonText: {
-    fontWeight: "bold",
-    color: "black",
+    fontWeight: '600',
+    color: '#000',
+    fontSize: 13,
   },
   loaderContainer: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
   },
   moreOptions: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'flex-end',
   },
   modalContainer: {
     backgroundColor: '#fff',
-    paddingVertical: 20,
-    paddingHorizontal: 25,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    gap: 20,
+    paddingVertical: 24,
+    paddingHorizontal: 28,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    gap: 22,
   },
   optionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
   },
   modalText: {
-    fontSize: 20,
-    color: '#333',
+    fontSize: 19,
+    color: '#222',
     fontWeight: '500',
   },
   modalOptionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5, // or use marginLeft on Text if gap is not supported
+    gap: 6,
   },
   divider: {
     height: 1,
-    backgroundColor: '#e0e0e0',
-    marginVertical: 10,
+    backgroundColor: '#ddd',
+    marginVertical: 12,
+  },
+  commentModal: {
+    backgroundColor: '#fff',
+    width: '100%',
+    height: '90%',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 18,
+    position: 'absolute',
+    bottom: 0,
+  },
+  commentHeader: {
+    fontSize: 19,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    marginBottom: 12,
+    color: '#222',
+  },
+  commentItem: {
+    paddingTop: 8,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 30,
+  },
+  commentUser: {
+    fontWeight: '200',
+    marginRight: 6,
+    color: '#000',
+    fontSize: 20,
+  },
+  commentText: {
+    color: '#444',
+    fontSize: 18,
+    letterSpacing: 1,
+    lineHeight: 22,
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderRadius: 15,
+    maxWidth: '80%',
+  },
+  commentInputContainer: {
+    flexDirection: "row",
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+    backgroundColor: "#fafafa",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    shadowColor: "gray",
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  commentInput: {
+    flex: 1,
+    fontSize: 18,
+    lineHeight: 24,           // Increase to avoid bottom clipping
+    paddingVertical: 10,      // Make vertical padding more generous
+    paddingHorizontal: 15,
+    borderWidth: 2,
+    borderColor: '#ccc',
+    borderRadius: 30,
+    backgroundColor: '#fff',
+  },
+  sendButtonText: {
+    backgroundColor: "#007aff",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginLeft: 10,
+    borderRadius: 30, // Make the button rounder and remove the bor
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 24,
   },
 });

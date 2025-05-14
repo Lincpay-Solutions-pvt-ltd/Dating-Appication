@@ -14,7 +14,7 @@ export default UploadReels = async (userID, video, title, description) => {
         });
 
         const response = await axios.post(
-            'http://192.168.0.104:5000/api/v1/uploads/upload',
+            'http://192.168.0.110:5000/api/v1/uploads/upload',
             formData,
             {
                 headers: {
@@ -41,7 +41,7 @@ export default UploadReels = async (userID, video, title, description) => {
             const uploadingReel = await axios.request({
                 method: 'POST',
                 maxBodyLength: Infinity,
-                url: 'http://192.168.0.104:5000/api/v1/reels',
+                url: 'http://192.168.0.110:5000/api/v1/reels',
                 headers: {
                     'Content-Type': 'application/json'
                 },
