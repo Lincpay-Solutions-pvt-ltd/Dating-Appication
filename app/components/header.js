@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useCallback } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import { login, logout } from "../Redux/authSlice";
+import { BackHandler, Alert } from "react-native";
+import { usePathname, Link,useFocusEffect } from "expo-router";
+import Layout from "../pages/_layout";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -24,13 +27,14 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const translateZ = useState(new Animated.Value(-screenWidth))[0];
 
-  
+
   const toggleMenu = () => {
     Animated.timing(translateX, {
       toValue: menuOpen ? -screenWidth : 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
+    console.log("menuOpen");
     setMenuOpen(!menuOpen);
   };
 
@@ -90,7 +94,7 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
         style={[stylesHeader.menu, { transform: [{ translateX }] }]}
       >
         {/* Back Icon to Close Sidebar */}
-        <TouchableOpacity style={stylesHeader.backIcon} onPress={toggleMenu}>
+        <TouchableOpacity style={stylesHeader.backIcon} onPress={() => router.replace("../pages/home")}>
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
         {/* Profile Section */}
