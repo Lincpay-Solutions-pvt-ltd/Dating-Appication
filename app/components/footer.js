@@ -20,7 +20,6 @@ export default function Footer() {
 
   useEffect(() => {
     const pageName = pathname.split('/').pop();
-    console.log("Current page:", pageName);  // Log the current page name directly
   }, [pathname]);
   
 

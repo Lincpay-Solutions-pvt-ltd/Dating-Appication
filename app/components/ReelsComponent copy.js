@@ -19,27 +19,28 @@ import { Video, ResizeMode } from "expo-av";
 import { FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import Entypo from "@expo/vector-icons/Entypo";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import FontAwesomeIcons from "@expo/vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { usePathname } from "expo-router";
 import axios from "axios";
-import { set } from "react-hook-form";
-import moment from "moment/moment";
-import { use } from "react";
-import LinearGradient from "react-native-linear-gradient";
 
 const { width, height } = Dimensions.get("window");
 
 
 export default function ReelsComponent(props) {
   const pathname = usePathname();
+  const [videoComments, setVideoComments] = useState({});
   const [currentViewableItemIndex, setCurrentViewableItemIndex] = useState(0);
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [newComment, setNewComment] = useState("");
   const [Database, setDatabase] = useState([]);
   const viewabilityConfig = { viewAreaCoveragePercentThreshold: 80 };
   const [itemUserID, setItemUserID] = useState("");
   const [currentUserID, setCurrentUserID] = useState("");
   const [isSaved, setIsSaved] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isCommented, setIsCommented] = useState(false);
   const video = useRef(null);
+  const [showMoreOptionsModal, setShowMoreOptionsModal] = useState(false);
 
   useEffect(() => {
     const getUser = async () => {
@@ -71,7 +72,6 @@ export default function ReelsComponent(props) {
 
         let updatedReels = fetchedReels;
         if (props.reel) {
-          // Always place the selected reel at the top
           const filteredReels = fetchedReels.filter(item => item.filepath !== props.reel.filepath);
           updatedReels = [props.reel, ...filteredReels];
         }
@@ -85,39 +85,30 @@ export default function ReelsComponent(props) {
   }, [props]);
 
 
-  const ReelItem = ({ item, shouldPlay, openShareOptions }) => {
+  const ReelItem = ({ item, shouldPlay, setShowCommentModal, openShareOptions,
+  }) => {
 
     const [status, setStatus] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [showCommentModal, setShowCommentModal] = useState(false);
-    const [showDeleteCommentModal, setShowDeleteCommentModal] = useState(false);
-    const [newComment, setNewComment] = useState("");
-    const [isLiked, setIsLiked] = useState(false);
-    const [showMoreOptionsModal, setShowMoreOptionsModal] = useState(false);
-    const [showCommentsOptionsModal, setShowCommentsOptionsModal] = useState(false);
-    const [videoComments, setVideoComments] = useState([]);
-    const [isCommented, setIsCommented] = useState(false);
-    const [isCommentLoaded, setIsCommentLoaded] = useState(false);
-    const [deleteCommentID, setDeleteCommentID] = useState(null);
-    const [haveMoreComments, setHaveMoreComments] = useState(false);
-    const [pageNumber, setPageNumber] = useState(1);
+
 
     useEffect(() => {
-      //*-------------------------------****---------------------///
-      //Here its been checked whether the reel is liked or not by the user
-      //*-------------------------------****---------------------///
       const checkLikes = async () => {
         try {
           const response = await axios.get(`http://192.168.0.101:5000/api/v1/reels/interaction-status/${item.reelId}/${item.userID}`);
+
           setIsLiked(response.data.data.isLiked);
           setIsCommented(response.data.data.isCommented);
+          console.log("Reel isLiked = ", response.data.data.isLiked);
+          console.log("Reel isCommented = ", response.data.data.isCommented);
         }
         catch (error) {
           console.error("Error fetching like status:", error.message);
         }
       };
+
       checkLikes();
-    }, []);
+    }, [item.reelId, item.commentText]);
 
 
     useEffect(() => {
@@ -145,30 +136,14 @@ export default function ReelsComponent(props) {
     }, [pathname]);
 
 
-
     const showMoreOptions = () => {
       setShowMoreOptionsModal(true);
     };
 
-
     const showFetchedComments = async () => {
       setShowCommentModal(true);
-      setIsCommentLoaded(false);
-
       console.log("Fetching Comments . . . .  ");
-      try {
-        const response = await axios.get(`http://192.168.0.101:5000/api/v1/reels/get-all-comments/${item.reelId}?page=${pageNumber}&limit=10`);
-        // setVideoComments(response.data.data);
-        setVideoComments((prev) => [...prev, ...response.data.data]);
-        console.log("Comments fetched successfully");
-        console.log("Comments = ", response.data.data);
-        const lastJson = response.data.data[response.data.data.length - 1];
-        console.log("lastJson = ", lastJson.haveMore);
-        setHaveMoreComments(lastJson.haveMore);
-      } catch (error) {
-        console.log("Error fetching comments:", error);
-      }
-      setIsCommentLoaded(true);
+      await fetchComments(item.reelId);
     };
 
     const closeMoreOptions = () => {
@@ -193,6 +168,8 @@ export default function ReelsComponent(props) {
           },
         }).then(async function (response) {
           console.log(response.data);
+          // await AsyncStorage.setItem("userID", JSON.stringify(response.data.data.userID));
+          // await AsyncStorage.setItem("reelID", JSON.stringify(response.data.data.reelId));
         });
         console.log("Reel liked successfully = ", item.reelId);
       } catch (error) {
@@ -213,6 +190,8 @@ export default function ReelsComponent(props) {
           },
         }).then(async function (response) {
           console.log(response.data);
+          // await AsyncStorage.setItem("userID", JSON.stringify(response.data.data.userID));
+          // await AsyncStorage.setItem("reelID", JSON.stringify(response.data.data.reelId));
         });
         console.log("Reel disliked successfully = ", item.reelId);
       } catch (error) {
@@ -243,34 +222,13 @@ export default function ReelsComponent(props) {
       }
     };
 
-    const getCommentTime = (timestamp) => {
-      const date = new Date(timestamp);
-      if (isNaN(date.getTime())) return ""; // Invalid date guard
-
-      const now = new Date();
-      const seconds = Math.floor((now - date) / 1000);
-
-      if (seconds < 60) return "Just now";
-      const minutes = Math.floor(seconds / 60);
-      if (minutes < 60) return `${minutes}m`;
-      const hours = Math.floor(minutes / 60);
-      if (hours < 24) return `${hours}h`;
-      const days = Math.floor(hours / 24);
-      return `${days}d`;
-    };
-
-    const sendComment = async (commentId, reelId, userID, commentText, commentedAt) => {
-      if (commentText.trim() === "") return;
-      const now = new Date();
-      const rawTimestamp = now.toISOString(); // Send this to backend
-      const formattedTime = getCommentTime(now); // Display this on UI
+    const sendComment = async (reelId, userID, commentText, commentedAt) => {
       try {
         let data = JSON.stringify({
-          "commentid": commentId,
           "reelId": reelId,
           "userID": userID,
           "commentText": commentText,
-          "commentedAt": rawTimestamp
+          "commentedAt": commentedAt
         });
         const response = await axios.post('http://192.168.0.101:5000/api/v1/reels/add-comment', data, {
           headers: {
@@ -278,68 +236,47 @@ export default function ReelsComponent(props) {
           },
         });
 
-        const newComment = {
-          commentId: Date.now(), // Temporarily create a random ID
-          reelId,
-          userID,
-          commentText,
-          commentedAt: formattedTime,
-          userFirstName: "You", // Replace with actual name if available
-          userSurname: "", // Replace if surname is available
-        };
-        setVideoComments((prev) => [newComment, ...prev]);
-        setNewComment("");
-
         console.log("Comment response = ", response.data);
-        console.log("Comment id sent = ", response.data.data.commentId);
 
       } catch (error) {
         console.log("Cannot comment the reel => ", error);
       }
+      if (commentText.trim() === "") return;
+      const videoKey = Database[currentViewableItemIndex]?.video;
+      setVideoComments((prev) => ({
+        ...prev,
+        [videoKey]: [...(prev[videoKey] || []), { user: "You", comment: commentText }],
+      }));
+      setNewComment("");
+      // console.log("Reel commented successfully");
+      // console.log("Commented on reel  = ", item.reelId);
+      // console.log("Commented successfully by  = ", item.userID);
+      // console.log("Commented text = ", commentText);
+      // console.log("Commented at = ", new Date().toISOString());
     };
 
-
-
-    const deleteComments = async () => {
-      if (!showDeleteCommentModal) return;
-      if (deleteCommentID === null) return;
-      const commentId = deleteCommentID;
-
+    const fetchComments = async (reelId) => {
       try {
-        let data = JSON.stringify({
-          "commentId": commentId
-        });
-        const response = await axios.post(`http://192.168.0.101:5000/api/v1/reels/delete-comment`, data, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        if (response.data.status === true) {
-          // Remove the comment from state
-          setVideoComments((prev) => prev.filter(comment => comment.commentId !== commentId));
-          console.log("Comment deleted successfully");
-        } else {
-          console.log("Failed to delete comment:", response.data.msg);
-        }
-        setDeleteCommentID(null);
+        const response = await axios.get(`http://192.168.0.101:5000/api/v1/reels/get-all-comments/${reelId}`);
+        setVideoComments((prev) => ({
+          ...prev,
+          [reelId]: response.data.data,
+        }));
+        console.log("Comments fetched successfully");
+        console.log("Comments = ", response.data.data);
+
       } catch (error) {
-        setDeleteCommentID(null);
+        console.log("Error fetching comments:", error);
+      }
+    };
+
+    const deleteComments = async (reelId) => {
+      try {
+        await axios.delete(`http://192.168.0.101:5000/api/v1/reels/delete-comments/${reelId}`);
+        console.log("Comments deleted successfully");
+      } catch (error) {
         console.log("Error deleting comments:", error);
       }
-    }
-
-    const handleEndPage = async () => {
-      console.log("End Page reached");
-      if (haveMoreComments) {
-        setPageNumber((prev) => prev + 1);
-        await showFetchedComments();
-      }
-    }
-
-
-
-    const showCommentOptionsModal = async () => {
-      setShowDeleteCommentModal(true);
     }
 
     return (
@@ -387,11 +324,11 @@ export default function ReelsComponent(props) {
             </Pressable>
 
             <Pressable style={styles.iconWrapper} onPress={() => isLiked ? dislikeReel(currentUserID, item.reelId) : likeReel(currentUserID, item.reelId)}>
-              <FontAwesome name={isLiked ? "heart" : "heart-o"} size={25} color={isLiked ? "red" : "white"} />
+              <FontAwesome name={isLiked ? "heart-o" : "heart"} size={25} color={isLiked ? "white" : "red"} />
               <Text style={styles.iconText}>106</Text>
             </Pressable>
 
-            <Pressable style={styles.iconWrapper} onPress={() => showFetchedComments(1)}>
+            <Pressable style={styles.iconWrapper} onPress={() => showFetchedComments()}>
               <MaterialIcons name="comment" size={25} color="white" />
               <Text style={styles.iconText}>Comments</Text>
             </Pressable>
@@ -415,10 +352,6 @@ export default function ReelsComponent(props) {
             <FollowButton />
           </View>
         </View>
-
-        {/*---------------------***************------------------*/}
-        {/*---------------------***************------------------*/}
-
         {/*For comment Modal*/}
         <Modal
           animationType="slide"
@@ -431,54 +364,21 @@ export default function ReelsComponent(props) {
               <TouchableWithoutFeedback>
                 <View style={styles.commentModal}>
                   <Text style={styles.commentHeader}>Comments</Text>
-                  {isCommentLoaded || videoComments.length > 0 ?
-                    <View>
-                      <FlatList
-                        data={videoComments}
-                        renderItem={({ item }) => {
-                          return (
-                            <TouchableOpacity onPress={() => { setDeleteCommentID(item.commentId); setShowCommentsOptionsModal(true) }}>
-                              <View style={styles.commentItem}>
-                                <Image source={require("../../assets/images/profile.jpg")} style={styles.profilePic} />
+                  <FlatList
+                    data={videoComments[Database[currentViewableItemIndex]?.video]}
+                    keyExtractor={(item, index) => index.toString()}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity>
+                        <View style={styles.commentItem}>
+                          <Text style={styles.commentUser}>{item.user}:</Text>
+                          <Text style={styles.commentText}>{item.comment}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    )}
+                    contentContainerStyle={{ paddingBottom: 40 }}
+                  />
 
-                                <View style={{ flex: 1 }}>
-                                  <View style={styles.commentHeaderRow}>
-                                    <Text style={styles.commentUser}>{item.userFirstName + " " + item.userSurname}</Text>
-                                    <Text style={styles.commentTime}>{getCommentTime(item.commentedAt)}</Text>
-                                  </View>
-                                  <Text style={styles.commentText}>{item.commentText}</Text>
-                                  <View style={styles.divider} />
-                                </View>
-
-                              </View>
-                            </TouchableOpacity>
-                          )
-                        }}
-                        contentContainerStyle={{ paddingBottom: 40 }}
-                        onEndReached={handleEndPage}
-                      />
-                      {(isCommentLoaded && videoComments.length > 0) || 2 > 1 ? <ActivityIndicator size="large" color="#000" /> : <></>}
-
-                    </View> :
-
-                    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((item) => {
-                      return (
-                        <View key={item} style={styles.commentItem}>
-                          <View style={styles.profilePicShimer}></View>
-                          <View style={{ flex: 1 }}>
-                            <View style={styles.commentHeaderRow}>
-                              <Text style={styles.commentUserShimer}>"username"</Text>
-                              <Text style={styles.commentTime}>"time"</Text>
-                            </View>
-                            <Text style={styles.commentTextShimer}>{"commentt"}</Text>
-                            <View style={styles.divider} />
-                          </View>
-                        </View>)
-                    })
-
-                  }
                   <View style={styles.commentInputContainer}>
-                    <Image source={require("../../assets/images/profile.jpg")} style={styles.profilePic}></Image>
                     <TextInput
                       style={styles.commentInput}
                       placeholder="Add a comment..."
@@ -489,79 +389,18 @@ export default function ReelsComponent(props) {
                     <TouchableOpacity
                       style={styles.commentButton}
                       onPress={() =>
-                        sendComment(item.commentId, item.reelId, item.userID, newComment, getCommentTime(item.commentedAt))
+                        sendComment(item.reelId, item.userID, newComment, new Date().toISOString())
                       }
                     >
-                      <FontAwesomeIcons name="send" size={25} color="#007aff" />
+                      <Text style={styles.sendButtonText}>Post</Text>
                     </TouchableOpacity>
                   </View>
-
 
                 </View>
               </TouchableWithoutFeedback>
             </View>
           </TouchableWithoutFeedback>
         </Modal>
-
-        {/*---------------------***************------------------*/}
-        {/*---------------------***************------------------*/}
-        {/*Show report and delete options modal as a popup */}
-        <Modal
-          transparent
-          visible={showCommentsOptionsModal}
-          animationType="fade"
-          onRequestClose={() => { setDeleteCommentID(null); setShowCommentsOptionsModal(false) }}
-        >
-          <TouchableOpacity style={styles.optionsOverlay} activeOpacity={1} onPress={() => { setDeleteCommentID(null); setShowCommentsOptionsModal(false) }}>
-            <View style={styles.popupContainer}>
-              <TouchableOpacity style={styles.optionRow} onPress={() => setShowDeleteCommentModal(true)}>
-                <MaterialCommunityIcons name="delete-outline" size={24} color="red" />
-                <Text style={styles.optionText}>Delete</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.optionRow} onPress={() => console.log("Reported successfully")
-              }>
-                <MaterialIcons name="report" size={24} color="red" />
-                <Text style={styles.optionText}>Report</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        </Modal>
-
-        {/*Delete comment Modal*/}
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={showDeleteCommentModal}
-          onRequestClose={() => { setDeleteCommentID(null); setShowDeleteCommentModal(false) }}
-        >
-          <TouchableWithoutFeedback onPress={() => showCommentOptionsModal()}>
-            <View style={styles.deletedOverlay}>
-              <TouchableWithoutFeedback>
-                <View style={styles.deleteCommentModal}>
-                  <Text style={styles.commentHeader}>Delete Comment</Text>
-                  <Text style={styles.commentText}>Are you sure you want to delete this comment?</Text>
-                  <View style={styles.commentDeleteContainer}>
-                    <TouchableOpacity onPress={() => { setDeleteCommentID(null); setShowDeleteCommentModal(false) }}>
-                      <Text style={styles.cancelButtons}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => {
-                      deleteComments();
-                      setShowDeleteCommentModal(false);
-                      setShowCommentsOptionsModal(false);
-                    }
-                    }>
-                      <Text style={styles.deleteButton}>Delete</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </TouchableWithoutFeedback>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
-
-        {/*---------------------***************------------------*/}
-        {/*---------------------***************------------------*/}
         {/* More Options Modal */}
         <Modal
           visible={showMoreOptionsModal}
@@ -647,6 +486,11 @@ export default function ReelsComponent(props) {
             <ReelItem
               item={item}
               shouldPlay={index === currentViewableItemIndex}
+              // likedVideos={likedVideos}
+              //setLikedVideos={setLikedVideos}
+              setIsLiked={setIsLiked}
+              setNewComment={setNewComment}
+              setShowCommentModal={setShowCommentModal}
               openShareOptions={openShareOptions}
               currentUserID={currentUserID}
             />
@@ -654,7 +498,7 @@ export default function ReelsComponent(props) {
             <View style={{ height }} /> // placeholder to keep the scroll height consistent
           )
         }
-
+        keyExtractor={(item) => item.filepath}
         pagingEnabled
         showsVerticalScrollIndicator={false}
         viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
@@ -666,6 +510,12 @@ export default function ReelsComponent(props) {
         maxToRenderPerBatch={1}
         removeClippedSubviews={true}
       />
+
+
+
+      {/* You can add modals for comments/options here */}
+      {/* Comment Modal */}
+
 
     </View>
   );
@@ -788,169 +638,70 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
   },
-  commentHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',  // pushes username left, time right
-    alignItems: 'center',
-    marginBottom: 4,
-    flex: 1,
+  commentHeader: {
+    fontSize: 19,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    marginBottom: 12,
+    color: '#222',
   },
   commentItem: {
+    paddingTop: 8,
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    padding: 10,
-    marginHorizontal: 16,
-    borderRadius: 14,
     alignItems: 'flex-start',
+    marginBottom: 30,
   },
   commentUser: {
-    fontSize: 17,
-    fontWeight: '700',
+    fontWeight: '200',
+    marginRight: 6,
     color: '#000',
-  },
-  commentUserShimer: {
-    fontSize: 17,
-    fontWeight: '700',
-    backgroundColor: '#000',
-    animationDuratin: '2s',
-    animationName: "shimmer",
-    background: "#ddd",
-    background: 'linear-gradient(to right, #ddd 0%, #fff 20%, #ddd 100%)',
-  },
-  commentTextShimer: {
-    fontSize: 14,
-    color: '#333',
-    backgroundColor: '#333',
+    fontSize: 20,
   },
   commentText: {
-    fontSize: 14,
-    color: '#333',
-    // flexShrink: 1,
-  },
-  commentTime: {
-    flex: 1,
-    textAlign: 'left',
-    left: 10,
-    fontSize: 14,
-    color: '#555',
-    fontStyle: 'italic',
-  },
-  commentTimeShimer: {
-    flex: 1,
-    textAlign: 'left',
-    left: 10,
-    fontSize: 14,
-    backgroundColor: '#555',
-    fontStyle: 'italic',
+    color: '#444',
+    fontSize: 18,
+    letterSpacing: 1,
+    lineHeight: 22,
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderRadius: 15,
+    maxWidth: '80%',
   },
   commentInputContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    zIndex: 999,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 20,
+    flexDirection: "row",
     borderTopWidth: 1,
-    borderTopColor: '#ddd',
+    borderTopColor: "#eee",
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+    backgroundColor: "#fafafa",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    shadowColor: "gray",
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
   commentInput: {
     flex: 1,
-    fontSize: 14,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 20,
-    color: '#000',
-  },
-  profilePic: {
-    width: 40,
-    height: 40,
-    borderRadius: 16,
-    marginRight: 8,
-  },
-  profilePicShimer: {
-    width: 40,
-    height: 40,
-    borderRadius: 16,
-    marginRight: 8,
-    backgroundColor: '#f5f5f5',
+    fontSize: 18,
+    lineHeight: 24,           // Increase to avoid bottom clipping
+    paddingVertical: 10,      // Make vertical padding more generous
+    paddingHorizontal: 15,
+    borderWidth: 2,
+    borderColor: '#ccc',
+    borderRadius: 30,
+    backgroundColor: '#fff',
   },
   sendButtonText: {
-    color: '#007aff',
-    fontWeight: '600',
-    fontSize: 16,
-    paddingHorizontal: 10,
-  },
-  deletedOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Dimmed overlay
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  deleteCommentModal: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 20,
-    padding: 30,
-    width: '85%',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  commentDeleteContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  cancelButtons: {
-    backgroundColor: '#E0E0E0',
-    color: '#333',
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 30,
-    fontSize: 16,
-    fontWeight: '600',
-    overflow: 'hidden',
-    textAlign: 'center',
-  },
-  deleteButton: {
-    backgroundColor: '#FF4C4C',
-    color: '#fff',
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 30,
-    fontSize: 16,
-    fontWeight: '600',
-    overflow: 'hidden',
-    textAlign: 'center',
-  },
-  optionsOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  popupContainer: {
-    width: 250,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 20,
-    elevation: 5,
-  },
-  optionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    backgroundColor: "#007aff",
     paddingVertical: 10,
-  },
-  icon: {
-    marginRight: 10,
-  },
-  optionText: {
-    fontSize: 16,
+    paddingHorizontal: 20,
+    marginLeft: 10,
+    borderRadius: 30, // Make the button rounder and remove the bor
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 24,
   },
 });

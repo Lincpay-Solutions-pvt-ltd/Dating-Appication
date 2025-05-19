@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { Provider } from 'react-redux';
 import store from './Redux/store';
+import "./assets/index.css";
 
 export default function Layout() {
   var express_1 = __importDefault(require("express"));
