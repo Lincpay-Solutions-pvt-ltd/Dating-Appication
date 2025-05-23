@@ -1,4 +1,4 @@
-package com.anonymous.testapp
+package com.tangoclone.testapp
 
 import android.app.Application
 import android.content.res.Configuration

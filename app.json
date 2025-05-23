@@ -16,7 +16,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.anonymous.testapp"
+      "package": "com.tangoclone.testapp"
     },
     "web": {
       "bundler": "metro",
@@ -37,6 +37,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "e9dd49e7-2242-4d64-b508-9a0717273802"
+      }
     }
   }
 }

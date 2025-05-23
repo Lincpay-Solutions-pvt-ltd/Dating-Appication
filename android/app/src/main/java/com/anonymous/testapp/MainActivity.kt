@@ -1,4 +1,4 @@
-package com.anonymous.testapp
+package com.tangoclone.testapp
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
