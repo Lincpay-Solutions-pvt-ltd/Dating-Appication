@@ -19,7 +19,7 @@ const VideoCard = ({ item }) => {
     <View style={styles.card}>
       {/* <TouchableOpacity onPress={() => router.push({ pathname: "../../pages/reels", query: { item: item } })}> */}
       {/* <Video
-        source={{ uri: `http://192.168.0.110:5000/reels${item.filepath}?token` }}
+        source={{ uri: `http://192.168.0.101:5000/reels${item.filepath}?token` }}
         style={styles.image}
         isLooping={false}
         resizeMode={ResizeMode.COVER}
@@ -48,7 +48,7 @@ const VideoCard = ({ item }) => {
         }
         }
         resizeMode={ResizeMode.COVER}
-        source={{ uri: `http://192.168.0.110:5000${item.filepath}-thumbnail.png?token` }} style={styles.image} />
+        source={{ uri: `http://192.168.0.101:5000${item.filepath}-thumbnail.png?token` }} style={styles.image} />
       {/* </TouchableOpacity> */}
     </View>
   );
@@ -67,7 +67,7 @@ const VideoList = (props) => {
   }, [props]);
 
   const fetchReel = async (userID = null) => {
-    var API = userID ? `http://192.168.0.110:5000/api/v1/reels/by-userID/${userID}` : "http://192.168.0.110:5000/api/v1/reels/get-latest"
+    var API = userID ? `http://192.168.0.101:5000/api/v1/reels/by-userID/${userID}` : "http://192.168.0.101:5000/api/v1/reels/get-latest"
     axios.get(API)
       .then((response) => {
         console.log(JSON.stringify(response.data));
@@ -87,8 +87,6 @@ const VideoList = (props) => {
         console.log(error);
       })
   };
-
-  // console.log("Database",Database);
 
   return (
 
