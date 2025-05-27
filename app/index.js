@@ -1,12 +1,12 @@
-import React, { useState } from "react";
-import { Provider } from 'react-redux';
-import store from '../Redux/store';
-import Main from "./main";
+import { StatusBar } from "expo-status-bar";
+import { Provider } from "react-redux";
+import store from "./Redux/store";
+import App from "./app";
 
-export default function App() {
-    return (
-        <Provider store = {store}>
-            <Main />
-        </Provider>
-    );
+export default function Layout() {
+  return (
+    <Provider store={store}>
+      <App />
+    </Provider>
+  );
 }
