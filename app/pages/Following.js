@@ -25,7 +25,6 @@ export default function FollowingScreen() {
                 { id: "7", title: "Product 7", price: "Rs. 700" },
                 { id: "8", title: "Product 8", price: "Rs. 800" },
                 { id: "9", title: "Product 9", price: "Rs. 900" },
-
             ]);
             setMsg("No related videos found");
         }
@@ -37,7 +36,7 @@ export default function FollowingScreen() {
     const VideoList = () => {
         return (
             !videos.length ? <Text style={styles.textMsg}>{msg}</Text> :
-                <>
+                <View style={styles.cardContainer}>
                     <FlatList
                         data={videos}
                         keyExtractor={(item) => item.id}
@@ -50,36 +49,49 @@ export default function FollowingScreen() {
                                 />
                             </View>)}
                     />
-                </>
+                </View>
         );
     };
 
     return (
         <>
-
-            <Header />
-           
             <FlatList
                 ListHeaderComponent={
-                    <SafeAreaView>
-                        <View style={styles.containerTop}>
-                            <MaterialIcon style={styles.icon} name="thumb-up" size={24} color="#000" />
-                            <Text style={styles.text}>No one you're following is live</Text>
-                        </View>
-                        <View style={styles.containerMid}>
-                            <Text style={styles.text}>You may also like</Text>
-                        </View>
-                    </SafeAreaView>
+                    <>
+                        <Header />
+                        <SafeAreaView>
+                            <View style={styles.containerTop}>
+                                <MaterialCommunityIcons
+                                    style={styles.icon}
+                                    name="account-group-outline"
+                                    size={100}
+                                    color="#fff"
+                                />
+                                <Text style={styles.followingText}>No active Followings yet</Text>
+                            </View>
+                            <View style={styles.containerMid}>
+                                <Text style={styles.text}>You may also like</Text>
+                            </View>
+                        </SafeAreaView>
+                    </>
                 }
                 data={[{ key: "VideoList" }]} // Placeholder data
                 renderItem={() => <VideoList />}
                 keyExtractor={(item) => item.key}
+                ListFooterComponent={
+                    <>
+                        <View style={styles.containerFloat}>
+                            <Image
+                                style={styles.image}
+                                source={require("../../assets/images/video-camera.png")}
+                            />
+                        </View>
+                    </>
+                }
             />
-            <View style={styles.containerFloat}>
-                <Image style={styles.image} source={require("../../assets/images/video-camera.png")} />
-            </View>
             <Footer />
         </>
+
     );
 }
 
@@ -87,12 +99,11 @@ const styles = StyleSheet.create({
     containerTop: {
         display: "flex",
         alignItems: "center",
+        backgroundColor: "#000",
     },
     containerMid: {
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "left",
-        padding: 20
+        padding: 30,
+        backgroundColor: "#000",
     },
     icon: {
         justifyContent: "center",
@@ -106,21 +117,36 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
     },
+    followingText: {
+        fontSize: 30,
+        color: "#fff",
+        justifyContent: "center",
+        backgroundColor: "#000",
+        paddingBottom: 10
+    },
     text: {
-        fontSize: 20,
-        color: "#000"
+        fontSize: 30,
+        fontWeight: "bold",
+        color: "#fff",
+        alignItems: "flex-start",
+        backgroundColor: "#000",
     },
     containerFloat: {
         position: "absolute",
         bottom: 50,
         left: "50%",
         transform: [{ translateX: "-50%" }, { translateY: "-50%" }],
-
     },
-    image: {
-        justifyContent: "center",
-        width: 70,
-        height: 70,
+    // image: {
+    //     justifyContent: "center",
+    //     width: 70,
+    //     height: 70,
+    // },
+    cardContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'flex-start',
+        backgroundColor: '#000',
     },
     card: {
         display: 'flex',
@@ -128,16 +154,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: "50%",  // Adjust width to fit the screen better
         height: 300,
-        padding: 10,
-        margin: "auto",
+        padding: 3,
         minHeight: 350,
-        backgroundColor: '#fff',
     },
-    text: {
-        fontWeight: 'bold',
-        textAlign: 'center',
-        flexWrap: 'nowrap'
-    },
+    // text: {
+    //     fontWeight: 'bold',
+    //     textAlign: 'center',
+    //     flexWrap: 'nowrap'
+    // },
     textMsg: {
         fontWeight: 'bold',
         textAlign: 'center',

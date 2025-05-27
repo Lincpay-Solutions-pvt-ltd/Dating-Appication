@@ -26,7 +26,7 @@ export default function SignUpScreen() {
       "userPassword": password
     });
 
-    await axios.post('http://192.168.0.101:5000/api/v1/users/login', data, {
+    await axios.post('http://192.168.0.108:5000/api/v1/users/login', data, {
       headers: {
         'Content-Type': 'application/json'
       }
@@ -98,7 +98,7 @@ export default function SignUpScreen() {
         userRoleID: 1,
         userAccountApproved: 1,
       });
-      await axios.post('http://192.168.0.101:5000/api/v1/users/signup', data, {
+      await axios.post('http://192.168.0.108:5000/api/v1/users/signup', data, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -192,12 +192,11 @@ export default function SignUpScreen() {
               <Text style={userGenderID == 1 ? styles.radioTextChecked : styles.radioText}>Male</Text>
             </TouchableOpacity>
 
-
             <TouchableOpacity
               style={userGenderID == 2 ? styles.radioItemChecked : styles.radioItem}
               onPress={() => setUserGenderID(2)}
             >
-              <Text style={userGenderID == 2 ? styles.radioTextChecked : styles.radioText }>Female</Text>
+              <Text style={userGenderID == 2 ? styles.radioTextChecked : styles.radioText}>Female</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -216,7 +215,7 @@ export default function SignUpScreen() {
         <Text style={styles.loginText} onPress={() => router.push("../pages/login")}>
           Already have an account?
 
-          <Text style={styles.loginLink}>Log in</Text>
+          <Text style={styles.loginLink}> Log in</Text>
         </Text>
       </View>
     </View>
@@ -246,12 +245,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
     color: "gray",
+    alignSelf: "flex-start",
   },
   input: {
     height: 50,
     width: "100%",
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#f8768e",
     borderRadius: 30,
     paddingHorizontal: 10,
     marginBottom: 10,
@@ -262,8 +262,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   button: {
-    backgroundColor: "#000",
-    borderColor: "#fff",
+    backgroundColor: "#f8768e",
+    borderColor: "black",
     padding: 15,
     borderRadius: 30,
     alignItems: "center",
@@ -277,11 +277,13 @@ const styles = StyleSheet.create({
   loginText: {
     textAlign: "center",
     marginTop: 20,
-    fontSize: 14,
+    fontSize: 20,
   },
   loginLink: {
     color: "#007BFF",
     fontWeight: "bold",
+    right: 10,
+    fontSize: 22,
   },
   errorText: {
     color: "red",
@@ -308,7 +310,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderWidth: 1,
-    borderColor: "#000",
+    borderColor: "#f8768e",
     borderRadius: 20,
     marginHorizontal: 5,
     backgroundColor: "#FFF",
@@ -320,7 +322,7 @@ const styles = StyleSheet.create({
     borderColor: "#fff",
     borderRadius: 20,
     marginHorizontal: 5,
-    backgroundColor: "#000",
+    backgroundColor: "#f8768e",
   },
   radioText: {
     fontSize: 14,
@@ -328,9 +330,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   radioTextChecked: {
-    fontSize: 14,
-    color: "#fff",
-    fontWeight: "bold",
+    color: "white", // selected text color
+    fontSize: 16,
+    textAlign: "center",
   },
   dateContainer: {
     margin: 20

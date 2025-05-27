@@ -30,7 +30,7 @@ export default function Footer() {
           router.replace('../pages/home');
         }}
       >
-        <MaterialCommunityIcons name={pathname === "/pages/home" ? "thumb-up" : "thumb-up-outline"} size={28} color="#fff" />
+        <MaterialCommunityIcons style={styles.FooterIcons} name={pathname === "/pages/home" ? "thumb-up" : "thumb-up-outline"} size={28} color="#fff" />
         <Text style={ styles.footerText }>Home</Text>
         
       </TouchableOpacity>
@@ -38,23 +38,23 @@ export default function Footer() {
         router.push("../pages/Following");
         }}
         >
-        <MaterialIcon name={pathname === "/pages/Following" ? "person" : "person-outline"} size={28} color="#fff" />
+        <MaterialIcon style={styles.FooterIcons} name={pathname === "/pages/Following" ? "person" : "person-outline"} size={28} color="#fff" />
         <Text style={ styles.footerText }>Following</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => {
         router.push("../pages/explore");
         }}
         >
-        <IoniconsIcons name={pathname === "/pages/explore" ? "search" : "search-outline"} size={28} color="#fff" />
+        <IoniconsIcons style={styles.FooterIcons} name={pathname === "/pages/explore" ? "search" : "search-outline"} size={28} color="#fff" />
         <Text style={ styles.footerText }>Explore</Text>
       </TouchableOpacity>
       {pathname === "/pages/reels" ?
-        (<EntypoIcons name="folder-video" size={28} color="#fff" />) :
+        (<EntypoIcons style={styles.FooterIcons} name="folder-video" size={28} color="#fff" />) :
         (<TouchableOpacity onPress={() => {
           router.push({ pathname: "../pages/reels" });
           }}
           >
-          <OcticonsIcons name="video" size={28} color="#fff" />
+          <OcticonsIcons style={styles.FooterIcons} name="video" size={28} color="#fff" />
           <Text style={ styles.footerText }>Moments</Text>
         </TouchableOpacity>)
       }
@@ -62,7 +62,7 @@ export default function Footer() {
       <TouchableOpacity onPress={() => {
         router.replace("../pages/chatList");
         }}>
-        <MaterialCommunityIcons name={pathname === "/pages/chatList" ? "chat" : "chat-outline"} size={28} color="#fff" />
+        <MaterialCommunityIcons style={styles.FooterIcons} name={pathname === "/pages/chatList" ? "chat" : "chat-outline"} size={28} color="#fff" />
         <Text style={ styles.footerText }>Chats</Text>
       </TouchableOpacity>
     </View>
@@ -72,11 +72,10 @@ export default function Footer() {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    bottom: 0, // Fixes the position at the bottom
-    width: "100%", // Ensures full width
+    bottom: 0, 
+    width: "100%", 
     flexDirection: "row",
-    justifyContent: "space-around", // Evenly spaces icons
-    alignItems: "center", // Centers icons vertically
+    justifyContent: "space-around",
     paddingVertical: 10,
     backgroundColor: "#000000A0",
   },
@@ -84,8 +83,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 12,
     fontWeight: "bold",
-    top:4,
-    justifyContent:"center",
-    alignItems:"center"
-  }
+    textAlign: "center",
+    top: 2,
+  },
 });
