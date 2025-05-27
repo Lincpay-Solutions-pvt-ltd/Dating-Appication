@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import publicIp from 'react-native-public-ip';
 import {
   PermissionsAndroid,Platform,Alert,KeyboardAvoidingView,View,TextInput,TouchableOpacity,Text,FlatList,StyleSheet,Keyboard,TouchableWithoutFeedback,
   Modal,
