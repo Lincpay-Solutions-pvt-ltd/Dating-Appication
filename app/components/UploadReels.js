@@ -14,7 +14,7 @@ export default UploadReels = async (userID, video, title, description) => {
         });
 
         const response = await axios.post(
-            'http://192.168.0.101:5000/api/v1/uploads/upload',
+            'http://192.168.0.108:5000/api/v1/uploads/upload',
             formData,
             {
                 headers: {
@@ -41,7 +41,7 @@ export default UploadReels = async (userID, video, title, description) => {
             const uploadingReel = await axios.request({
                 method: 'POST',
                 maxBodyLength: Infinity,
-                url: 'http://192.168.0.101:5000/api/v1/reels',
+                url: 'http://192.168.0.108:5000/api/v1/reels',
                 headers: {
                     'Content-Type': 'application/json'
                 },
@@ -63,6 +63,6 @@ export default UploadReels = async (userID, video, title, description) => {
 
         console.log('Reel uploaded successfully:', response.data);
     } catch (error) {
-        console.error('Error uploading reel:', error);
+        console.error('Error uploading reel:', error.response ? error.response.data : error.message);
     }
 }

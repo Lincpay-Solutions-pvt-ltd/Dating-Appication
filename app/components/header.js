@@ -1,4 +1,4 @@
-import React, { useEffect, useState,useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import { login, logout } from "../Redux/authSlice";
 import { BackHandler, Alert } from "react-native";
-import { usePathname, Link,useFocusEffect } from "expo-router";
+import { usePathname, Link, useFocusEffect } from "expo-router";
 import Layout from "../pages/_layout";
 
 const screenWidth = Dimensions.get("window").width;
@@ -26,7 +26,6 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
   const translateX = useState(new Animated.Value(-screenWidth))[0];
   const [notificationOpen, setNotificationOpen] = useState(false);
   const translateZ = useState(new Animated.Value(-screenWidth))[0];
-
 
   const toggleMenu = () => {
     Animated.timing(translateX, {
@@ -45,7 +44,7 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
       useNativeDriver: true,
     }).start();
     setNotificationOpen(!notificationOpen);
-  }
+  };
 
   const router = useRouter();
   const dispatch = useDispatch();
@@ -60,7 +59,11 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
   return (
     <>
       {/* Normal Header Bar */}
-      <View style={isTransparent ?stylesHeader.headerTransparent : stylesHeader.header}>
+      <View
+        style={
+          isTransparent ? stylesHeader.headerTransparent : stylesHeader.header
+        }
+      >
         <View style={stylesHeader.leftSection}>
           {/* Profile Image (Click to open menu) */}
           <TouchableOpacity
@@ -77,15 +80,21 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
           <View style={stylesHeader.coinContainer}>
             <Ionicons name="star" size={16} color="gold" />
             <Text style={stylesHeader.coinText}>0</Text>
-            <TouchableOpacity style={stylesHeader.addButton} onPress={() => router.push("../pages/coinScreen")}>
+            <TouchableOpacity
+              style={stylesHeader.addButton}
+              onPress={() => router.push("../pages/coinScreen")}
+            >
               <Ionicons name="add" size={16} color="black" />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Right Side: Notification Bell */}
-        <TouchableOpacity style={stylesHeader.notificationIcon} onPress={toggleNotification}>
-          <Ionicons name="notifications-outline" size={30} color="black" />
+        <TouchableOpacity
+          style={stylesHeader.notificationIcon}
+          onPress={toggleNotification}
+        >
+          <Ionicons name="notifications-outline" size={30} color="white" />
         </TouchableOpacity>
       </View>
 
@@ -94,20 +103,31 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
         style={[stylesHeader.menu, { transform: [{ translateX }] }]}
       >
         {/* Back Icon to Close Sidebar */}
-        <TouchableOpacity style={stylesHeader.backIcon} onPress={() => router.replace("../pages/home")}>
+        <TouchableOpacity
+          style={stylesHeader.backIcon}
+          onPress={() => router.replace("../pages/home")}
+        >
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
         {/* Profile Section */}
         <View style={stylesHeader.profileSection}>
           <View style={stylesHeader.profileRowContainer}>
             {/* Profile Row */}
-            <TouchableOpacity style={stylesHeader.profileRow} onPress={() => router.push("../pages/profile")}>
+            <TouchableOpacity
+              style={stylesHeader.profileRow}
+              onPress={() => {
+                toggleMenu();
+                router.push("../pages/profile");
+              }}
+            >
               <Image
                 source={require("../../assets/images/profile.jpg")}
                 style={stylesHeader.profileImageLarge}
               />
               <View style={stylesHeader.profileInfoContainer}>
-                <Text style={stylesHeader.profileName}>{user.userFirstName}</Text>
+                <Text style={stylesHeader.profileName}>
+                  {user.userFirstName}
+                </Text>
                 {/* Stats Row Below Profile Name */}
                 <View style={stylesHeader.statsRow}>
                   <Ionicons name="diamond-outline" size={16} color="gray" />
@@ -141,12 +161,24 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={stylesHeader.menuItem} onPress={() => router.push("../pages/(sidebar)/agency")}>
+        <TouchableOpacity
+          style={stylesHeader.menuItem}
+          onPress={() => {
+            toggleMenu();
+            router.push("../pages/(sidebar)/agency");
+          }}
+        >
           <Ionicons name="briefcase-outline" size={24} color="white" />
           <Text style={stylesHeader.menuText}>Agency Program</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={stylesHeader.menuItem} onPress={() => router.push("../pages/fanPage")}>
+        <TouchableOpacity
+          style={stylesHeader.menuItem}
+          onPress={() => {
+            toggleMenu();
+            router.push("../pages/fanPage");
+          }}
+        >
           <Ionicons name="heart-outline" size={24} color="white" />
           <Text style={stylesHeader.menuText}>My Fans</Text>
         </TouchableOpacity>
@@ -198,16 +230,31 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
       {/* {notificationOpen && <TouchableOpacity style={stylesHeader.overlay} onPress={toggleNotification} />} */}
 
       {/* /// Notification Sidebar */}
-      <Animated.View style={[stylesHeader.notificationBar, { transform: [{ translateX: translateZ }] }]}>
-      {/* Back Icon to Close Sidebar */}
-      <TouchableOpacity style={stylesHeader.backIcon} onPress={toggleNotification}>
-        <Ionicons name="arrow-back" size={24} color="white" />
-      </TouchableOpacity>
-      <Text style={stylesHeader.notificationText}>Notifications</Text>
-      <Image source={require("../../assets/images/profile.jpg")} style={stylesHeader.profileIcon} />
-      <Text style={stylesHeader.followText}>+1 Followers</Text>
-      <EntypoIcons name="chevron-right" size={24} style={stylesHeader.rightArrow} />
-    </Animated.View>
+      <Animated.View
+        style={[
+          stylesHeader.notificationBar,
+          { transform: [{ translateX: translateZ }] },
+        ]}
+      >
+        {/* Back Icon to Close Sidebar */}
+        <TouchableOpacity
+          style={stylesHeader.backIcon}
+          onPress={toggleNotification}
+        >
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
+        <Text style={stylesHeader.notificationText}>Notifications</Text>
+        <Image
+          source={require("../../assets/images/profile.jpg")}
+          style={stylesHeader.profileIcon}
+        />
+        <Text style={stylesHeader.followText}>+1 Followers</Text>
+        <EntypoIcons
+          name="chevron-right"
+          size={24}
+          style={stylesHeader.rightArrow}
+        />
+      </Animated.View>
     </>
   );
 }
@@ -219,7 +266,9 @@ const stylesHeader = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 15,
     paddingVertical: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "#545454",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   headerTransparent: {
     flexDirection: "row",
@@ -227,7 +276,7 @@ const stylesHeader = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 15,
     paddingVertical: 10,
-    backgroundColor:"#ffffff50",
+    backgroundColor: "#4f4d4d",
   },
   leftSection: {
     flexDirection: "row",
@@ -349,13 +398,13 @@ const stylesHeader = StyleSheet.create({
     color: "white",
     fontSize: 26,
     marginLeft: 40,
-    bottom: 20
+    bottom: 20,
   },
   folllowerText: {
     color: "white",
     fontSize: 26,
     marginLeft: 40,
-    bottom: 22
+    bottom: 22,
   },
   profileIcon: {
     width: 50,
@@ -376,16 +425,16 @@ const stylesHeader = StyleSheet.create({
     color: "white",
     fontSize: 30,
     paddingLeft: 70,
-    bottom: 40
+    bottom: 40,
   },
   rightArrow: {
     position: "absolute",
-    right: 20,  // Adjust the value as needed
+    right: 20, // Adjust the value as needed
     color: "grey",
     fontSize: 26,
     fontWeight: "bold",
     paddingTop: 0,
-    marginTop:20,
+    marginTop: 20,
     top: 50,
   },
   notificationBar: {
@@ -396,5 +445,5 @@ const stylesHeader = StyleSheet.create({
     paddingTop: 50,
     paddingHorizontal: 20,
     zIndex: 2,
-  }
+  },
 });
