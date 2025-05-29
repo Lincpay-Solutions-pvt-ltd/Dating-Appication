@@ -25,7 +25,6 @@ import UploadReels from "../components/UploadReels";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { ScrollView } from "react-native";
 import { Platform } from "react-native";
-import Geolocation from "react-native-geolocation-service";
 import { ActivityIndicator } from "react-native";
 import { set } from "react-hook-form";
 import { isLoading } from "expo-font";

@@ -2,17 +2,17 @@ import { Stack } from 'expo-router/stack';
 import { Provider } from "react-redux";
 import store from "../Redux/store";
 import { BackHandler, Alert } from "react-native";
-import React, { useEffect, useState,useCallback} from "react";
+import React, { useEffect, useState, useCallback} from "react";
 import { usePathname } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 
 export default function Layout() {
-  const pathName = usePathname(); // this gives the CURRENT path
+  const pathName = usePathname();
 
   useFocusEffect(
     useCallback(() => {
       const onBackPress = () => {
-        const currentPath = pathName; // ensure it's scoped inside the callback
+        const currentPath = pathName; 
         console.log("PathName = ", currentPath);
 
         if (currentPath === "/pages/home") {
@@ -33,7 +33,7 @@ export default function Layout() {
 
       BackHandler.addEventListener("hardwareBackPress", onBackPress);
 
-      return () => BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+      // return () => BackHandler.removeEventListener("hardwareBackPress", onBackPress);
     }, [pathName]) // depend on pathName so it's fresh
   );
 
