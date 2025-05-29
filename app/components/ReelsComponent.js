@@ -25,7 +25,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { usePathname } from "expo-router";
 import axios from "axios";
 import { set } from "react-hook-form";
-import moment from "moment/moment";
+// import moment from 'moment';
 import { use } from "react";
 import LinearGradient from "react-native-linear-gradient";
 import { current } from "@reduxjs/toolkit";
@@ -123,6 +123,8 @@ export default function ReelsComponent(props) {
     const [commentUserFirstName, setCommentUserFirstName] = useState("");
     const [commentUserID, setCommentUserID] = useState("");
     const [isReport, setIsReport] = useState(false);
+    const [totalLikes, setTotalLikes] = useState(0);
+    const [totalComments, setTotalComments] = useState(0);
     //const [isSaved, setIsSaved] = useState(false);
 
     useMemo(() => {
@@ -143,6 +145,8 @@ export default function ReelsComponent(props) {
       };
       getUser();
       // setIsSaved(false);
+      setTotalLikes(item.likes || 0);
+      setTotalComments(item.comments || 0);
     }, []);
 
     useEffect(() => {
@@ -461,18 +465,21 @@ export default function ReelsComponent(props) {
 
             <Pressable
               style={styles.iconWrapper}
-              onPress={() =>
+              onPress={() => {
                 isLiked
                   ? dislikeReel(currentUserID, item.reelId)
-                  : likeReel(currentUserID, item.reelId)
-              }
+                  : likeReel(currentUserID, item.reelId);
+                isLiked
+                  ? setTotalLikes(totalLikes - 1)
+                  : setTotalLikes(totalLikes + 1);
+              }}
             >
               <FontAwesome
                 name={isLiked ? "heart" : "heart-o"}
                 size={25}
                 color={isLiked ? "red" : "white"}
               />
-              <Text style={styles.iconText}>106</Text>
+              <Text style={styles.iconText}>{totalLikes}</Text>
             </Pressable>
 
             <Pressable
@@ -765,7 +772,7 @@ export default function ReelsComponent(props) {
                 </TouchableOpacity>
               ) : (
                 // Show Delete option for user's own comments
-                
+
                 <TouchableOpacity
                   style={styles.optionRow}
                   onPress={() => setShowDeleteCommentModal(true)}
