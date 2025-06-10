@@ -1,5 +1,3 @@
-import { StatusBar } from "expo-status-bar";
-import React from "react";
 import {
   View,
   Text,
@@ -7,148 +5,125 @@ import {
   Image,
   StyleSheet,
   Dimensions,
-  ScrollView,
   TouchableOpacity,
   TextInput,
-  Button,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Header from "../components/header";
 import Footer from "../components/footer";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-
-const data = [
-  {
-    id: "1",
-    name: "Name",
-    image: "https://picsum.photos/200/300", // Replace with actual image URL
-    views: "7",
-    likes: "1.22M",
-  },
-  {
-    id: "2",
-    name: "Name",
-    image: "https://picsum.photos/200/300",
-    views: "14",
-    likes: "22.57M",
-  },
-  {
-    id: "3",
-    name: "Name",
-    image: "https://picsum.photos/200/300",
-    views: "14",
-    likes: "22.57M",
-  },
-  {
-    id: "4",
-    name: "Name",
-    image: "https://picsum.photos/200/300",
-    views: "14",
-    likes: "22.57M",
-  },
-  {
-    id: "5",
-    name: "Name",
-    image: "https://picsum.photos/200/300",
-    views: "14",
-    likes: "22.57M",
-  },
-  {
-    id: "6",
-    name: "Name",
-    image: "https://picsum.photos/200/300",
-    views: "14",
-    likes: "22.57M",
-  },
-];
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
-const titles = ["Nearby", "New", "Gamer", "Artists"];
 
 export default ExploreScreen = () => {
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState(null);
   const router = useRouter();
+  const [Database, setDatabase] = useState([]);
+  const [currentUserID, setCurrentUserID] = useState(null);
+  const [accessToken, setAccessToken] = useState("");
+  const [showSearch, setShowSearch] = useState(true);
 
-  const fetchReelsByUserName = async ({ userName }) => {
+  useMemo(() => {
+    const getUser = async () => {
+      try {
+        const user = await AsyncStorage.getItem("User");
+        const _accessToken = await AsyncStorage.getItem("accessToken");
+
+        if (user) {
+          const parsedUser = JSON.parse(user);
+          const userID = parsedUser.userID;
+          setCurrentUserID(userID);
+          setAccessToken(_accessToken);
+
+        }
+      } catch (err) {
+        console.error("Error parsing user from AsyncStorage", err);
+      }
+    };
+    getUser();
+  }, []);
+
+  const showUserAccount = async (name) => {
     try {
       const response = await axios.get(
-        `http://192.168.0.108:5000/api/v1/reels/get-latest?page=${pageNumber}&limit=10`
+        `http://192.168.0.101:5000/api/v1/users/allUsers?search=${name}`, // Adjust the URL as needed
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
       );
       const fetchedReels = response.data.data;
-      console.log("fetchedReels First", fetchedReels[0]);
-      const lastJson = fetchedReels[fetchedReels.length - 1];
-      setHaveMoreReels(lastJson.haveMore);
- 
-      setDatabase((prev) => [...prev, ...fetchedReels]);
+      setShowSearch(true);
 
-      console.log("Database length= ", Database.length);
+      // Filter out the current user from the fetched reels
+      const filteredReels = fetchedReels.filter(
+        (item) => item.userID !== currentUserID
+      );
+
+      setDatabase(filteredReels);
     } catch (error) {
       console.log(error);
     }
   };
 
-  const handleSearch = (text) => {
-    setSearchText(text);
-    console.log("Search input changed:", text);
-    // Optionally call a search function here
+  const handleSearch = async (text) => {
+    await showUserAccount(text);
+  };
+
+  const OpenUserProfile = (item) => {
+    // router.push("../pages/OtherProfile");
+    router.push({
+      pathname: "../pages/OtherProfile",
+      params: { userData: JSON.stringify(item) },
+    });
   };
 
   return (
     <>
       <Header />
-      <ScrollView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
             placeholder="Search By UserName"
             value={searchText}
-            onChangeText={handleSearch}
+            onChangeText={(text) => {
+              setSearchText(text);
+              if (text.length >= 3) {
+                handleSearch(text);
+              } else {
+                setShowSearch(false);
+              }
+            }}
             placeholderTextColor="#888"
           />
-          <TouchableOpacity>
-            <MaterialCommunityIcons
-              name="magnify"
-              size={35}
-              margin={15}
-              color="#fff"
-            />
-          </TouchableOpacity>
         </View>
-        {titles.map((title, index) => (
-          <View key={index}>
-            <Text style={styles.title}>{title}</Text>
-            <TouchableOpacity
-              onPress={() => router.push("../pages/exploreMore")}
-            >
-              <Text
-                style={[
-                  styles.moreText,
-                  { alignSelf: "flex-end", marginRight: 15 },
-                ]}
-              >
-                More
-              </Text>
-            </TouchableOpacity>
-            <FlatList
-              data={data}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <View style={styles.card}>
-                  <Image source={{ uri: item.image }} style={styles.image} />
-                  <View style={styles.overlay}>
-                    <Text style={styles.views}>👁 {item.views}</Text>
-                    <Text style={styles.name}>{item.name}</Text>
-                    <Text style={styles.likes}>💎 {item.likes}</Text>
+        <FlatList
+          data={Database}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) =>
+            showSearch && (
+              <View style={styles.messageItem}>
+                <Image
+                  source={require("../../assets/images/profile.jpg")}
+                  style={styles.messageAvatar}
+                />
+                <TouchableOpacity onPress={() => OpenUserProfile(item)}>
+                  <View style={styles.messageContent}>
+                    <Text style={styles.messageName}>
+                      {item.userFirstName} {item.userSurname}
+                    </Text>
                   </View>
-                </View>
-              )}
-            />
-          </View>
-        ))}
-      </ScrollView>
+                </TouchableOpacity>
+              </View>
+            )
+          }
+        />
+      </View>
       <Footer />
     </>
   );
@@ -157,11 +132,11 @@ export default ExploreScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#fff",
   },
   title: {
     fontSize: 30,
-    color: "#fff",
+    color: "#000",
     fontWeight: "bold",
     marginLeft: 15,
     top: 13,
@@ -193,11 +168,11 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   views: {
-    color: "#fff",
+    color: "#000",
     fontSize: 14,
   },
   name: {
-    color: "#fff",
+    color: "#000",
     fontSize: 16,
     fontWeight: "bold",
   },
@@ -213,14 +188,37 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     height: 50,
-    borderColor: "#fff",
+    borderColor: "#000",
     borderWidth: 1,
     borderRadius: 30,
     paddingHorizontal: 15,
     fontSize: 20,
     marginBottom: 10,
-    color: "#fff",
+    color: "#000",
     marginLeft: 15,
     marginRight: 15,
+  },
+  messageItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f3f3f3",
+    padding: 10,
+    borderRadius: 10,
+    marginVertical: 5,
+  },
+  messageAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  messageContent: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  messageName: {
+    padding: 10,
+    fontWeight: "bold",
+    fontSize: 18,
+    color: "#000",
   },
 });
