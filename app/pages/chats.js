@@ -35,7 +35,7 @@ export default function ChatScreen() {
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
-              <Ionicons name="arrow-back" size={24} color="#fff" />
+              <Ionicons name="arrow-back" size={24} color="#000" />
             </TouchableOpacity>
             
             <View style={styles.profileSection}>
@@ -46,15 +46,15 @@ export default function ChatScreen() {
               <TouchableOpacity onPress={handleUsernamePress} style={styles.userInfo}>
                 <View style={styles.usernameContainer}>
                   <Text style={styles.username}>Rapid Fox</Text>
-                  <Ionicons name="chevron-down" size={16} color="#fff" />
+                  <Ionicons name="chevron-down" size={16} color="#000" />
                 </View>
                 <Text style={styles.status}>Active 39 min. ago</Text>
               </TouchableOpacity>
             </View>
             
             <TouchableOpacity style={styles.callButton} onPress={handleCallPress}>
-              <Ionicons name="call" size={24} color="#fff" />
-              <Ionicons name="chevron-down" size={14} color="#fff" style={styles.callDownIcon} />
+              <Ionicons name="call" size={24} color="#000" />
+              <Ionicons name="chevron-down" size={14} color="#000" style={styles.callDownIcon} />
             </TouchableOpacity>
           </View>
           
@@ -69,37 +69,37 @@ export default function ChatScreen() {
       {showProfileOptions && (
         <View style={styles.optionsContainer}>
           <TouchableOpacity style={styles.optionItem}>
-            <FontAwesome name="image" size={24} color="#fff" style={styles.optionIcon} />
+            <FontAwesome name="image" size={24} color="#000" style={styles.optionIcon} />
             <Text style={styles.optionText}>Media</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.optionItem}>
-            <Feather name="user" size={24} color="#fff" style={styles.optionIcon} />
+            <Feather name="user" size={24} color="#000" style={styles.optionIcon} />
             <Text style={styles.optionText}>View Profile</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.optionItem}>
-            <Feather name="share" size={24} color="#fff" style={styles.optionIcon} />
+            <Feather name="share" size={24} color="#000" style={styles.optionIcon} />
             <Text style={styles.optionText}>Share profile</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.optionItem}>
-            <Feather name="bell-off" size={24} color="#fff" style={styles.optionIcon} />
+            <Feather name="bell-off" size={24} color="#000" style={styles.optionIcon} />
             <Text style={styles.optionText}>Mute Chat</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.optionItem}>
-            <Feather name="trash-2" size={24} color="#fff" style={styles.optionIcon} />
+            <Feather name="trash-2" size={24} color="#000" style={styles.optionIcon} />
             <Text style={styles.optionText}>Delete Chat</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.optionItem}>
-            <Feather name="flag" size={24} color="#fff" style={styles.optionIcon} />
+            <Feather name="flag" size={24} color="#000" style={styles.optionIcon} />
             <Text style={styles.optionText}>Report User</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.optionItem}>
-            <Feather name="x-circle" size={24} color="#fff" style={styles.optionIcon} />
+            <Feather name="x-circle" size={24} color="#000" style={styles.optionIcon} />
             <Text style={styles.optionText}>Block</Text>
           </TouchableOpacity>
         </View>
@@ -145,7 +145,7 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#FFE4C4",
     width: '100%'
   },
   backdrop: {
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 15,
     borderBottomWidth: 0.5,
-    borderBottomColor: "#333",
+    borderBottomColor: "#f3f3f3",
   },
   backButton: {
     padding: 5,
@@ -182,13 +182,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   username: {
-    color: "#fff",
+    color: "#000",
     fontSize: 18,
     fontWeight: "bold",
     marginRight: 5,
   },
   status: {
-    color: "#999",
+    color: "#000",
     fontSize: 14,
   },
   callButton: {
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     bottom: 10, // Add space above the ChatFooter
     left: 0,
     right: 0,
-    backgroundColor: "#111",
+    backgroundColor: "#f3f3f3",
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
     padding: 20,
@@ -222,14 +222,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 15,
     borderBottomWidth: 0.5,
-    borderBottomColor: "#333",
+    borderBottomColor: "#000",
   },
   optionIcon: {
     marginRight: 15,
     width: 30,
   },
   optionText: {
-    color: "#fff",
+    color: "#000",
     fontSize: 18,
   },
   callOptionTextContainer: {

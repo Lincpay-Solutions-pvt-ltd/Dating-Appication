@@ -54,18 +54,17 @@ export default function LoginScreen() {
     console.log("Login data = ", data);
 
     await axios
-      .post("http://192.168.0.108:5000/api/v1/users/login", data, {
+      .post("http://192.168.0.101:5000/api/v1/users/login", data, {
         headers: {
           "Content-Type": "application/json",
         },
       })
       .then(async function (response) {
         if (response.data.status === true) {
-          console.log("User Data =>>> ", response.data.data.UserData);
           await AsyncStorage.setItem("Authenticated", "true");
           await AsyncStorage.setItem(
             "accessToken",
-            JSON.stringify(response.data.data.accessToken)
+            response.data.data.accessToken
           );
           await AsyncStorage.setItem(
             "refreshToken",
@@ -75,7 +74,6 @@ export default function LoginScreen() {
             "User",
             JSON.stringify(response.data.data.UserData)
           );
-          console.log("Login Successful");
           router.replace("./home");
         }
         setIsValidating(false);
@@ -91,7 +89,7 @@ export default function LoginScreen() {
 
   /*Forgot password implementation via api*/
    const forgotPassword = async () => {
-    console.log("OTP sent to your number");
+    //console.log("OTP sent to your number");
    }
 
   return (

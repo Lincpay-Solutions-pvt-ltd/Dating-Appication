@@ -22,7 +22,7 @@ import Entypo from "@expo/vector-icons/Entypo";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import FontAwesomeIcons from "@expo/vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { usePathname } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import axios from "axios";
 import { set } from "react-hook-form";
 // import moment from 'moment';
@@ -66,7 +66,6 @@ export default function ReelsComponent(props) {
   // }, []);
 
   useEffect(() => {
-    console.log("props = ", props.reel);
     if (props.reel) {
       setDatabase([props.reel]);
     }
@@ -75,16 +74,13 @@ export default function ReelsComponent(props) {
   const fetchReels = async ({ pageNumber }) => {
     try {
       const response = await axios.get(
-        `http://192.168.0.108:5000/api/v1/reels/get-latest?page=${pageNumber}&limit=10`
+        `http://192.168.0.101:5000/api/v1/reels/get-latest?page=${pageNumber}&limit=10`
       );
       const fetchedReels = response.data.data;
-      console.log("fetchedReels First", fetchedReels[0]);
       const lastJson = fetchedReels[fetchedReels.length - 1];
       setHaveMoreReels(lastJson.haveMore);
 
       setDatabase((prev) => [...prev, ...fetchedReels]);
-
-      console.log("Database length= ", Database.length);
     } catch (error) {
       console.log(error);
     }
@@ -104,6 +100,7 @@ export default function ReelsComponent(props) {
   };
 
   const ReelItem = ({ item, shouldPlay, openShareOptions }) => {
+    const router = useRouter();
     const [currentUserID, setCurrentUserID] = useState("");
     const [status, setStatus] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -131,13 +128,11 @@ export default function ReelsComponent(props) {
       const getUser = async () => {
         try {
           const user = await AsyncStorage.getItem("User");
-          console.log("getUser called = ", user);
 
           if (user) {
             const parsedUser = JSON.parse(user);
             const userID = parsedUser.userID;
             setCurrentUserID(userID);
-            console.log("Current User ID = ", userID);
           }
         } catch (err) {
           console.error("Error parsing user from AsyncStorage", err);
@@ -156,7 +151,7 @@ export default function ReelsComponent(props) {
       const checkLikes = async () => {
         try {
           const response = await axios.get(
-            `http://192.168.0.108:5000/api/v1/reels/interaction-status/${item.reelId}/${item.userID}`
+            `http://192.168.0.101:5000/api/v1/reels/interaction-status/${item.reelId}/${item.userID}`
           );
           setIsLiked(response.data.data.isLiked);
           setIsCommented(response.data.data.isCommented);
@@ -198,10 +193,9 @@ export default function ReelsComponent(props) {
         setVideoComments([]); // clear existing comments on first page load
         setIsCommentLoaded(false); // optionally show shimmer/loading again
       }
-      console.log("Fetching Comments . . . .  ");
       try {
         const response = await axios.get(
-          `http://192.168.0.108:5000/api/v1/reels/get-all-comments/${item.reelId}?page=${pageNumber}&limit=10`
+          `http://192.168.0.101:5000/api/v1/reels/get-all-comments/${item.reelId}?page=${pageNumber}&limit=10`
         );
 
         // Remove duplicates using commentId if needed
@@ -236,12 +230,9 @@ export default function ReelsComponent(props) {
         userID: userID,
         reelId: reelId,
       });
-      console.log("isLiked = ", isLiked);
-
-      console.log("MyReelID_2 = ", item.reelId);
       try {
         await axios
-          .post("http://192.168.0.108:5000/api/v1/reels/like", data, {
+          .post("http://192.168.0.101:5000/api/v1/reels/like", data, {
             headers: {
               "Content-Type": "application/json",
             },
@@ -249,7 +240,6 @@ export default function ReelsComponent(props) {
           .then(async function (response) {
             console.log(response.data);
           });
-        console.log("Reel liked successfully = ", item.reelId);
       } catch (error) {
         console.log("Cannot like the reel => ", error);
       }
@@ -263,7 +253,7 @@ export default function ReelsComponent(props) {
       });
       try {
         await axios
-          .post("http://192.168.0.108:5000/api/v1/reels/dislike", data, {
+          .post("http://192.168.0.101:5000/api/v1/reels/dislike", data, {
             headers: {
               "Content-Type": "application/json",
             },
@@ -271,20 +261,17 @@ export default function ReelsComponent(props) {
           .then(async function (response) {
             console.log(response.data);
           });
-        console.log("Reel disliked successfully = ", item.reelId);
       } catch (error) {
         console.log("Cannot dislike the reel => ", error);
       }
     };
 
     const deleteReel = async () => {
-      console.log("Reel with ID:", item.reelId);
       try {
         await axios.delete(
-          `http://192.168.0.108:5000/api/v1/reels/delete/${item.reelId}`
+          `http://192.168.0.101:5000/api/v1/reels/delete/${item.reelId}`
         );
         setShowMoreOptionsModal(false);
-        console.log("Reel deleted successfully");
       } catch (error) {
         console.log("Cannot delete the reel => ", error);
       }
@@ -293,10 +280,8 @@ export default function ReelsComponent(props) {
     const ReelManagement = () => {
       if (isSaved) {
         setIsSaved(false);
-        console.log("Removed from saved reels  ");
       } else {
         setIsSaved(true);
-        console.log("Added to saved reels  ");
       }
     };
 
@@ -336,7 +321,7 @@ export default function ReelsComponent(props) {
           commentedAt: rawTimestamp,
         });
         const response = await axios.post(
-          "http://192.168.0.108:5000/api/v1/reels/add-comment",
+          "http://192.168.0.101:5000/api/v1/reels/add-comment",
           data,
           {
             headers: {
@@ -356,9 +341,6 @@ export default function ReelsComponent(props) {
         };
         setVideoComments((prev) => [newComment, ...prev]);
         setNewComment("");
-
-        console.log("Comment response = ", response.data);
-        console.log("Comment id sent = ", response.data.data.commentId);
       } catch (error) {
         console.log("Cannot comment the reel => ", error);
       }
@@ -374,7 +356,7 @@ export default function ReelsComponent(props) {
           commentId: commentId,
         });
         const response = await axios.post(
-          `http://192.168.0.108:5000/api/v1/reels/delete-comment`,
+          `http://192.168.0.101:5000/api/v1/reels/delete-comment`,
           data,
           {
             headers: {
@@ -387,7 +369,6 @@ export default function ReelsComponent(props) {
           setVideoComments((prev) =>
             prev.filter((comment) => comment.commentId !== commentId)
           );
-          console.log("Comment deleted successfully");
         } else {
           console.log("Failed to delete comment:", response.data.msg);
         }
@@ -399,7 +380,6 @@ export default function ReelsComponent(props) {
     };
 
     const handleEndPage = async () => {
-      console.log("End Page reached");
       if (haveMoreComments) {
         await showFetchedComments({ pageNumber: pageNumber + 1 });
         setPageNumber((prev) => prev + 1);
@@ -432,7 +412,7 @@ export default function ReelsComponent(props) {
             <Video
               ref={video}
               source={{
-                uri: `http://192.168.0.108:5000/reels${item.filepath}`,
+                uri: `http://192.168.0.101:5000/reels${item.filepath}`,
               }}
               style={styles.video}
               resizeMode={ResizeMode.COVER}
@@ -505,107 +485,23 @@ export default function ReelsComponent(props) {
 
           <View style={styles.profileContainer}>
             <Image source={item.postProfile} style={styles.profileImage} />
-            <View style={styles.profileTextContainer}>
-              <Text style={styles.username}>{item.description}</Text>
-              {/* <Text style={styles.description}>{item.description}</Text> */}
-            </View>
+            <TouchableOpacity
+              onPress={() => {
+                router.push({
+                  pathname: "../pages/OtherProfile",
+                  params: { userID: item.userID },
+                });
+              }}
+            >
+              <View style={styles.profileTextContainer}>
+                <Text style={styles.username}>{item.description}</Text>
+              </View>
+            </TouchableOpacity>
             <FollowButton />
           </View>
         </View>
 
-        {/*---------------------***************------------------*/}
-        {/*---------------------***************------------------*/}
-
-        {/*For comment Modal*/}
-        {/* <Modal
-          animationType="slide"
-          transparent={true}
-          visible={showCommentModal}
-          onRequestClose={() => setShowCommentModal(false)}
-        >
-          <TouchableWithoutFeedback onPress={() => setShowCommentModal(false)}>
-            <View style={styles.modalOverlay}>
-              <TouchableWithoutFeedback>
-                <View style={styles.commentModal}>
-                  <Text style={styles.commentHeader}>Comments</Text>
-                  {isCommentLoaded || videoComments.length > 0 ?
-                    <View>
-                      <FlatList
-                        data={videoComments}
-                        renderItem={({ item }) => {
-                          return (
-                            <TouchableOpacity onPress={() => { setDeleteCommentID(item.commentId); setShowCommentsOptionsModal(true) }}>
-                              <View style={styles.commentItem}>
-                                <Image source={require("../../assets/images/profile.jpg")} style={styles.profilePic} />
-
-                                <View style={{ flex: 1 }}>
-                                  <View style={styles.commentHeaderRow}>
-
-                                    <Text style={styles.commentUser}>
-                                      {item.userFirstName === commentUserFirstName
-                                        ? "You"
-                                        : item.userFirstName + " " + item.userSurname}
-
-                                    </Text>
-                                    <Text style={styles.commentTime}>{getCommentTime(item.commentedAt)}</Text>
-                                  </View>
-                                  <Text style={styles.commentText}>{item.commentText}</Text>
-                                  <View style={styles.divider} />
-                                </View>
-
-                              </View>
-                            </TouchableOpacity>
-                          )
-                        }}
-                        contentContainerStyle={{ paddingBottom: 40 }}
-                        onEndReached={handleEndPage}
-                        onEndReachedThreshold={0.5}
-                      />
-                      {(isCommentLoaded) ? <ActivityIndicator size="large" color="#000" /> : videoComments.length <= 0 ? <Text style={styles.noCommentText}>No comments yet</Text> : <></>}
-
-                    </View> :
-
-                    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((item) => {
-                      return (
-                        <View key={item} style={styles.commentItem}>
-                          <View style={styles.profilePicShimer}></View>
-                          <View style={{ flex: 1 }}>
-                            <View style={styles.commentHeaderRow}>
-                              <Text style={styles.commentUserShimer}>"username"</Text>
-                              <Text style={styles.commentTime}>"time"</Text>
-                            </View>
-                            <Text style={styles.commentTextShimer}>{"commentt"}</Text>
-                            <View style={styles.divider} />
-                          </View>
-                        </View>)
-                    })
-
-                  }
-                  <View style={styles.commentInputContainer}>
-                    <Image source={require("../../assets/images/profile.jpg")} style={styles.profilePic}></Image>
-                    <TextInput
-                      style={styles.commentInput}
-                      placeholder="Add a comment..."
-                      value={newComment}
-                      onChangeText={setNewComment}
-                      placeholderTextColor="#aaa"
-                    />
-                    <TouchableOpacity
-                      style={styles.commentButton}
-                      onPress={() =>
-                        sendComment(item.commentId, item.reelId, item.userID, newComment, getCommentTime(item.commentedAt))
-                      }
-                    >
-                      <FontAwesomeIcons name="send" size={25} color="#007aff" />
-                    </TouchableOpacity>
-                  </View>
-
-
-                </View>
-              </TouchableWithoutFeedback>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal> */}
+  
         <Modal
           animationType="slide"
           transparent={true}
@@ -637,15 +533,9 @@ export default function ReelsComponent(props) {
                                   setDeleteCommentID(item.commentId);
                                   setShowCommentsOptionsModal(true);
                                   setIsReport(false);
-                                  console.log(
-                                    "Comment User ID matches current user, Can delete the comment"
-                                  );
                                 } else {
                                   setShowCommentsOptionsModal(true);
                                   setIsReport(true);
-                                  console.log(
-                                    "Comment User ID does not match current user, Cannot delete the comment"
-                                  );
                                 }
                               }}
                             >
@@ -963,7 +853,7 @@ export default function ReelsComponent(props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000" },
+  container: { flex: 1, backgroundColor: "#fff" },
   videoContainer: { width, height },
   video: { width: "100%", height: "92%", borderRadius: 12 },
   overlay: {

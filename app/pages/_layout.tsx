@@ -13,10 +13,8 @@ export default function Layout() {
     useCallback(() => {
       const onBackPress = () => {
         const currentPath = pathName; 
-        console.log("PathName = ", currentPath);
 
         if (currentPath === "/pages/home") {
-          console.log("Exit from homePage");
           Alert.alert(
             "Hold on!",
             "Are you sure you want to exit the app?",
@@ -27,13 +25,12 @@ export default function Layout() {
           );
           return true;
         }
-
         return false;
       };
 
       BackHandler.addEventListener("hardwareBackPress", onBackPress);
 
-      // return () => BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+      return () => BackHandler.removeEventListener("hardwareBackPress", onBackPress);
     }, [pathName]) // depend on pathName so it's fresh
   );
 

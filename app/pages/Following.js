@@ -65,7 +65,7 @@ export default function FollowingScreen() {
                                     style={styles.icon}
                                     name="account-group-outline"
                                     size={100}
-                                    color="#fff"
+                                    color="#000"
                                 />
                                 <Text style={styles.followingText}>No active Followings yet</Text>
                             </View>
@@ -99,11 +99,11 @@ const styles = StyleSheet.create({
     containerTop: {
         display: "flex",
         alignItems: "center",
-        backgroundColor: "#000",
+        backgroundColor: "#fff",
     },
     containerMid: {
         padding: 30,
-        backgroundColor: "#000",
+        backgroundColor: "#fff",
     },
     icon: {
         justifyContent: "center",
@@ -119,17 +119,17 @@ const styles = StyleSheet.create({
     },
     followingText: {
         fontSize: 30,
-        color: "#fff",
+        color: "#000",
         justifyContent: "center",
-        backgroundColor: "#000",
+        backgroundColor: "#fff",
         paddingBottom: 10
     },
     text: {
         fontSize: 30,
         fontWeight: "bold",
-        color: "#fff",
+        color: "#000",
         alignItems: "flex-start",
-        backgroundColor: "#000",
+        backgroundColor: "#fff",
     },
     containerFloat: {
         position: "absolute",
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'flex-start',
-        backgroundColor: '#000',
+        backgroundColor: '#fff',
     },
     card: {
         display: 'flex',
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: "50%",  // Adjust width to fit the screen better
         height: 300,
-        padding: 3,
+        padding: 1,
         minHeight: 350,
     },
     // text: {

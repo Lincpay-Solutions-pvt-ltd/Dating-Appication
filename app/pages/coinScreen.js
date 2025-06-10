@@ -42,7 +42,7 @@ const CoinsScreen = () => {
                 {/* Back Button */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => router.back()}>
-                        <Icon name="arrow-back" style={styles.backIcon} size={28} color="white" />
+                        <Icon name="arrow-back" style={styles.backIcon} size={28} color="#000" />
                     </TouchableOpacity>
                     <Image style={styles.coinImage} source={require("../../assets/images/coin.png")} />
                     <Text style={styles.coinsText}>10</Text>
@@ -98,7 +98,7 @@ const CoinsScreen = () => {
 const styles = StyleSheet.create({
     container: {
         padding: 16,
-        backgroundColor: "#000",
+        backgroundColor: "#fff",
     },
     header: {
         flexDirection: "row",
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     coinsText: {
         fontSize: 24,
         fontWeight: "bold",
-        color: "white",
+        color: "black",
     },
     amountPic: {
         left: 40,
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: "bold",
         marginBottom: 8,
-        color: "white",
+        color: "black",
     },
     offerGrid: {
         flexDirection: "row",
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         padding: 16,
         borderWidth: 2,
-        borderColor: "#fff",
+        borderColor: "#000",
         borderRadius: 8,
     },
     moreOfferContainer: {
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     },
     moreOfferCard: {
         borderWidth: 2,
-        borderColor: "#fff",
+        borderColor: "#000",
         borderRadius: 8,
         padding: 16,
     },
@@ -156,24 +156,24 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "bold",
         marginBottom: 8,
-        color: "white",
+        color: "black",
     },
     coinText: {
         fontSize: 16,
         fontWeight: "bold",
         marginBottom: 8,
-        color: "white",
+        color: "black",
     },
     price: {
         fontSize: 16,
         left: 40,
         fontWeight: "bold",
-        color: "white",
+        color: "#0fc709",
     },
     oldPrice: {
         fontSize: 16,
         left: 40,
-        color: "gray",
+        color: "red",
         textDecorationLine: "line-through",
     },
 });

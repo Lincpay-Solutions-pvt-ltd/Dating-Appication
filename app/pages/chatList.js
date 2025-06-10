@@ -5,7 +5,7 @@ import Footer from '../components/footer';
 import { useRouter, usePathname, Link } from "expo-router";
 
 
-const ChatList = () => {
+export default  ChatList = () => {
     const router = useRouter();
 
     const messages = [
@@ -13,36 +13,8 @@ const ChatList = () => {
             id: "1",
             name: "Jan",
             message: "Hi there , lets chat ! ! ! !",
-            time: "11:45",
-            avatar: "https://via.placeholder.com/50", // Replace with actual image URL
-        },
-        {
-            id: "2",
-            name: "Feb",
-            message: "Hi there , lets chat ! ! ! !",
-            time: "11:50",
-            avatar: "https://via.placeholder.com/50", // Replace with actual image URL
-        },
-        {
-            id: "3",
-            name: "Mar",
-            message: "Hi there , lets chat ! ! ! !",
-            time: "11:55",
-            avatar: "https://via.placeholder.com/50", // Replace with actual image URL
-        },
-        {
-            id: "4",
-            name: "Apr",
-            message: "Hi there , lets chat ! ! ! !",
-            time: "12:00",
-            avatar: "https://via.placeholder.com/50", // Replace with actual image URL
-        },
-        {
-            id: "5",
-            name: "May",
-            message: "Hi there , lets chat ! ! ! !",
-            time: "12:05",
-            avatar: "https://via.placeholder.com/50", // Replace with actual image URL
+            //time: "11:45",
+            profilePic: "https://via.placeholder.com/50", // Replace with actual image URL
         },
     ];
 
@@ -92,7 +64,7 @@ const ChatList = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#000",
+        backgroundColor: "#fff",
         padding: 10,
     },
     topBar: {
@@ -113,7 +85,7 @@ const styles = StyleSheet.create({
     banner: {
         backgroundColor: "orange",
         padding: 10,
-        borderRadius: 10,
+        borderRadius: 20,
         alignItems: "center",
         marginVertical: 10,
     },
@@ -127,7 +99,7 @@ const styles = StyleSheet.create({
     messageItem: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#222",
+        backgroundColor: "#f3f3f3",
         padding: 10,
         borderRadius: 10,
         marginVertical: 5,
@@ -139,18 +111,16 @@ const styles = StyleSheet.create({
     },
     messageContent: {
         flex: 1,
-        marginLeft: 10,
+        marginLeft: 20,
     },
     messageName: {
         fontWeight: "bold",
-        color: "#fff",
+        color: "#000",
     },
     messageText: {
-        color: "#bbb",
+        color: "#000",
     },
     messageTime: {
-        color: "#888",
+        color: "#000",
     },
 });
-
-export default ChatList;

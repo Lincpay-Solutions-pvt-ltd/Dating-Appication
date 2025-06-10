@@ -1,25 +1,23 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, usePathname, Link,useFocusEffect } from "expo-router";
 import React from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, Image, Button } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, } from "react-native";
 import MaterialIcon from "react-native-vector-icons/MaterialIcons";
 import IoniconsIcons from "react-native-vector-icons/Ionicons";
 import OcticonsIcons from "react-native-vector-icons/Octicons";
 import EntypoIcons from "react-native-vector-icons/Entypo";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { useEffect } from "react";
+import { useEffect,useMemo } from "react";
 
-
-import { BackHandler } from 'react-native';
 import { useCallback,useState } from "react";
 export default function Footer() {
   const router = useRouter();
   const pathname = usePathname();
-  const [recentRoute, setRecentRoute] = useState(pathname);
   
 
   useEffect(() => {
     const pageName = pathname.split('/').pop();
+    
   }, [pathname]);
   
 
@@ -60,7 +58,7 @@ export default function Footer() {
       }
 
       <TouchableOpacity onPress={() => {
-        router.replace("../pages/chatList");
+        router.push("../pages/chatList");
         }}>
         <MaterialCommunityIcons style={styles.FooterIcons} name={pathname === "/pages/chatList" ? "chat" : "chat-outline"} size={28} color="#fff" />
         <Text style={ styles.footerText }>Chats</Text>

@@ -12,11 +12,8 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import EntypoIcons from "react-native-vector-icons/Entypo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { login, logout } from "../Redux/authSlice";
-import { BackHandler, Alert } from "react-native";
-import { usePathname, Link, useFocusEffect } from "expo-router";
-import Layout from "../pages/_layout";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -33,7 +30,6 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
       duration: 300,
       useNativeDriver: true,
     }).start();
-    console.log("menuOpen");
     setMenuOpen(!menuOpen);
   };
 
@@ -54,7 +50,6 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
       setUser(JSON.parse(User));
     };
     getUser();
-    console.log(user);
   }, []);
   return (
     <>
@@ -70,10 +65,17 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
             onPress={toggleMenu}
             style={stylesHeader.profileContainer}
           >
-            <Image
-              source={require("../../assets/images/profile.jpg")}
-              style={stylesHeader.profileImage}
-            />
+            {user.profilePic ? (
+              <Image
+                source={{ uri: `http://192.168.0.101:5000${user.profilePic}` }}
+                style={stylesHeader.profileImageLarge}
+              />
+            ) : (
+              <Image
+                source={require("../../assets/images/profile.jpg")}
+                style={stylesHeader.profileImageLarge}
+              />
+            )}
           </TouchableOpacity>
 
           {/* Coins and Add Button */}
@@ -94,7 +96,7 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
           style={stylesHeader.notificationIcon}
           onPress={toggleNotification}
         >
-          <Ionicons name="notifications-outline" size={30} color="white" />
+          <Ionicons name="notifications-outline" size={30} color="black" />
         </TouchableOpacity>
       </View>
 
@@ -107,7 +109,7 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
           style={stylesHeader.backIcon}
           onPress={() => router.replace("../pages/home")}
         >
-          <Ionicons name="arrow-back" size={24} color="white" />
+          <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
         {/* Profile Section */}
         <View style={stylesHeader.profileSection}>
@@ -120,13 +122,22 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
                 router.push("../pages/profile");
               }}
             >
-              <Image
-                source={require("../../assets/images/profile.jpg")}
-                style={stylesHeader.profileImageLarge}
-              />
+              {user.profilePic ? (
+                <Image
+                  source={{
+                    uri: `http://192.168.0.101:5000${user.profilePic}`,
+                  }}
+                  style={stylesHeader.profileImageLarge}
+                />
+              ) : (
+                <Image
+                  source={require("../../assets/images/profile.jpg")}
+                  style={stylesHeader.profileImageLarge}
+                />
+              )}
               <View style={stylesHeader.profileInfoContainer}>
                 <Text style={stylesHeader.profileName}>
-                  {user.userFirstName}
+                  {user.userFirstName + " "}
                 </Text>
                 {/* Stats Row Below Profile Name */}
                 <View style={stylesHeader.statsRow}>
@@ -142,7 +153,7 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
 
             {/* Broadcast Button (Shifted to Right) */}
             <TouchableOpacity style={stylesHeader.broadcastButton}>
-              <Ionicons name="videocam" size={24} color="white" />
+              <Ionicons name="videocam" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
@@ -152,7 +163,7 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
 
         {/* Menu Items */}
         <TouchableOpacity style={stylesHeader.menuItem}>
-          <Ionicons name="phone-portrait-outline" size={24} color="white" />
+          <Ionicons name="phone-portrait-outline" size={24} color="#000" />
           <View>
             <Text style={stylesHeader.menuText}>Get Tango App</Text>
             <Text style={stylesHeader.subText}>
@@ -168,7 +179,7 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
             router.push("../pages/(sidebar)/agency");
           }}
         >
-          <Ionicons name="briefcase-outline" size={24} color="white" />
+          <Ionicons name="briefcase-outline" size={24} color="#000" />
           <Text style={stylesHeader.menuText}>Agency Program</Text>
         </TouchableOpacity>
 
@@ -179,17 +190,17 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
             router.push("../pages/fanPage");
           }}
         >
-          <Ionicons name="heart-outline" size={24} color="white" />
+          <Ionicons name="heart-outline" size={24} color="#000" />
           <Text style={stylesHeader.menuText}>My Fans</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={stylesHeader.menuItem}>
-          <Ionicons name="card-outline" size={24} color="white" />
+          <Ionicons name="card-outline" size={24} color="#000" />
           <Text style={stylesHeader.menuText}>Tango Cards Auction</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={stylesHeader.menuItem}>
-          <Ionicons name="game-controller-outline" size={24} color="white" />
+          <Ionicons name="game-controller-outline" size={24} color="#000" />
           <Text style={stylesHeader.menuText}>Social Games</Text>
         </TouchableOpacity>
 
@@ -221,7 +232,7 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
             });
           }}
         >
-          <Ionicons name="log-out-outline" size={24} color="white" />
+          <Ionicons name="log-out-outline" size={24} color="#000" />
           <Text style={stylesHeader.menuText}>Logout</Text>
         </TouchableOpacity>
       </Animated.View>
@@ -241,13 +252,20 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
           style={stylesHeader.backIcon}
           onPress={toggleNotification}
         >
-          <Ionicons name="arrow-back" size={24} color="white" />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={stylesHeader.notificationText}>Notifications</Text>
-        <Image
-          source={require("../../assets/images/profile.jpg")}
-          style={stylesHeader.profileIcon}
-        />
+        {user.profilePic ? (
+          <Image
+            source={{ uri: `http://192.168.0.101:5000${user.profilePic}` }}
+            style={stylesHeader.profileImageLarge}
+          />
+        ) : (
+          <Image
+            source={require("../../assets/images/profile.jpg")}
+            style={stylesHeader.profileImageLarge}
+          />
+        )}
         <Text style={stylesHeader.followText}>+1 Followers</Text>
         <EntypoIcons
           name="chevron-right"
@@ -266,9 +284,7 @@ const stylesHeader = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 15,
     paddingVertical: 10,
-    backgroundColor: "#545454",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: "#f3f3f3",
   },
   headerTransparent: {
     flexDirection: "row",
@@ -276,7 +292,7 @@ const stylesHeader = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 15,
     paddingVertical: 10,
-    backgroundColor: "#4f4d4d",
+    backgroundColor: "black",
   },
   leftSection: {
     flexDirection: "row",
@@ -285,7 +301,7 @@ const stylesHeader = StyleSheet.create({
   coinContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#222",
+    backgroundColor: "#999",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -304,6 +320,7 @@ const stylesHeader = StyleSheet.create({
   },
   notificationIcon: {
     padding: 5,
+    
   },
   profileContainer: {
     width: 50,
@@ -322,7 +339,7 @@ const stylesHeader = StyleSheet.create({
     left: 0,
     width: "100%", // Full width
     height: "100%",
-    backgroundColor: "#111",
+    backgroundColor: "#f3f3f3",
     paddingTop: 50,
     paddingHorizontal: 20,
     zIndex: 2,
@@ -348,7 +365,7 @@ const stylesHeader = StyleSheet.create({
     borderRadius: 25,
   },
   profileName: {
-    color: "white",
+    color: "black",
     fontSize: 18,
     marginLeft: 10,
   },
@@ -376,7 +393,7 @@ const stylesHeader = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: "#444",
+    backgroundColor: "#111",
     marginVertical: 15,
   },
   menuItem: {
@@ -385,7 +402,7 @@ const stylesHeader = StyleSheet.create({
     paddingVertical: 15,
   },
   menuText: {
-    color: "white",
+    color: "black",
     fontSize: 18,
     marginLeft: 10,
   },
@@ -395,16 +412,10 @@ const stylesHeader = StyleSheet.create({
     marginLeft: 10,
   },
   notificationText: {
-    color: "white",
+    color: "#fff",
     fontSize: 26,
     marginLeft: 40,
     bottom: 20,
-  },
-  folllowerText: {
-    color: "white",
-    fontSize: 26,
-    marginLeft: 40,
-    bottom: 22,
   },
   profileIcon: {
     width: 50,
@@ -418,11 +429,11 @@ const stylesHeader = StyleSheet.create({
     left: 0,
     width: "100%",
     height: "100%",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(207, 42, 42, 0.5)",
     zIndex: 1,
   },
   followText: {
-    color: "white",
+    color: "#fff",
     fontSize: 30,
     paddingLeft: 70,
     bottom: 40,
