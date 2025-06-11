@@ -1,104 +1,140 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, ActivityIndicator } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
-import { useState, useEffect } from "react";
-
-const offers = [
-    { id: "1", coins: 100, price: "₹51.99", oldPrice: "₹103.98" },
-    { id: "2", coins: 250, price: "₹104.99", oldPrice: "₹262.47" },
-    { id: "3", coins: 450, price: "₹214.99", oldPrice: "₹483.73" },
-    { id: "4", coins: 1125, price: "₹529.99", oldPrice: "₹1,192.48" },
-    { id: "5", coins: 2500, price: "₹1,059.99", oldPrice: "₹2,649.98" },
-    { id: "6", coins: 3000, price: "₹1,589.99", oldPrice: "₹3,179.98" },
-];
+import axios from "axios";
 
 const CoinsScreen = () => {
-    const router = useRouter();
-    const [timeLeft, setTimeLeft] = useState(19 * 60 + 12); // 19 hours and 12 minutes
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setTimeLeft((prevTime) => {
-                if (prevTime > 0) {
-                    return prevTime - 1;
-                } else {
-                    clearInterval(interval);
-                    return 0;
-                }
-            });
-        }, 1000);
+  const router = useRouter();
+  const [offers, setOffers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [userCoins, setUserCoins] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(19 * 60 + 12);
+  const [error, setError] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
 
-        return () => clearInterval(interval);
-    }, []);
-
-    const formatTime = (seconds) => {
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
-        return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const userData = await AsyncStorage.getItem("User");
+        const parsedUser = JSON.parse(userData);
+        setCurrentUser(parsedUser);
+        await Promise.all([
+          fetchOffers(),
+          fetchUserCoins(parsedUser?.userID)
+        ]);
+      } catch (error) {
+        console.error("Error in fetchData:", error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
     };
-    return (
-        <ScrollView>
-            <View style={styles.container}>
-                {/* Back Button */}
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()}>
-                        <Icon name="arrow-back" style={styles.backIcon} size={28} color="#000" />
-                    </TouchableOpacity>
-                    <Image style={styles.coinImage} source={require("../../assets/images/coin.png")} />
-                    <Text style={styles.coinsText}>10</Text>
-                </View>
+    fetchData();
+  }, []);
 
-                {/* Best Offers Section */}
-                <View>
-                    <Text style={styles.sectionTitle}>Best Offers</Text>
-                    <View style={styles.offerGrid}>
-                        {offers.map((item) => (
-                            <TouchableOpacity key={item.id} style={styles.offerCard}>
-                                <Text style={styles.coinText}>
-                                    <Image style={styles.coinImage} source={require("../../assets/images/coin.png")} /> {item.coins}
-                                </Text>
-                                <Image style={styles.amountPic} source={require("../../assets/images/coins_4.png")} />
-                                <Text style={styles.price}>{item.price}</Text>
-                                <Text style={styles.oldPrice}>{item.oldPrice}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
+  const fetchOffers = async () => {
+    try {
+      const response = await axios.get("http://192.168.0.113:5000/api/v1/coins/all-offers");
+      if (response.data?.status && response.data?.data) {
+        setOffers(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching offers:", error);
+      throw error;
+    }
+  };
 
-                {/* More Offers Section */}
-                <View style={styles.moreOfferContainer}>
-                    <Text style={styles.sectionTitle}>More Offers</Text>
-                    <View style={styles.moreOfferCard}>
-                        <Text style={styles.moreOfferText}>+100% More ⏳ {formatTime(timeLeft)}</Text>
-                        <Text style={styles.coinText}><Image style={styles.coinImage} source={require("../../assets/images/coin.png")} /> 100</Text>
-                        <Text style={styles.price}>₹51.99</Text>
-                    </View>
-                </View>
+  const fetchUserCoins = async (userID) => {
+    try {
+      const response = await axios.get(
+        `http://192.168.0.113:5000/api/v1/coins/user-total-coin/${userID}`
+      );
+      if (response.data?.status) {
+        const coins = response.data.data || [];
+        const totalCount = coins.length > 0 ? coins[coins.length - 1].totalCount : 0;
+        setUserCoins(totalCount);
+      }
+    } catch (error) {
+      console.error("Error fetching user coins:", error);
+      setError(error.message);
+      throw error;
+    }
+  };
 
-                {/* Best Offers Section (Duplicate) */}
-                <View>
-                    <Text style={styles.sectionTitle}>Best Offers</Text>
-                    <View style={styles.offerGrid}>
-                        {offers.map((item) => (
-                            <TouchableOpacity key={item.id} style={styles.offerCard}>
-                                <Text style={styles.coinText}>
-                                    <Image style={styles.coinImage} source={require("../../assets/images/coin.png")} /> {item.coins}
-                                </Text>
-                                <Text style={styles.price}>{item.price}</Text>
-                                <Text style={styles.oldPrice}>{item.oldPrice}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+  };
+
+  return (
+    <ScrollView>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Icon name="arrow-back" style={styles.backIcon} size={28} color="white" />
+          </TouchableOpacity>
+          <Image style={styles.coinImage} source={require("../../assets/images/coin.png")} />
+             <View style={styles.container}>
+            <View style={styles.coinsContainer}>
+              <Text style={styles.coinsText}>{userCoins}</Text>
             </View>
-        </ScrollView>
-    );
+          </View>
+        </View>
+
+        {loading ? (
+          <ActivityIndicator size="large" color="#fff" />
+        ) : (
+          <>
+            <Text style={styles.sectionTitle}>Best Offers</Text>
+            <View style={styles.offerGrid}>
+              {offers.map((item, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.offerCard}
+                  onPress={() =>
+                    router.push({
+                      pathname: "./purchaseCoin",
+                      params: {
+                        coinAmount: item.coinAmount,
+                        offerPrice: item.offerPrice,
+                        actualPrice: item.actualPrice,
+                        offerId: item.offerId,
+                      },
+                    })
+                  }
+                >
+                  <Text style={styles.coinText}>
+                    <Image style={styles.coinImage} source={require("../../assets/images/coin.png")} />{" "}
+                    {item.coinAmount}
+                  </Text>
+                  <Image style={styles.amountPic} source={require("../../assets/images/coins_4.png")} />
+                  <Text style={styles.price}>{item.offerPrice}</Text>
+                  <Text style={styles.oldPrice}>{item.actualPrice}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        )}
+      </View>
+    </ScrollView>
+  );
 };
 
 const styles = StyleSheet.create({
     container: {
         padding: 16,
-        backgroundColor: "#fff",
+        backgroundColor: "#000",
     },
     header: {
         flexDirection: "row",
@@ -116,7 +152,7 @@ const styles = StyleSheet.create({
     coinsText: {
         fontSize: 24,
         fontWeight: "bold",
-        color: "black",
+        color: "white",
     },
     amountPic: {
         left: 40,
@@ -128,7 +164,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: "bold",
         marginBottom: 8,
-        color: "black",
+        color: "white",
     },
     offerGrid: {
         flexDirection: "row",
@@ -140,7 +176,7 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         padding: 16,
         borderWidth: 2,
-        borderColor: "#000",
+        borderColor: "#fff",
         borderRadius: 8,
     },
     moreOfferContainer: {
@@ -148,7 +184,7 @@ const styles = StyleSheet.create({
     },
     moreOfferCard: {
         borderWidth: 2,
-        borderColor: "#000",
+        borderColor: "#fff",
         borderRadius: 8,
         padding: 16,
     },
@@ -156,19 +192,19 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "bold",
         marginBottom: 8,
-        color: "black",
+        color: "white",
     },
     coinText: {
         fontSize: 16,
         fontWeight: "bold",
         marginBottom: 8,
-        color: "black",
+        color: "white",
     },
     price: {
         fontSize: 16,
         left: 40,
         fontWeight: "bold",
-        color: "#0fc709",
+        color: "white",
     },
     oldPrice: {
         fontSize: 16,
