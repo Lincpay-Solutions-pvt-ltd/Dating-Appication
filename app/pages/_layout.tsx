@@ -2,24 +2,23 @@ import { Stack } from 'expo-router/stack';
 import { Provider } from "react-redux";
 import store from "../Redux/store";
 import { BackHandler, Alert } from "react-native";
-import React, { useEffect, useState, useCallback} from "react";
-import { usePathname } from 'expo-router';
+import React, { useEffect } from "react";
+import { useNavigationContainerRef, usePathname } from 'expo-router';
+import { ToastProvider } from 'react-native-toast-notifications';
 import { useFocusEffect } from '@react-navigation/native';
 
 export default function Layout() {
   const pathName = usePathname();
 
   useFocusEffect(
-    useCallback(() => {
+    React.useCallback(() => {
       const onBackPress = () => {
-        const currentPath = pathName; 
-
-        if (currentPath === "/pages/home") {
+        if (pathName === "/pages/home") {
           Alert.alert(
             "Hold on!",
             "Are you sure you want to exit the app?",
             [
-              { text: "Cancel", style: "cancel", onPress: () => {} },
+              { text: "Cancel", style: "cancel" },
               { text: "YES", onPress: () => BackHandler.exitApp() }
             ]
           );
@@ -28,16 +27,24 @@ export default function Layout() {
         return false;
       };
 
-      BackHandler.addEventListener("hardwareBackPress", onBackPress);
-
-      return () => BackHandler.removeEventListener("hardwareBackPress", onBackPress);
-    }, [pathName]) // depend on pathName so it's fresh
+      const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+      return () => subscription.remove();
+    }, [pathName])
   );
 
   return (
+    <ToastProvider
+      placement="bottom"
+      duration={3000}
+      animationType="slide-in"
+      successColor="#4BB543"
+      dangerColor="#FF3B30"
+      warningColor="#FFA500"
+      textStyle={{ fontSize: 16 }}
+    >
     <Provider store={store}>
       <Stack screenOptions={{ headerShown: false }} />
     </Provider>
+      </ToastProvider>
   );
 }
-
