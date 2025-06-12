@@ -39,18 +39,18 @@ const ChatFooter = () => {
   const router = useRouter();
 
   const emojiData = [
-    { id: "1", icon: "🧑‍🎤", coins: 1099 },
-    { id: "2", icon: "🦄", coins: 1499 },
-    { id: "3", icon: "⭐", coins: 3 },
-    { id: "4", icon: "💖", coins: 8 },
-    { id: "5", icon: "🐱", coins: 4 },
-    { id: "6", icon: "🍎", coins: 5 },
-    { id: "7", icon: "🐯", coins: 9 },
-    { id: "8", icon: "🎯", coins: 11 },
-    { id: "9", icon: "🧑‍🎤", coins: 1099 },
-    { id: "10", icon: "🦄", coins: 1499 },
-    { id: "11", icon: "⭐", coins: 3 },
-    { id: "12", icon: "💖", coins: 8 },
+    // { id: "1", icon: "🧑‍🎤", coins: 1099 },
+    // { id: "2", icon: "🦄", coins: 1499 },
+    // { id: "3", icon: "⭐", coins: 3 },
+    // { id: "4", icon: "💖", coins: 8 },
+    // { id: "5", icon: "🐱", coins: 4 },
+    // { id: "6", icon: "🍎", coins: 5 },
+    // { id: "7", icon: "🐯", coins: 9 },
+    // { id: "8", icon: "🎯", coins: 11 },
+    // { id: "9", icon: "🧑‍🎤", coins: 1099 },
+    // { id: "10", icon: "🦄", coins: 1499 },
+    // { id: "11", icon: "⭐", coins: 3 },
+    // { id: "12", icon: "💖", coins: 8 },
   ];
 
   const giftsData = [
@@ -350,7 +350,7 @@ const ChatFooter = () => {
                 style={styles.sendButton}
                 onPress={handleSendMessage}
               >
-                <Ionicons name="send" size={24} color="#fff" />
+                <Ionicons name="send" size={24} color="#000" />
               </TouchableOpacity>
             )}
           </View>
@@ -385,13 +385,13 @@ const ChatFooter = () => {
                 </View>
 
                 {/* Gifts Grid */}
-                <FlatList
+                {/* <FlatList
                   data={giftsData}
                   keyExtractor={(item) => item.id}
                   renderItem={renderGiftItem}
                   numColumns={4}
                   contentContainerStyle={styles.giftsGrid}
-                />
+                /> */}
 
                 {/* Gift Shop Button */}
                 <View style={styles.giftShopButtonContainer}>
@@ -499,11 +499,11 @@ const styles = StyleSheet.create({
   },
   messageContainer: {
     backgroundColor: "#f3f3f3",
-    padding: 10,
+    padding: 15,
     borderRadius: 10,
     marginBottom: 10,
     alignSelf: "flex-end", // Aligns the whole container to the right
-    maxWidth: "70%", // Optional: adjust width as needed
+    maxWidth: "100%", // Optional: adjust width as needed
   },
   messageText: {
     color: "#000",
