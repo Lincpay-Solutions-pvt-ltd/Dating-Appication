@@ -109,7 +109,7 @@ export default function ChatScreen() {
       {showCallOptions && (
         <View style={styles.optionsContainer}>
           <TouchableOpacity style={styles.optionItem}>
-            <FontAwesome name="video-camera" size={24} color="#fff" style={styles.optionIcon} />
+            <FontAwesome name="video-camera" size={24} color="#000" style={styles.optionIcon} />
             <View style={styles.callOptionTextContainer}>
               <Text style={styles.optionText}>Premium Match Call</Text>
               <View style={styles.coinContainer}>
@@ -120,17 +120,17 @@ export default function ChatScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.optionItem}>
-            <Ionicons name="videocam-outline" size={24} color="#fff" style={styles.optionIcon} />
+            <Ionicons name="videocam-outline" size={24} color="#000" style={styles.optionIcon} />
             <Text style={styles.optionText}>Video Call</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.optionItem}>
-            <MaterialIcons name="live-tv" size={24} color="#fff" style={styles.optionIcon} />
+            <MaterialIcons name="live-tv" size={24} color="#000" style={styles.optionIcon} />
             <Text style={styles.optionText}>1:1 Stream</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.optionItem}>
-            <Ionicons name="call-outline" size={24} color="#fff" style={styles.optionIcon} />
+            <Ionicons name="call-outline" size={24} color="#000" style={styles.optionIcon} />
             <Text style={styles.optionText}>Audio Call</Text>
           </TouchableOpacity>
         </View>
@@ -145,7 +145,7 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFE4C4",
+    backgroundColor: "#fff",
     width: '100%'
   },
   backdrop: {
@@ -158,6 +158,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderBottomWidth: 0.5,
     borderBottomColor: "#f3f3f3",
+    backgroundColor:"#fff"
   },
   backButton: {
     padding: 5,
@@ -202,7 +203,7 @@ const styles = StyleSheet.create({
   },
   chatArea: {
     flex: 1,
-    padding: 10,
+    padding: 20,
   },
   optionsContainer: {
     position: "absolute",
@@ -250,7 +251,7 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
   coinText: {
-    color: "#fff",
+    color: "#000",
     fontSize: 16,
   }
 });
