@@ -67,7 +67,7 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
           >
             {user.profilePic ? (
               <Image
-                source={{ uri: `http://192.168.0.101:5000${user.profilePic}` }}
+                source={{ uri: `https://ca1e-103-198-98-77.ngrok-free.app${user.profilePic}` }}
                 style={stylesHeader.profileImageLarge}
               />
             ) : (
@@ -125,7 +125,7 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
               {user.profilePic ? (
                 <Image
                   source={{
-                    uri: `http://192.168.0.101:5000${user.profilePic}`,
+                    uri: `https://ca1e-103-198-98-77.ngrok-free.app${user.profilePic}`,
                   }}
                   style={stylesHeader.profileImageLarge}
                 />
@@ -257,7 +257,7 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
         <Text style={stylesHeader.notificationText}>Notifications</Text>
         {user.profilePic ? (
           <Image
-            source={{ uri: `http://192.168.0.101:5000${user.profilePic}` }}
+            source={{ uri: `https://ca1e-103-198-98-77.ngrok-free.app${user.profilePic}` }}
             style={stylesHeader.profileImageLarge}
           />
         ) : (

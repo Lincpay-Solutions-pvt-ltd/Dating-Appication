@@ -74,7 +74,7 @@ export default function ReelsComponent(props) {
   const fetchReels = async ({ pageNumber }) => {
     try {
       const response = await axios.get(
-        `http://192.168.0.101:5000/api/v1/reels/get-latest?page=${pageNumber}&limit=10`
+        `https://ca1e-103-198-98-77.ngrok-free.app/api/v1/reels/get-latest?page=${pageNumber}&limit=10`
       );
       const fetchedReels = response.data.data;
       const lastJson = fetchedReels[fetchedReels.length - 1];
@@ -151,7 +151,7 @@ export default function ReelsComponent(props) {
       const checkLikes = async () => {
         try {
           const response = await axios.get(
-            `http://192.168.0.101:5000/api/v1/reels/interaction-status/${item.reelId}/${item.userID}`
+            `https://ca1e-103-198-98-77.ngrok-free.app/api/v1/reels/interaction-status/${item.reelId}/${item.userID}`
           );
           setIsLiked(response.data.data.isLiked);
           setIsCommented(response.data.data.isCommented);
@@ -195,7 +195,7 @@ export default function ReelsComponent(props) {
       }
       try {
         const response = await axios.get(
-          `http://192.168.0.101:5000/api/v1/reels/get-all-comments/${item.reelId}?page=${pageNumber}&limit=10`
+          `https://ca1e-103-198-98-77.ngrok-free.app/api/v1/reels/get-all-comments/${item.reelId}?page=${pageNumber}&limit=10`
         );
 
         // Remove duplicates using commentId if needed
@@ -232,7 +232,7 @@ export default function ReelsComponent(props) {
       });
       try {
         await axios
-          .post("http://192.168.0.101:5000/api/v1/reels/like", data, {
+          .post("https://ca1e-103-198-98-77.ngrok-free.app/api/v1/reels/like", data, {
             headers: {
               "Content-Type": "application/json",
             },
@@ -253,7 +253,7 @@ export default function ReelsComponent(props) {
       });
       try {
         await axios
-          .post("http://192.168.0.101:5000/api/v1/reels/dislike", data, {
+          .post("https://ca1e-103-198-98-77.ngrok-free.app/api/v1/reels/dislike", data, {
             headers: {
               "Content-Type": "application/json",
             },
@@ -269,7 +269,7 @@ export default function ReelsComponent(props) {
     const deleteReel = async () => {
       try {
         await axios.delete(
-          `http://192.168.0.101:5000/api/v1/reels/delete/${item.reelId}`
+          `https://ca1e-103-198-98-77.ngrok-free.app/api/v1/reels/delete/${item.reelId}`
         );
         setShowMoreOptionsModal(false);
       } catch (error) {
@@ -321,7 +321,7 @@ export default function ReelsComponent(props) {
           commentedAt: rawTimestamp,
         });
         const response = await axios.post(
-          "http://192.168.0.101:5000/api/v1/reels/add-comment",
+          "https://ca1e-103-198-98-77.ngrok-free.app/api/v1/reels/add-comment",
           data,
           {
             headers: {
@@ -356,7 +356,7 @@ export default function ReelsComponent(props) {
           commentId: commentId,
         });
         const response = await axios.post(
-          `http://192.168.0.101:5000/api/v1/reels/delete-comment`,
+          `https://ca1e-103-198-98-77.ngrok-free.app/api/v1/reels/delete-comment`,
           data,
           {
             headers: {
@@ -412,7 +412,7 @@ export default function ReelsComponent(props) {
             <Video
               ref={video}
               source={{
-                uri: `http://192.168.0.101:5000/reels${item.filepath}`,
+                uri: `https://ca1e-103-198-98-77.ngrok-free.app/reels${item.filepath}`,
               }}
               style={styles.video}
               resizeMode={ResizeMode.COVER}

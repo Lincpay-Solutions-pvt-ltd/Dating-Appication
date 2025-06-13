@@ -10,7 +10,7 @@ export default UploadReels = async (userID, video, title, description) => {
     });
 
     const response = await axios
-      .post("http://192.168.0.101:5000/api/v1/uploads/upload", formData, {
+      .post("https://ca1e-103-198-98-77.ngrok-free.app/api/v1/uploads/upload", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -32,7 +32,7 @@ export default UploadReels = async (userID, video, title, description) => {
         .request({
           method: "POST",
           maxBodyLength: Infinity,
-          url: "http://192.168.0.101:5000/api/v1/reels",
+          url: "https://ca1e-103-198-98-77.ngrok-free.app/api/v1/reels",
           headers: {
             "Content-Type": "application/json",
           },

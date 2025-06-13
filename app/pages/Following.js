@@ -36,7 +36,7 @@ export default function FollowingScreen() {
 
     try {
       const response = await axios.get(
-        `http://192.168.0.103:5000/api/v1/follow/getFollowingList/${user.userID}`
+        `https://ca1e-103-198-98-77.ngrok-free.app/api/v1/follow/getFollowingList/${user.userID}`
       );
       if (response.data.status === true) {
         setFollowingData(response.data.data);
@@ -70,7 +70,7 @@ export default function FollowingScreen() {
                 <TouchableOpacity onPress={() => OpenUserProfile(item)}>
                   <Image
                     source={{
-                      uri: `http://192.168.0.103:5000${item.profilePic}`,
+                      uri: `https://ca1e-103-198-98-77.ngrok-free.app${item.profilePic}`,
                     }}
                     style={styles.card}
                   />
