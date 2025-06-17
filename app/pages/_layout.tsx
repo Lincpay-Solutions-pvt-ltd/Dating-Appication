@@ -6,7 +6,7 @@ import React, { useEffect } from "react";
 import { useNavigationContainerRef, usePathname } from 'expo-router';
 import { ToastProvider } from 'react-native-toast-notifications';
 import { useFocusEffect } from '@react-navigation/native';
-
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 export default function Layout() {
   const pathName = usePathname();
 
@@ -33,18 +33,20 @@ export default function Layout() {
   );
 
   return (
-    <ToastProvider
-      placement="bottom"
-      duration={3000}
-      animationType="slide-in"
-      successColor="#4BB543"
-      dangerColor="#FF3B30"
-      warningColor="#FFA500"
-      textStyle={{ fontSize: 16 }}
-    >
-    <Provider store={store}>
-      <Stack screenOptions={{ headerShown: false }} />
-    </Provider>
+    <SafeAreaProvider>
+      <ToastProvider
+        placement="bottom"
+        duration={3000}
+        animationType="slide-in"
+        successColor="#4BB543"
+        dangerColor="#FF3B30"
+        warningColor="#FFA500"
+        textStyle={{ fontSize: 16 }}
+      >
+        <Provider store={store}>
+          <Stack screenOptions={{ headerShown: false }} />
+        </Provider>
       </ToastProvider>
+    </SafeAreaProvider>
   );
 }
