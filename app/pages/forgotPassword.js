@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -13,14 +13,29 @@ import axios from 'axios';
 import Toast from 'react-native-toast-notifications';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'http://192.168.0.113:5000/api/v1';
+const API_BASE_URL = `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1`;
 
 const ForgotPasswordScreen = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const toastRef = React.useRef();
+  const [coolDown, setCoolDown] = useState(0);
+  const toastRef = useRef();
   const router = useRouter();
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
+  };
+
+  const getCooldownDuration = (attempts) => {
+    if (attempts <= 3) return 0;
+    if (attempts === 4) return 5 * 60;
+    if (attempts === 5) return 10 * 60;
+    return 30 * 60;
+  };
 
   const handleSendOTP = async () => {
     if (!email.trim()) {
@@ -28,14 +43,38 @@ const ForgotPasswordScreen = () => {
       return;
     }
 
-    setLoading(true);
     try {
+      const now = Date.now();
+      const lastAttempt = parseInt(await AsyncStorage.getItem('lastAttempt') || '0');
+      const attemptCount = parseInt(await AsyncStorage.getItem('attemptCount') || '0');
+      const timePassed = Math.floor((now - lastAttempt) / 1000);
+
+      // Reset attempt count after 24h
+      if (timePassed > 24 * 60 * 60) {
+        await AsyncStorage.setItem('attemptCount', '0');
+      }
+
+      const cooldown = getCooldownDuration(attemptCount);
+
+      if (timePassed < cooldown) {
+        const remaining = cooldown - timePassed;
+        setCoolDown(remaining);
+        toastRef.current?.show(`Please wait ${Math.ceil(remaining / 60)} min(s) to retry`, { type: 'danger' });
+        return;
+      }
+
+      setLoading(true);
+
       const response = await axios.post(`${API_BASE_URL}/users/forgot-password`, {
         userEmail: email
       });
 
       if (response.data?.status) {
         toastRef.current?.show(response.data.msg || 'OTP sent successfully', { type: 'success' });
+
+        const newAttemptCount = attemptCount + 1;
+        await AsyncStorage.setItem('attemptCount', `${newAttemptCount}`);
+        await AsyncStorage.setItem('lastAttempt', `${Date.now()}`);
 
         setTimeout(() => {
           router.push(`./otpScreen?userID=${response.data.userID}`);
@@ -53,6 +92,22 @@ const ForgotPasswordScreen = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    let timer;
+    if (coolDown > 0) {
+      timer = setInterval(() => {
+        setCoolDown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [coolDown]);
 
   return (
     <>
@@ -82,14 +137,16 @@ const ForgotPasswordScreen = () => {
         />
 
         <TouchableOpacity
-          style={[styles.button, loading && { opacity: 0.6 }]}
+          style={[styles.button, (loading || coolDown > 0) && { opacity: 0.6 }]}
           onPress={handleSendOTP}
-          disabled={loading}
+          disabled={loading || coolDown > 0}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.buttonText}>Send OTP</Text>
+            <Text style={styles.buttonText}>
+              {coolDown > 0 ? `Wait ${formatTime(coolDown)}` : 'Send OTP'}
+            </Text>
           )}
         </TouchableOpacity>
       </KeyboardAvoidingView>

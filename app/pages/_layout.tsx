@@ -9,6 +9,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 export default function Layout() {
   const pathName = usePathname();
+console.log("API_URL", process.env);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -42,9 +43,9 @@ export default function Layout() {
       warningColor="#FFA500"
       textStyle={{ fontSize: 16 }}
     >
-    <Provider store={store}>
-      <Stack screenOptions={{ headerShown: false }} />
-    </Provider>
-      </ToastProvider>
+      <Provider store={store}>
+        <Stack screenOptions={{ headerShown: false }} />
+      </Provider>
+    </ToastProvider>
   );
 }

@@ -10,6 +10,5 @@ export default function Layout() {
     <Provider store={store}>
       <Stack />
     </Provider>
-
   );
 }

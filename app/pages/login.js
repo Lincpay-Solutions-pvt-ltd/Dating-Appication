@@ -54,7 +54,7 @@ export default function LoginScreen() {
     console.log("Login data = ", data);
 
     await axios
-      .post("https://ca1e-103-198-98-77.ngrok-free.app/api/v1/users/login", data, {
+      .post(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/login`, data, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -157,12 +157,14 @@ export default function LoginScreen() {
 
       {/* Forgot Password */}
       <View style={styles.forgotContainer}>
-        <TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.push("../pages/forgotPassword")}
+        >
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
       </View>
       {/* <Ionicons name="logo-google" size={40} color="red"/> */}
-      <View style={styles.loginButton}>
+      {/* <View style={styles.loginButton}>
         <TouchableOpacity>
           <Image
             style={styles.image}
@@ -181,9 +183,7 @@ export default function LoginScreen() {
             source={require("../../assets/images/twitter.png")}
           ></Image>
         </TouchableOpacity>
-
-        {/* Sign Up Button */}
-      </View>
+      </View> */}
       <TouchableOpacity
         style={styles.signUpButton}
         onPress={() => router.push("./signUp")}

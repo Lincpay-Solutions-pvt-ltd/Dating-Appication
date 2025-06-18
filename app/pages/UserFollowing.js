@@ -28,11 +28,11 @@ export default function UserFollowing() {
   }, []);
 
   const fetchFollowingData = async (user) => {
-    console.log("Fetching following data for user:", user.userID);
+    console.log("Fetching following data for user2:", user.userID);
 
     try {
       const response = await axios.get(
-        `https://ca1e-103-198-98-77.ngrok-free.app/api/v1/follow/getFollowingList/${user.userID}`
+        `http://192.168.0.101:5000/api/v1/follow/getFollowingList/${user.userID}`
       );
       if (response.data.status === true) {
         setFollowingData(response.data.data);
@@ -46,7 +46,7 @@ export default function UserFollowing() {
         console.error("Failed to fetch following data");
       }
     } catch (error) {
-      console.error("Error fetching following data:", error);
+      console.error("Error fetching following data:2", error.response.data);
     }
   };
 
@@ -76,7 +76,7 @@ export default function UserFollowing() {
                 {item.profilePic ? (
                   <Image
                     source={{
-                      uri: `https://ca1e-103-198-98-77.ngrok-free.app${item.profilePic}`,
+                      uri: `http://192.168.0.101:5000${item.profilePic}`,
                     }}
                     style={styles.avatar}
                   />

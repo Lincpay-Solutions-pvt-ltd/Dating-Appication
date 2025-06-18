@@ -48,7 +48,8 @@ export default ExploreScreen = () => {
   const showUserAccount = async (name) => {
     try {
       const response = await axios.get(
-        `https://ca1e-103-198-98-77.ngrok-free.app/api/v1/users/allUsers?search=${name}`, // Adjust the URL as needed
+
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/allUsers?search=${name}`,
         {
           headers: {
             "Content-Type": "application/json",

@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Alert } from "react-native";
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, Alert, Modal } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useToast } from 'react-native-toast-notifications';
 
-
-const API_BASE_URL = "http://192.168.0.113:5000/api/v1";
+const API_BASE_URL = `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1`;
 
 const PurchaseCoinScreen = () => {
   const router = useRouter();
@@ -16,19 +15,18 @@ const PurchaseCoinScreen = () => {
   const [processing, setProcessing] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [user, setUser] = useState({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const toast = useToast();
 
   useEffect(() => {
     const getUser = async () => {
       const User = await AsyncStorage.getItem("User");
-
       setUser(JSON.parse(User));
     };
     getUser();
   }, []);
 
-  
   useEffect(() => {
     const fetchOffers = async () => {
       try {
@@ -53,7 +51,7 @@ const PurchaseCoinScreen = () => {
       } catch (error) {
         console.error("Fetch offers error:", error);
         let errorMsg = "Failed to load offers";
-        
+
         if (error.response) {
           if (error.response.status === 401) {
             errorMsg = "Session expired. Please login again.";
@@ -62,7 +60,7 @@ const PurchaseCoinScreen = () => {
             errorMsg = error.response.data?.message || errorMsg;
           }
         }
-        
+
         Alert.alert("Error", errorMsg);
       } finally {
         setLoading(false);
@@ -72,87 +70,82 @@ const PurchaseCoinScreen = () => {
     fetchOffers();
   }, []);
 
+  const handlePurchase = async (offer) => {
+    try {
+      setSelectedOffer(offer.offerId);
+      setProcessing(true);
 
+      const accessToken = await AsyncStorage.getItem("accessToken");
+      if (!accessToken) {
+        throw new Error("No access token found");
+      }
 
-const handlePurchase = async (offer) => {
-  try {
-    setSelectedOffer(offer.offerId);
-    setProcessing(true);
+      const response = await axios.post(
+        `${API_BASE_URL}/coins/purchase-coin`,
+        {
+          userID: user.userID,
+          count: offer.coinAmount
+        },
+        {
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
 
-    const accessToken = await AsyncStorage.getItem("accessToken");
-    if (!accessToken) {
-      throw new Error("No access token found");
-    }
+      if (response.data?.status) {
+        toast.show(`✅ ${response.data.msg || `Purchased ${offer.coinAmount} coins!`}`, { type: "success" });
+        setShowSuccessModal(true);
+      } else {
+        throw new Error(response.data?.msg || "Purchase failed");
+      }
 
-    const response = await axios.post(
-      `${API_BASE_URL}/coins/purchase-coin`,
-      {
-        userID: user.userID,
-        count: offer.coinAmount
-      },
-      {
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
+    } catch (error) {
+      console.error("Purchase error:", error.response?.data || error.message);
+      let errorMsg = "Purchase failed. Please try again.";
+
+      if (error.response) {
+        if (error.response.status === 401) {
+          errorMsg = "Session expired. Please login again.";
+          router.push("/login");
+        } else if (error.response.status === 404) {
+          errorMsg = "Endpoint not found. Please contact support.";
+        } else if (error.response.data?.message) {
+          errorMsg = error.response.data.message;
         }
       }
-    );
 
-    if (response.data?.status) {
-      toast.show(`✅ ${response.data.msg || `Purchased ${offer.coinAmount} coins!`}`, { type: "success" });
-      router.push("/purchases");
-    } else {
-      throw new Error(response.data?.msg || "Purchase failed");
+      toast.show(`❌ ${errorMsg}`, { type: "danger" });
+
+    } finally {
+      setProcessing(false);
+      setSelectedOffer(null);
     }
+  };
 
-  } catch (error) {
-    console.error("Purchase error:", error.response?.data || error.message);
-    let errorMsg = "Purchase failed. Please try again.";
-
-    if (error.response) {
-      if (error.response.status === 401) {
-        errorMsg = "Session expired. Please login again.";
-        router.push("/login");
-      } else if (error.response.status === 404) {
-        errorMsg = "Endpoint not found. Please contact support.";
-      } else if (error.response.data?.message) {
-        errorMsg = error.response.data.message;
-      }
-    }
-
-    toast.show(`❌ ${errorMsg}`, { type: "danger" });
-
-  } finally {
-    setProcessing(false);
-    setSelectedOffer(null);
-  }
-};
-
-
-
-const renderOffer = ({ item }) => (
-  <TouchableOpacity
-    style={[
-      styles.offer,
-      selectedOffer === item.offerId && styles.selectedOffer,
-      processing && styles.disabled
-    ]}
-    onPress={() => handlePurchase(item)}
-    disabled={processing}
-  >
-    <View style={styles.offerContent}>
-      <Text style={styles.offerTitle}>{item.name || `${item.coinAmount} Coins`}</Text>
-      <Text style={styles.offerPrice}>${item.offerPrice?.toFixed(2)}</Text>
-      {item.bonusText && <Text style={styles.bonus}>{item.bonusText}</Text>}
-    </View>
-    {processing && selectedOffer === item.offerId ? (
-      <ActivityIndicator size="small" color="#007AFF" />
-    ) : (
-      <Icon name="chevron-right" size={24} color="#007AFF" />
-    )}
-  </TouchableOpacity>
-);
-
+  const renderOffer = ({ item }) => (
+    <TouchableOpacity
+      style={[
+        styles.offer,
+        selectedOffer === item.offerId && styles.selectedOffer,
+        processing && styles.disabled
+      ]}
+      onPress={() => handlePurchase(item)}
+      disabled={processing}
+    >
+      <View style={styles.offerContent}>
+        <Text style={styles.offerTitle}>{item.name || `${item.coinAmount} Coins`}</Text>
+        <Text style={styles.offerPrice}>${item.offerPrice?.toFixed(2)}</Text>
+        {item.bonusText && <Text style={styles.bonus}>{item.bonusText}</Text>}
+      </View>
+      {processing && selectedOffer === item.offerId ? (
+        <ActivityIndicator size="small" color="#007AFF" />
+      ) : (
+        <Icon name="chevron-right" size={24} color="#007AFF" />
+      )}
+    </TouchableOpacity>
+  );
 
   if (loading) {
     return (
@@ -164,6 +157,29 @@ const renderOffer = ({ item }) => (
 
   return (
     <View style={styles.container}>
+      <Modal
+        transparent
+        visible={showSuccessModal}
+        animationType="fade"
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>🎉 Purchase Successful!</Text>
+            <Text style={styles.modalMessage}>Your coins have been added.</Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => {
+                setShowSuccessModal(false);
+                router.push("../pages/home");
+              }}
+            >
+              <Text style={styles.modalButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Icon name="arrow-back" size={24} color="#000" />
@@ -175,19 +191,18 @@ const renderOffer = ({ item }) => (
       <FlatList
         data={offers}
         renderItem={renderOffer}
-        numColumns={2} 
+        numColumns={2}
         keyExtractor={(item) => item.offerId}
         contentContainerStyle={styles.gridContainer}
-        columnWrapperStyle={styles.row}   
+        columnWrapperStyle={styles.row}
         ListHeaderComponent={<Text style={styles.subtitle}>Available Coin Packages</Text>}
         ListFooterComponent={<Text style={styles.footer}>Coins can be used for in-app purchases</Text>}
-        ListEmptyComponent={
-          !loading && <Text style={styles.empty}>No offers available at the moment</Text>
-        }
+        ListEmptyComponent={!loading && <Text style={styles.empty}>No offers available at the moment</Text>}
       />
     </View>
   );
 };
+
 
 
 
@@ -360,6 +375,41 @@ selectedOffer: {
 
 disabled: {
   opacity: 0.6,
+},
+modalBackground: {
+  flex: 1,
+  backgroundColor: 'rgba(0,0,0,0.5)',
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+modalContainer: {
+  width: '80%',
+  backgroundColor: '#fff',
+  padding: 20,
+  borderRadius: 10,
+  alignItems: 'center',
+},
+modalTitle: {
+  fontSize: 18,
+  fontWeight: 'bold',
+  marginBottom: 10,
+},
+modalMessage: {
+  fontSize: 14,
+  color: '#333',
+  marginBottom: 20,
+  textAlign: 'center',
+},
+modalButton: {
+  backgroundColor: '#007AFF',
+  paddingHorizontal: 20,
+  paddingVertical: 10,
+  borderRadius: 5,
+},
+modalButtonText: {
+  color: '#fff',
+  fontWeight: 'bold',
+  fontSize: 16,
 },
 
 });

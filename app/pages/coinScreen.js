@@ -37,7 +37,7 @@ const CoinsScreen = () => {
 
   const fetchOffers = async () => {
     try {
-      const response = await axios.get("http://192.168.0.113:5000/api/v1/coins/all-offers");
+      const response = await axios.get(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/all-offers`);
       if (response.data?.status && response.data?.data) {
         setOffers(response.data.data);
       }
@@ -50,7 +50,7 @@ const CoinsScreen = () => {
   const fetchUserCoins = async (userID) => {
     try {
       const response = await axios.get(
-        `http://192.168.0.113:5000/api/v1/coins/user-total-coin/${userID}`
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/user-total-coin/${userID}`
       );
       if (response.data?.status) {
         const coins = response.data.data || [];

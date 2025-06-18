@@ -13,7 +13,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import Toast from 'react-native-toast-notifications';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://192.168.0.113:5000/api/v1';
+const API_BASE_URL = `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1`;
 
 const ResetPasswordScreen = () => {
   const router = useRouter();

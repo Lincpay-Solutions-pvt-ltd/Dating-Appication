@@ -113,7 +113,7 @@ export default function EditProfileScreen() {
           });
 
           const response = await axios.post(
-            "https://ca1e-103-198-98-77.ngrok-free.app/api/v1/uploads/upload",
+            `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/uploads/upload`,
             formData,
             {
               headers: {
@@ -150,7 +150,7 @@ export default function EditProfileScreen() {
     });
 
     const response = await axios.post(
-      `https://ca1e-103-198-98-77.ngrok-free.app/api/v1/users/update-user`,
+      `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/update-user`,
       data,
       {
         headers: {
@@ -209,7 +209,7 @@ export default function EditProfileScreen() {
 
         <View style={styles.avatarContainer}>
           <Image
-            source={{ uri: `https://ca1e-103-198-98-77.ngrok-free.app${selectedImage}` }}
+            source={{ uri: `http://192.168.0.101:5000${selectedImage}` }}
             style={styles.avatar}
           />
           <TouchableOpacity onPress={showOptions}>
