@@ -54,7 +54,7 @@ export default function LoginScreen() {
     console.log("Login data = ", data);
 
     await axios
-      .post("https://ca1e-103-198-98-77.ngrok-free.app/api/v1/users/login", data, {
+      .post("https://58f7-182-70-116-29.ngrok-free.app/api/v1/users/login", data, {
         headers: {
           "Content-Type": "application/json",
         },

@@ -7,7 +7,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { useToast } from 'react-native-toast-notifications';
 
 
-const API_BASE_URL = "http://192.168.0.113:5000/api/v1";
+const API_BASE_URL = "https://58f7-182-70-116-29.ngrok-free.app/api/v1";
 
 const PurchaseCoinScreen = () => {
   const router = useRouter();

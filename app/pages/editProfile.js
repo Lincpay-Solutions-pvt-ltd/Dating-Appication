@@ -33,7 +33,7 @@ export default function EditProfileScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [currentUserID, setCurrentUserID] = useState(null);
   const [selectedImage, setSelectedImage] = useState(
-    "https://ca1e-103-198-98-77.ngrok-free.app/api/v1/uploads/win_20250529_13_01_49_pro-1748503944346.jpg?dfault=0"
+    "https://58f7-182-70-116-29.ngrok-free.app/api/v1/uploads/win_20250529_13_01_49_pro-1748503944346.jpg?dfault=0"
   ); // Default image
 
   //const [userProfileData, setUserProfileData] = useState(username,userBio,userGender, /*userProfileImage*/);
@@ -113,7 +113,7 @@ export default function EditProfileScreen() {
           });
 
           const response = await axios.post(
-            "https://ca1e-103-198-98-77.ngrok-free.app/api/v1/uploads/upload",
+            "https://58f7-182-70-116-29.ngrok-free.app/api/v1/uploads/upload",
             formData,
             {
               headers: {
@@ -150,7 +150,7 @@ export default function EditProfileScreen() {
     });
 
     const response = await axios.post(
-      `https://ca1e-103-198-98-77.ngrok-free.app/api/v1/users/update-user`,
+      `https://58f7-182-70-116-29.ngrok-free.app/api/v1/users/update-user`,
       data,
       {
         headers: {
@@ -209,7 +209,7 @@ export default function EditProfileScreen() {
 
         <View style={styles.avatarContainer}>
           <Image
-            source={{ uri: `https://ca1e-103-198-98-77.ngrok-free.app${selectedImage}` }}
+            source={{ uri: `https://58f7-182-70-116-29.ngrok-free.app${selectedImage}` }}
             style={styles.avatar}
           />
           <TouchableOpacity onPress={showOptions}>

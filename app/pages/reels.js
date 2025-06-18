@@ -13,7 +13,7 @@ const Reels = (props) => {
   useEffect(() => {
     if (ReelItem.reel) {
       setReel(JSON.parse(ReelItem.reel));
-    } 
+    }
   }, [])
 
   return (
@@ -26,7 +26,7 @@ const Reels = (props) => {
         backgroundColor: 'white',
       }}>
       <Header />
-      { <ReelsComponent reel={reel} />}
+      {<ReelsComponent reel={reel} />}
 
       <Footer />
     </View>

@@ -32,7 +32,7 @@ const VideoCard = ({ item }) => {
         }}
         resizeMode={ResizeMode.COVER}
         source={{
-          uri: `https://ca1e-103-198-98-77.ngrok-free.app${item.filepath}-thumbnail.png?token`,
+          uri: `https://58f7-182-70-116-29.ngrok-free.app${item.filepath}-thumbnail.png?token`,
         }}
         style={styles.image}
       />
@@ -54,8 +54,8 @@ const VideoList = (props) => {
   const fetchReel = async ({ userID = null, pageNumber = 1 }) => {
 
     var API = userID
-      ? `https://ca1e-103-198-98-77.ngrok-free.app/api/v1/reels/by-userID/${userID}?page=${pageNumber}&limit=10`
-      : `https://ca1e-103-198-98-77.ngrok-free.app/api/v1/reels/get-latest?page=${pageNumber}&limit=10`;
+      ? `https://58f7-182-70-116-29.ngrok-free.app/api/v1/reels/by-userID/${userID}?page=${pageNumber}&limit=10`
+      : `https://58f7-182-70-116-29.ngrok-free.app/api/v1/reels/get-latest?page=${pageNumber}&limit=10`;
     axios
       .get(API)
       .then((response) => {
