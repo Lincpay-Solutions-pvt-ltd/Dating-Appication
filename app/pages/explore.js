@@ -61,7 +61,8 @@ export default function ExploreScreen() {
     setLoading(true);
     try {
       const response = await axios.get(
-        `https://58f7-182-70-116-29.ngrok-free.app/api/v1/users/allUsers?search=${searchTerm}`,
+
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/allUsers?search=${name}`,
         {
           headers: {
             "Content-Type": "application/json",

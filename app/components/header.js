@@ -1,28 +1,32 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   Image,
   Animated,
-  StyleSheet,
   Dimensions,
+  StyleSheet,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import EntypoIcons from "react-native-vector-icons/Entypo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useDispatch } from "react-redux";
-import { login, logout } from "../Redux/authSlice";
+import axios from "axios";
+import { logout } from "../Redux/authSlice";
 
 const screenWidth = Dimensions.get("window").width;
 
-export default function HeaderForm({ showStatusBar, isTransparent = false }) {
+export default function HeaderForm({ isTransparent = false }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [user, setUser] = useState({});
-  const translateX = useState(new Animated.Value(-screenWidth))[0];
   const [notificationOpen, setNotificationOpen] = useState(false);
-  const translateZ = useState(new Animated.Value(-screenWidth))[0];
+  const [user, setUser] = useState({});
+  const [userCoins, setUserCoins] = useState(0);
+  const translateX = useState(new Animated.Value(-screenWidth))[0];
+  const translateZ = useState(new Animated.Value(screenWidth))[0];
+  const router = useRouter();
+  const dispatch = useDispatch();
 
   const toggleMenu = () => {
     Animated.timing(translateX, {
@@ -42,23 +46,43 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
     setNotificationOpen(!notificationOpen);
   };
 
-  const router = useRouter();
-  const dispatch = useDispatch();
+  const fetchUserCoins = async (userID) => {
+    try {
+      const response = await axios.get(
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/user-total-coin/${userID}`
+      );
+      if (response.data?.status) {
+        const coins = response.data.data || [];
+        const totalCount = coins.length > 0 ? coins[coins.length - 1].totalCount : 0;
+        setUserCoins(totalCount);
+      }
+    } catch (error) {
+      console.error("Error fetching user coins:", error.message);
+    }
+  };
+
   useEffect(() => {
     const getUser = async () => {
-      const User = await AsyncStorage.getItem("User");
-      setUser(JSON.parse(User));
+      try {
+        const storedUser = await AsyncStorage.getItem("User");
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          if (parsedUser?.userID) {
+            fetchUserCoins(parsedUser.userID);
+          }
+        }
+      } catch (e) {
+        console.error("Error loading user from AsyncStorage:", e);
+      }
     };
     getUser();
   }, []);
+
   return (
     <>
-      {/* Normal Header Bar */}
-      <View
-        style={
-          isTransparent ? stylesHeader.headerTransparent : stylesHeader.header
-        }
-      >
+      {/* Header */}
+      <View style={isTransparent ? stylesHeader.headerTransparent : stylesHeader.header}>
         <View style={stylesHeader.leftSection}>
           {/* Profile Image (Click to open menu) */}
           <TouchableOpacity
@@ -77,49 +101,40 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
               />
             )}
           </TouchableOpacity>
-
-          {/* Coins and Add Button */}
-          <View style={stylesHeader.coinContainer}>
-            <Ionicons name="star" size={16} color="gold" />
-            <Text style={stylesHeader.coinText}>0</Text>
-            <TouchableOpacity
-              style={stylesHeader.addButton}
-              onPress={() => router.push("../pages/coinScreen")}
-            >
-              <Ionicons name="add" size={16} color="black" />
-            </TouchableOpacity>
-          </View>
+          
+          <TouchableOpacity
+            style={stylesHeader.addButton}
+            onPress={() => router.push("./coinScreen")}
+          >
+            <View style={stylesHeader.coinContainer}>
+              <Ionicons name="star" size={16} color="gold" />
+              <Text style={stylesHeader.coinText}>{userCoins}</Text>
+              <Ionicons style={stylesHeader.plusIcon} name="add" size={16} color="black" />
+            </View>
+          </TouchableOpacity>
         </View>
 
-        {/* Right Side: Notification Bell */}
-        <TouchableOpacity
-          style={stylesHeader.notificationIcon}
-          onPress={toggleNotification}
-        >
+        <TouchableOpacity style={stylesHeader.notificationIcon} onPress={toggleNotification}>
           <Ionicons name="notifications-outline" size={30} color="black" />
         </TouchableOpacity>
       </View>
 
       {/* Sidebar Menu */}
-      <Animated.View
-        style={[stylesHeader.menu, { transform: [{ translateX }] }]}
-      >
-        {/* Back Icon to Close Sidebar */}
+      <Animated.View style={[stylesHeader.menu, { transform: [{ translateX }] }]}>
         <TouchableOpacity
           style={stylesHeader.backIcon}
-          onPress={() => router.replace("../pages/home")}
+          onPress={() => router.replace("/home")}
         >
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-        {/* Profile Section */}
+
         <View style={stylesHeader.profileSection}>
           <View style={stylesHeader.profileRowContainer}>
-            {/* Profile Row */}
             <TouchableOpacity
               style={stylesHeader.profileRow}
               onPress={() => {
                 toggleMenu();
-                router.push("../pages/profile");
+                router.push("/profile");
               }}
             >
               {user.profilePic ? (
@@ -136,10 +151,7 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
                 />
               )}
               <View style={stylesHeader.profileInfoContainer}>
-                <Text style={stylesHeader.profileName}>
-                  {user.userFirstName + " "}
-                </Text>
-                {/* Stats Row Below Profile Name */}
+                <Text style={stylesHeader.profileName}>{user.userFirstName + " "}</Text>
                 <View style={stylesHeader.statsRow}>
                   <Ionicons name="diamond-outline" size={16} color="gray" />
                   <Text style={stylesHeader.statsText}>0</Text>
@@ -151,24 +163,19 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
               </View>
             </TouchableOpacity>
 
-            {/* Broadcast Button (Shifted to Right) */}
             <TouchableOpacity style={stylesHeader.broadcastButton}>
               <Ionicons name="videocam" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Horizontal Line */}
         <View style={stylesHeader.divider} />
 
-        {/* Menu Items */}
         <TouchableOpacity style={stylesHeader.menuItem}>
           <Ionicons name="phone-portrait-outline" size={24} color="#000" />
           <View>
             <Text style={stylesHeader.menuText}>Get Tango App</Text>
-            <Text style={stylesHeader.subText}>
-              Stay connected with your friends anywhere!
-            </Text>
+            <Text style={stylesHeader.subText}>Stay connected with your friends anywhere!</Text>
           </View>
         </TouchableOpacity>
 
@@ -176,7 +183,7 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
           style={stylesHeader.menuItem}
           onPress={() => {
             toggleMenu();
-            router.push("../pages/(sidebar)/agency");
+            router.push("/(sidebar)/agency");
           }}
         >
           <Ionicons name="briefcase-outline" size={24} color="#000" />
@@ -187,7 +194,7 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
           style={stylesHeader.menuItem}
           onPress={() => {
             toggleMenu();
-            router.push("../pages/fanPage");
+            router.push("/fanPage");
           }}
         >
           <Ionicons name="heart-outline" size={24} color="#000" />
@@ -204,31 +211,21 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
           <Text style={stylesHeader.menuText}>Social Games</Text>
         </TouchableOpacity>
 
-        {/* Horizontal Line */}
         <View style={stylesHeader.divider} />
 
-        {/* Logout Button */}
         <TouchableOpacity
-          style={[stylesHeader.menuItem]}
+          style={stylesHeader.menuItem}
           onPress={async () => {
-            // Close the sidebar first
             Animated.timing(translateX, {
               toValue: -screenWidth,
               duration: 300,
               useNativeDriver: true,
             }).start(() => {
-              // After animation completes, perform logout
-              setMenuOpen(false); // Ensure menu state is updated
-
-              // Clear AsyncStorage
+              setMenuOpen(false);
               AsyncStorage.removeItem("Authenticated");
               AsyncStorage.removeItem("User");
-
-              // Dispatch logout action
               dispatch(logout());
-
-              // Navigate to login page
-              router.navigate("../pages/login");
+              router.navigate("/login");
             });
           }}
         >
@@ -237,21 +234,11 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
         </TouchableOpacity>
       </Animated.View>
 
-      {/* Overlay when menu is open */}
-      {/* {notificationOpen && <TouchableOpacity style={stylesHeader.overlay} onPress={toggleNotification} />} */}
-
-      {/* /// Notification Sidebar */}
+      {/* Notification Panel */}
       <Animated.View
-        style={[
-          stylesHeader.notificationBar,
-          { transform: [{ translateX: translateZ }] },
-        ]}
+        style={[stylesHeader.notificationBar, { transform: [{ translateX: translateZ }] }]}
       >
-        {/* Back Icon to Close Sidebar */}
-        <TouchableOpacity
-          style={stylesHeader.backIcon}
-          onPress={toggleNotification}
-        >
+        <TouchableOpacity style={stylesHeader.backIcon} onPress={toggleNotification}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={stylesHeader.notificationText}>Notifications</Text>
@@ -267,11 +254,7 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
           />
         )}
         <Text style={stylesHeader.followText}>+1 Followers</Text>
-        <EntypoIcons
-          name="chevron-right"
-          size={24}
-          style={stylesHeader.rightArrow}
-        />
+        <EntypoIcons name="chevron-right" size={24} style={stylesHeader.rightArrow} />
       </Animated.View>
     </>
   );
@@ -314,7 +297,6 @@ const stylesHeader = StyleSheet.create({
   },
   addButton: {
     marginLeft: 5,
-    backgroundColor: "white",
     borderRadius: 12,
     padding: 5,
   },
@@ -450,11 +432,18 @@ const stylesHeader = StyleSheet.create({
   },
   notificationBar: {
     position: "absolute",
-    width: "100%", // Full width
+    width: "100%", 
     height: "100%",
     backgroundColor: "#111",
     paddingTop: 50,
     paddingHorizontal: 20,
     zIndex: 2,
+  },
+  plusIcon: {
+    backgroundColor: "#fff",
+    padding: 5,
+    borderRadius: 50,
+    marginLeft: 5,
+    color: "black",
   },
 });

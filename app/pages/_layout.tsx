@@ -9,6 +9,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 export default function Layout() {
   const pathName = usePathname();
+console.log("API_URL", process.env);
 
   useFocusEffect(
     React.useCallback(() => {

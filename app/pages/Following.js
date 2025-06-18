@@ -1,52 +1,62 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
   Image,
   FlatList,
+  ActivityIndicator,
 } from "react-native";
 import Header from "../components/header";
-import { SafeAreaView } from "react-native-safe-area-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import Footer from "../components/footer";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { useRouter } from "expo-router";
 
 export default function FollowingScreen() {
-  const [videos, setVideos] = useState([]);
-  const [msg, setMsg] = useState("loading...");
-  const [user, setUser] = useState({});
   const [followingData, setFollowingData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [msg, setMsg] = useState("");
   const router = useRouter();
 
-  useMemo(() => {
-    const getUser = async () => {
-      const User = await AsyncStorage.getItem("User");
-      setUser(JSON.parse(User));
-      showFollowers(JSON.parse(User));
-    };
-    getUser();
-  }, []);
+  useEffect(() => {
+    const getUserAndFollowers = async () => {
+      try {
+        const userStr = await AsyncStorage.getItem("User");
+        const user = JSON.parse(userStr);
 
-  const showFollowers = async (user) => {
-    console.log("Fetching following data for user:", user.userID);
+        if (!user?.userID) {
+          console.log("No user ID found");
+          setMsg("User not found");
+          setLoading(false);
+          return;
+        }
 
-    try {
-      const response = await axios.get(
-        `https://58f7-182-70-116-29.ngrok-free.app/api/v1/follow/getFollowingList/${user.userID}`
-      );
-      if (response.data.status === true) {
-        setFollowingData(response.data.data);
-      } else {
-        console.error("Failed to fetch following data");
+        console.log("Fetching following data for user:", user.userID);
+
+        const response = await axios.get(
+          `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/follow/getFollowingList/${user.userID}`
+        );
+
+        if (response.data.status === true) {
+          setFollowingData(response.data.data);
+          if (response.data.data.length === 0) {
+            setMsg("You are not following anyone yet.");
+          }
+        } else {
+          setMsg("Failed to fetch following data");
+        }
+      } catch (error) {
+        console.error("Error fetching following data:", error);
+        setMsg("Something went wrong while fetching data.");
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching following data:", error);
-    }
-  };
+    };
+
+    getUserAndFollowers();
+  }, []);
 
   const OpenUserProfile = (item) => {
     router.push({
@@ -55,126 +65,85 @@ export default function FollowingScreen() {
     });
   };
 
-  const VideoList = () => {
-    return videos.length ? (
-      <Text style={styles.textMsg}>{msg}</Text>
-    ) : (
-      <View style={styles.cardContainer}>
-        <FlatList
-          data={followingData}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              {item.profilePic ? (
-                <TouchableOpacity onPress={() => OpenUserProfile(item)}>
-                  <Image
-                    source={{
-                      uri: `https://58f7-182-70-116-29.ngrok-free.app${item.profilePic}`,
-                    }}
-                    style={styles.card}
-                  />
-                </TouchableOpacity>
-              ) : (
-                <View style={styles.avatarPlaceholder} />
-              )}
-            </View>
-          )}
-        />
-      </View>
-    );
-  };
+  const renderItem = ({ item }) => (
+    <View style={styles.card}>
+      {item.profilePic ? (
+        <TouchableOpacity onPress={() => OpenUserProfile(item)}>
+          <Image
+            source={{
+              uri: `http://192.168.0.103:5000${item.profilePic}`,
+            }}
+            style={styles.image}
+          />
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.avatarPlaceholder}>
+          <Text style={styles.placeholderText}>No Image</Text>
+        </View>
+      )}
+    </View>
+  );
 
   return (
     <>
-    <Header />
-      <FlatList
-        // ListHeaderComponent={
-        //   <>
-        //     <SafeAreaView>
-        //       {/* <View style={styles.containerTop}>
-        //                         <MaterialCommunityIcons
-        //                             style={styles.icon}
-        //                             name="account-group-outline"
-        //                             size={100}
-        //                             color="#000"
-        //                         />
-        //                         <Text style={styles.followingText}>No active Followings yet</Text>
-        //                     </View> */}
-        //       {/* <View style={styles.containerMid}>
-        //         <Text style={styles.text}>Following</Text>
-        //       </View> */}
-        //     </SafeAreaView>
-        //   </>
-        // }
-        data={[{ key: "VideoList" }]} // Placeholder data
-        renderItem={() => <VideoList />}
-        keyExtractor={(item) => item.key}
-      />
+      <Header />
+
+      {loading ? (
+        <ActivityIndicator size="large" color="#000" style={{ marginTop: 50 }} />
+      ) : followingData.length === 0 ? (
+        <Text style={styles.textMsg}>{msg}</Text>
+      ) : (
+        <FlatList
+          contentContainerStyle={styles.cardContainer}
+          data={followingData}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          renderItem={renderItem}
+        />
+      )}
+
       <Footer />
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  containerTop: {
-    display: "flex",
-    backgroundColor: "#fff",
-  },
-  containerMid: {
-    display: "flex",
-    padding: 30,
-    backgroundColor: "#fff",
-  },
-  icon: {
-    justifyContent: "center",
-    alignItems: "center",
-    fontSize: 100,
-    padding: 30,
-    paddingBottom: 20,
-  },
-  button: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  followingText: {
-    fontSize: 30,
-    color: "#000",
-    justifyContent: "center",
-    backgroundColor: "#fff",
-    paddingBottom: 10,
-  },
-  text: {
-    fontSize: 30,
-    fontWeight: "bold",
-    color: "#000",
-    alignItems: "flex-start",
-    backgroundColor: "#fff",
-  },
   cardContainer: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
     backgroundColor: "#f3f3f3",
-
+    paddingBottom: 80,
   },
   card: {
-    width: 150, // Adjust width to fit the screen better
+    width: 150,
     height: 150,
-    padding: 2,
-    borderRadius: 30,
-    marginLeft: 5,
-    marginTop:10
+    borderRadius: 15,
+    margin: 10,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
   },
   textMsg: {
     fontWeight: "bold",
     textAlign: "center",
-    flexWrap: "nowrap",
     fontSize: 20,
     marginTop: 50,
   },
-  image: {
-    width: "50%",
-    height: "50%",
-    objectFit: "cover",
+  avatarPlaceholder: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#ccc",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  placeholderText: {
+    color: "#666",
   },
 });

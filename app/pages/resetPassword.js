@@ -13,7 +13,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import Toast from 'react-native-toast-notifications';
 import axios from 'axios';
 
-const API_BASE_URL = 'https://58f7-182-70-116-29.ngrok-free.app/api/v1';
+const API_BASE_URL = `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1`;
 
 const ResetPasswordScreen = () => {
   const router = useRouter();
