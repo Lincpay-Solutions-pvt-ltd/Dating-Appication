@@ -31,8 +31,8 @@ export default function OtherProfileScreen() {
     UserItem?.userID
       ? UserItem.userID
       : UserItem?.userData
-      ? JSON.parse(UserItem?.userData).userID
-      : null
+        ? JSON.parse(UserItem?.userData).userID
+        : null
   );
 
   useMemo(() => {
@@ -45,14 +45,13 @@ export default function OtherProfileScreen() {
           ? userData_.userFirstName + userData_.userSurname
           : "Loading...",
         profileImage: userData_.profilePic
-          ? `http://192.168.0.101:5000${userData_.profilePic}`
-          : "https://i.pinimg.com/736x/af/0d/7c/af0d7c8ce434deb503432cc5fce2c326.jpg", // Replace with actual image URL
+          ? `https://58f7-182-70-116-29.ngrok-free.app${userData_.profilePic}`
+          : `set-default-${userData_?.userGender}`, // Replace with actual image URL
         posts: userData_.posts ? userData_.posts : 0,
         followers: userData_.followers ? userData_.followers : 0,
         following: userData_.followings ? userData_.followings : 0,
-        bio: `${
-          userData_.userBio ? userData_.userBio : "✨ No bio available "
-        }`,
+        bio: `${userData_.userBio ? userData_.userBio : "✨ No bio available "
+          }`,
         website: "www.donyetaylor.com",
         postImages: [
           "https://your-image-url.com/post1.jpg",
@@ -68,7 +67,7 @@ export default function OtherProfileScreen() {
       const fetchUserData = async () => {
         try {
           const response = await fetch(
-            `http://192.168.0.101:5000/api/v1/users/getUserByEmail/testing@dev.com`
+            `https://58f7-182-70-116-29.ngrok-free.app/api/v1/users/getUserByEmail/testing@dev.com`
           );
           const data = await response.json();
           const userData_ = data.data.length ? data.data[0] : {};
@@ -77,15 +76,14 @@ export default function OtherProfileScreen() {
               userData_.userFirstName + " " + userData_.userSurname ||
               "Undefined",
             profileImage: userData_.profilePic
-              ? `http://192.168.0.101:5000${userData_.profilePic}`
-              : "https://i.pinimg.com/736x/af/0d/7c/af0d7c8ce434deb503432cc5fce2c326.jpg",
+              ? `https://58f7-182-70-116-29.ngrok-free.app${userData_.profilePic}`
+              : `set-default-${userData_?.userGender}`,
 
             posts: userData_.posts,
             followers: `${userData_.totalFollowers}`,
             following: `${userData_.followings}`,
-            bio: `${
-              userData_.userBio ? userData_.userBio : "✨ No bio available "
-            }`,
+            bio: `${userData_.userBio ? userData_.userBio : "✨ No bio available "
+              }`,
             website: "www.donyetaylor.com",
             postImages: [
               "https://your-image-url.com/post1.jpg",
@@ -125,7 +123,7 @@ export default function OtherProfileScreen() {
   const fetchFollowStatus = async (currentUserID, followToUserID) => {
     try {
       const response = await axios.post(
-        `http://192.168.0.101:5000/api/v1/follow/checkFollow`,
+        `https://58f7-182-70-116-29.ngrok-free.app/api/v1/follow/checkFollow`,
         {
           followBy: currentUserID,
           followTo: followToUserID,
@@ -142,7 +140,7 @@ export default function OtherProfileScreen() {
 
     try {
       const response = await axios.post(
-        "http://192.168.0.101:5000/api/v1/follow/follow",
+        "https://58f7-182-70-116-29.ngrok-free.app/api/v1/follow/follow",
         {
           followBy: currentUserID,
           followTo: followToUserID,
@@ -157,7 +155,7 @@ export default function OtherProfileScreen() {
   const unfollowUser = async () => {
     try {
       const response = axios.post(
-        "http://192.168.0.101:5000/api/v1/follow/unfollow",
+        "https://58f7-182-70-116-29.ngrok-free.app/api/v1/follow/unfollow",
         {
           followBy: currentUserID,
           followTo: followToUserID,
@@ -177,14 +175,21 @@ export default function OtherProfileScreen() {
       ) : (
         <View style={styles.profileContainer}>
           <Image
-            source={{ uri: profileData.profileImage }}
+            source={
+              profileData.profileImage && profileData.profileImage.startsWith("set-default") ?
+                profileData.profileImage == "set-default-2" ?
+                  require("../../assets/images/profile-female.jpg") :
+                  require("../../assets/images/profile.jpg") :
+                { uri: profileData.profileImage }
+
+            }
             style={styles.profileImage}
           />
           <View style={styles.statsContainer}>
             <TouchableOpacity>
               <Text style={styles.statsText}>
                 {profileData.posts}
-                {"\n"}Posts
+                {"\n"}Posts1
               </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => router.push("../pages/followers")}>

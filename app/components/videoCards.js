@@ -32,7 +32,7 @@ const VideoCard = ({ item }) => {
         }}
         resizeMode={ResizeMode.COVER}
         source={{
-          uri: `http://192.168.0.103:5000${item.filepath}-thumbnail.png?token`,
+          uri: `https://58f7-182-70-116-29.ngrok-free.app${item.filepath}-thumbnail.png?token`,
         }}
         style={styles.image}
       />

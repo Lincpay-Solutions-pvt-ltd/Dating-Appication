@@ -7,9 +7,11 @@ import {
   Dimensions,
   TouchableOpacity,
   TextInput,
+  ActivityIndicator,
 } from "react-native";
+
 import { useRouter } from "expo-router";
-import { useState, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import axios from "axios";
@@ -17,35 +19,46 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 
-export default ExploreScreen = () => {
-  const [searchText, setSearchText] = useState(null);
-  const router = useRouter();
-  const [Database, setDatabase] = useState([]);
+export default function ExploreScreen() {
+  const [searchText, setSearchText] = useState("");
+  const [database, setDatabase] = useState([]);
   const [currentUserID, setCurrentUserID] = useState(null);
   const [accessToken, setAccessToken] = useState("");
-  const [showSearch, setShowSearch] = useState(true);
+  const [showSearch, setShowSearch] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const debounceTimeout = useRef(null);
 
-  useMemo(() => {
+  const router = useRouter();
+
+  // Fetch user info on mount
+  useEffect(() => {
     const getUser = async () => {
       try {
-        const user = await AsyncStorage.getItem("User");
-        const _accessToken = await AsyncStorage.getItem("accessToken");
-
-        if (user) {
-          const parsedUser = JSON.parse(user);
-          const userID = parsedUser.userID;
-          setCurrentUserID(userID);
-          setAccessToken(_accessToken);
-
+        const userData = await AsyncStorage.getItem("User");
+        const token = await AsyncStorage.getItem("accessToken");
+        if (userData) {
+          const parsedUser = JSON.parse(userData);
+          setCurrentUserID(parsedUser.userID);
+        }
+        if (token) {
+          setAccessToken(token);
         }
       } catch (err) {
-        console.error("Error parsing user from AsyncStorage", err);
+        console.error("Error reading AsyncStorage:", err);
       }
     };
     getUser();
   }, []);
 
-  const showUserAccount = async (name) => {
+  // Fetch users matching search query
+  const fetchUsers = async (searchTerm) => {
+    if (!searchTerm) {
+      setShowSearch(false);
+      setDatabase([]);
+      return;
+    }
+
+    setLoading(true);
     try {
       const response = await axios.get(
 
@@ -57,26 +70,35 @@ export default ExploreScreen = () => {
           },
         }
       );
-      const fetchedReels = response.data.data;
-      setShowSearch(true);
-
-      // Filter out the current user from the fetched reels
-      const filteredReels = fetchedReels.filter(
-        (item) => item.userID !== currentUserID
+      const users = response.data.data.filter(
+        (user) => user.userID !== currentUserID
       );
-
-      setDatabase(filteredReels);
+      setDatabase(users);
+      setShowSearch(true);
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching users:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSearch = async (text) => {
-    await showUserAccount(text);
+  const handleSearchChange = (text) => {
+    setSearchText(text);
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+
+    debounceTimeout.current = setTimeout(() => {
+      if (text.length >= 1) {
+        fetchUsers(text);
+      } else {
+        setShowSearch(false);
+        setDatabase([]);
+      }
+    }, 500); // 500ms delay, adjust as needed
   };
 
-  const OpenUserProfile = (item) => {
-    // router.push("../pages/OtherProfile");
+  const openUserProfile = (item) => {
     router.push({
       pathname: "../pages/OtherProfile",
       params: { userData: JSON.stringify(item) },
@@ -87,123 +109,86 @@ export default ExploreScreen = () => {
     <>
       <Header />
       <View style={styles.container}>
+        {/* Search Bar */}
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
             placeholder="Search By UserName"
             value={searchText}
-            onChangeText={(text) => {
-              setSearchText(text);
-              if (text.length >= 3) {
-                handleSearch(text);
-              } else {
-                setShowSearch(false);
-              }
-            }}
+            onChangeText={handleSearchChange}
             placeholderTextColor="#888"
           />
+          {loading && <ActivityIndicator size="small" color="#000" style={styles.loading} />}
         </View>
-        <FlatList
-          data={Database}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) =>
-            showSearch && (
-              <View style={styles.messageItem}>
-                <Image
-                  source={require("../../assets/images/profile.jpg")}
-                  style={styles.messageAvatar}
-                />
-                <TouchableOpacity onPress={() => OpenUserProfile(item)}>
-                  <View style={styles.messageContent}>
-                    <Text style={styles.messageName}>
-                      {item.userFirstName} {item.userSurname}
-                    </Text>
+
+        {/* Search Results */}
+        {showSearch ? (
+          database.length > 0 ? (
+            <FlatList
+              data={database}
+              keyExtractor={(item) => item.id || item.userID.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity onPress={() => openUserProfile(item)}>
+                  <View style={styles.messageItem}>
+                    <Image
+                      source={
+                        item.profilePic
+                          ? { uri: `https://58f7-182-70-116-29.ngrok-free.app${item.profilePic}` }
+                          : item.userGender == 2
+                            ? require("../../assets/images/profile-female.jpg")
+                            : require("../../assets/images/profile.jpg")
+                      }
+                      style={styles.messageAvatar}
+                    />
+                    <View style={styles.messageContent}>
+                      <Text style={styles.messageName}>
+                        {item.userFirstName} {item.userSurname}
+                      </Text>
+                    </View>
                   </View>
                 </TouchableOpacity>
-              </View>
-            )
-          }
-        />
+              )}
+            />
+          ) : (
+            <Text style={styles.noResultsText}>No users found.</Text>
+          )
+        ) : null}
       </View>
       <Footer />
     </>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
   },
-  title: {
-    fontSize: 30,
-    color: "#000",
-    fontWeight: "bold",
-    marginLeft: 15,
-    top: 13,
-  },
-  moreText: {
-    color: "#fff",
-    fontSize: 30,
-    fontWeight: "bold",
-    bottom: 15,
-  },
-  card: {
-    width: width * 0.5,
-    height: 300,
-    margin: 3,
-    borderRadius: 5,
-    overflow: "hidden",
-    position: "relative",
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-  },
-  overlay: {
-    position: "absolute",
-    bottom: 10,
-    left: 10,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    padding: 5,
-    borderRadius: 5,
-  },
-  views: {
-    color: "#000",
-    fontSize: 14,
-  },
-  name: {
-    color: "#000",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  likes: {
-    color: "#fff",
-    fontSize: 14,
-  },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
     margin: 10,
+    paddingHorizontal: 10,
   },
   searchInput: {
     flex: 1,
     height: 50,
-    borderColor: "#000",
+    borderColor: "#ccc",
     borderWidth: 1,
-    borderRadius: 30,
+    borderRadius: 25,
     paddingHorizontal: 15,
-    fontSize: 20,
-    marginBottom: 10,
-    color: "#000",
-    marginLeft: 15,
-    marginRight: 15,
+    fontSize: 16,
+    backgroundColor: "#fff",
+  },
+  loading: {
+    marginLeft: 10,
   },
   messageItem: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#f3f3f3",
     padding: 10,
+    marginHorizontal: 10,
     borderRadius: 10,
     marginVertical: 5,
   },
@@ -217,9 +202,14 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   messageName: {
-    padding: 10,
+    fontSize: 16,
     fontWeight: "bold",
-    fontSize: 18,
     color: "#000",
+  },
+  noResultsText: {
+    textAlign: "center",
+    marginTop: 20,
+    color: "#555",
+    fontSize: 16,
   },
 });

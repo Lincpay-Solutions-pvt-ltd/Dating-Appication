@@ -26,7 +26,7 @@ export default function SignUpScreen() {
       "userPassword": password
     });
 
-    await axios.post('http://192.168.0.101:5000/api/v1/users/login', data, {
+    await axios.post('https://58f7-182-70-116-29.ngrok-free.app/api/v1/users/login', data, {
       headers: {
         'Content-Type': 'application/json'
       }
@@ -98,7 +98,7 @@ export default function SignUpScreen() {
         userRoleID: 1,
         userAccountApproved: 1,
       });
-      await axios.post('http://192.168.0.101:5000/api/v1/users/signup', data, {
+      await axios.post('https://58f7-182-70-116-29.ngrok-free.app/api/v1/users/signup', data, {
         headers: {
           'Content-Type': 'application/json'
         }
