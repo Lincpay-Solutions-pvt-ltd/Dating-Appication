@@ -31,8 +31,8 @@ export default function OtherProfileScreen() {
     UserItem?.userID
       ? UserItem.userID
       : UserItem?.userData
-      ? JSON.parse(UserItem?.userData).userID
-      : null
+        ? JSON.parse(UserItem?.userData).userID
+        : null
   );
 
   useMemo(() => {
@@ -50,9 +50,8 @@ export default function OtherProfileScreen() {
         posts: userData_.posts ? userData_.posts : 0,
         followers: userData_.followers ? userData_.followers : 0,
         following: userData_.followings ? userData_.followings : 0,
-        bio: `${
-          userData_.userBio ? userData_.userBio : "✨ No bio available "
-        }`,
+        bio: `${userData_.userBio ? userData_.userBio : "✨ No bio available "
+          }`,
         website: "www.donyetaylor.com",
         postImages: [
           "https://your-image-url.com/post1.jpg",
@@ -83,9 +82,8 @@ export default function OtherProfileScreen() {
             posts: userData_.posts,
             followers: `${userData_.totalFollowers}`,
             following: `${userData_.followings}`,
-            bio: `${
-              userData_.userBio ? userData_.userBio : "✨ No bio available "
-            }`,
+            bio: `${userData_.userBio ? userData_.userBio : "✨ No bio available "
+              }`,
             website: "www.donyetaylor.com",
             postImages: [
               "https://your-image-url.com/post1.jpg",
@@ -177,14 +175,21 @@ export default function OtherProfileScreen() {
       ) : (
         <View style={styles.profileContainer}>
           <Image
-            source={{ uri: profileData.profileImage }}
+            source={
+              profileData.profileImage && profileData.profileImage.startsWith("set-default") ?
+                profileData.profileImage == "set-default-2" ?
+                  require("../../assets/images/profile-female.jpg") :
+                  require("../../assets/images/profile.jpg") :
+                { uri: profileData.profileImage }
+
+            }
             style={styles.profileImage}
           />
           <View style={styles.statsContainer}>
             <TouchableOpacity>
               <Text style={styles.statsText}>
                 {profileData.posts}
-                {"\n"}Posts
+                {"\n"}Posts1
               </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => router.push("../pages/followers")}>
