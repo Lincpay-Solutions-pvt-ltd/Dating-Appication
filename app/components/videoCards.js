@@ -32,7 +32,7 @@ const VideoCard = ({ item }) => {
         }}
         resizeMode={ResizeMode.COVER}
         source={{
-          uri: `http://192.168.0.103:5000${item.filepath}-thumbnail.png?token`,
+          uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.filepath}-thumbnail.png?token`,
         }}
         style={styles.image}
       />

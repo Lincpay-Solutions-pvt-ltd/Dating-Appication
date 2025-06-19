@@ -71,7 +71,7 @@ export default function FollowingScreen() {
         <TouchableOpacity onPress={() => OpenUserProfile(item)}>
           <Image
             source={{
-              uri: `http://192.168.0.103:5000${item.profilePic}`,
+              uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
             }}
             style={styles.image}
           />

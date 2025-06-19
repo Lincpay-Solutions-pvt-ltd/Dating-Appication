@@ -43,7 +43,7 @@ export default function ProfileScreen() {
   const profileData = {
     username: user ? user.userFirstName : "Loading...",
     profileImage: user.profilePic
-      ? `http://192.168.0.101:5000${user.profilePic}`
+      ? `${process.env.EXPO_PUBLIC_API_BASE_URL}${user.profilePic}`
       : "https://i.pinimg.com/736x/af/0d/7c/af0d7c8ce434deb503432cc5fce2c326.jpg", // Replace with actual image URL
     posts: user.posts ? user.posts : 0,
     followers: user.followers ? user.followers : 0,

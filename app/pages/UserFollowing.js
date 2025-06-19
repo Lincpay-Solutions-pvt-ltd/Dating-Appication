@@ -32,7 +32,7 @@ export default function UserFollowing() {
 
     try {
       const response = await axios.get(
-        `http://192.168.0.101:5000/api/v1/follow/getFollowingList/${user.userID}`
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/follow/getFollowingList/${user.userID}`
       );
       if (response.data.status === true) {
         setFollowingData(response.data.data);
@@ -76,7 +76,7 @@ export default function UserFollowing() {
                 {item.profilePic ? (
                   <Image
                     source={{
-                      uri: `http://192.168.0.101:5000${item.profilePic}`,
+                      uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
                     }}
                     style={styles.avatar}
                   />

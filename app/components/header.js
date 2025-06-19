@@ -91,7 +91,7 @@ export default function HeaderForm({ isTransparent = false }) {
           >
             {user.profilePic ? (
               <Image
-                source={{ uri: `http://192.168.0.101:5000${user.profilePic}` }}
+                source={{ uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${user.profilePic}` }}
                 style={stylesHeader.profileImageLarge}
               />
             ) : (
@@ -140,7 +140,7 @@ export default function HeaderForm({ isTransparent = false }) {
               {user.profilePic ? (
                 <Image
                   source={{
-                    uri: `http://192.168.0.101:5000${user.profilePic}`,
+                    uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${user.profilePic}`,
                   }}
                   style={stylesHeader.profileImageLarge}
                 />
@@ -244,7 +244,7 @@ export default function HeaderForm({ isTransparent = false }) {
         <Text style={stylesHeader.notificationText}>Notifications</Text>
         {user.profilePic ? (
           <Image
-            source={{ uri: `http://192.168.0.101:5000${user.profilePic}` }}
+            source={{ uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${user.profilePic}` }}
             style={stylesHeader.profileImageLarge}
           />
         ) : (

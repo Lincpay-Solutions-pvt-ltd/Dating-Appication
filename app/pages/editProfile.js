@@ -209,7 +209,7 @@ export default function EditProfileScreen() {
 
         <View style={styles.avatarContainer}>
           <Image
-            source={{ uri: `http://192.168.0.101:5000${selectedImage}` }}
+            source={{ uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${selectedImage}` }}
             style={styles.avatar}
           />
           <TouchableOpacity onPress={showOptions}>

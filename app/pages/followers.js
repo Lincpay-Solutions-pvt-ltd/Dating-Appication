@@ -35,7 +35,7 @@ export default function followers() {
     });
     try {
       const response = await axios.get(
-        `http://192.168.0.101:5000/api/v1/follow/getFollowersList/${user.userID}`
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/follow/getFollowersList/${user.userID}`
       );
       if (response.data.status === true) {
         // setUserData(response.data.data);
@@ -82,7 +82,7 @@ export default function followers() {
                 {item.profilePic ? (
                   <Image
                     source={{
-                      uri: `http://192.168.0.101:5000${item.profilePic}`,
+                      uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
                     }}
                     style={styles.avatar}
                   />
