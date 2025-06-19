@@ -54,8 +54,6 @@ const VideoList = (props) => {
   const fetchReel = async ({ userID = null, pageNumber = 1 }) => {
 
     var API = userID
-      ? `https://58f7-182-70-116-29.ngrok-free.app/api/v1/reels/by-userID/${userID}?page=${pageNumber}&limit=10`
-      : `https://58f7-182-70-116-29.ngrok-free.app/api/v1/reels/get-latest?page=${pageNumber}&limit=10`;
       ? `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/by-userID/${userID}?page=${pageNumber}&limit=10`
       : `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/get-latest?page=${pageNumber}&limit=10`;
     axios
