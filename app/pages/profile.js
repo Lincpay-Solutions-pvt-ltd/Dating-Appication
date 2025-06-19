@@ -39,34 +39,45 @@ export default function ProfileScreen() {
   const slideAnim = useRef(new Animated.Value(height)).current;
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  const profileData = {
-    username: user ? user.userFirstName : "Loading...",
-    profileImage: user.profilePic
-      ? `${process.env.EXPO_PUBLIC_API_BASE_URL}${user.profilePic}`
-      : "https://i.pinimg.com/736x/af/0d/7c/af0d7c8ce434deb503432cc5fce2c326.jpg", // Replace with actual image URL
-    posts: user.posts ? user.posts : 0,
-    followers: user.followers ? user.followers : 0,
-    following: user.following ? user.following : 0,
-    bio: `${
-      user.bio
-        ? user.bio
-        : "Just for fun\n📍 Los Angeles\n💄 Digital Creator, Educator, Strategist\n✨ Director @fohr.co\n📩 Sign up for my newsletter"
-    }`,
-    website: "www.donyetaylor.com",
-    postImages: [
-      "https://your-image-url.com/post1.jpg",
-      "https://your-image-url.com/post2.jpg",
-      "https://your-image-url.com/post3.jpg",
-    ],
-  };
+  const [profileData, setProfileData] = useState({});
 
   useEffect(() => {
-    const getUser = async () => {
+    const fetchUserData = async () => {
       const User = await AsyncStorage.getItem("User");
-      setUser(JSON.parse(User));
+      const CACHE_USER = JSON.parse(User);
+      setUser(CACHE_USER);
+      setProfileData({
+        username: CACHE_USER ? CACHE_USER.userFirstName : "Loading...",
+        profileImage: CACHE_USER.profilePic
+          ? `${process.env.EXPO_PUBLIC_API_BASE_URL}${CACHE_USER.profilePic}`
+          : `set-default-${CACHE_USER.userGender}`, // Replace with actual image URL
+        posts: CACHE_USER.posts ? CACHE_USER.posts : 0,
+        followers: CACHE_USER.followers ? CACHE_USER.totalFollowers : 0,
+        following: CACHE_USER.followings ? CACHE_USER.followings : 0,
+        bio: `${CACHE_USER.bio ? CACHE_USER.bio : "✨ No bio available"}`,
+      });
+      try {
+        const response = await fetch(
+          `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/by-userID/${CACHE_USER.userID}`
+        );
+        const data = await response.json();
+        const userData_ = data.data.length ? data.data[0] : {};
+        setUser(userData_);
+        setProfileData({
+          username: userData_ ? userData_.userFirstName : "Loading...",
+          profileImage: userData_.profilePic
+            ? `${process.env.EXPO_PUBLIC_API_BASE_URL}${userData_.profilePic}`
+            : `set-default-${userData_.userGender}`, // Replace with actual image URL
+          posts: userData_.posts ? userData_.posts : 0,
+          followers: userData_.followers ? userData_.totalFollowers : 0,
+          following: userData_.followings ? userData_.followings : 0,
+          bio: `${userData_.bio ? userData_.bio : "✨ No bio available"}`,
+        });
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
     };
-    getUser();
+    fetchUserData();
   }, []);
 
   const openImagePicker = () => {
@@ -119,7 +130,6 @@ export default function ProfileScreen() {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
       );
-      
     }
     Geolocation.getCurrentPosition(
       (pos) => setLocation(pos.coords),
@@ -182,9 +192,6 @@ export default function ProfileScreen() {
     }
   };
 
-  
-
-
   return (
     <View style={styles.container}>
       <Header />
@@ -192,7 +199,14 @@ export default function ProfileScreen() {
       {/* Profile Info */}
       <View style={styles.profileContainer}>
         <Image
-          source={{ uri: profileData.profileImage }}
+          source={
+            profileData.profileImage &&
+            profileData.profileImage.startsWith("set-default")
+              ? profileData.profileImage == "set-default-2"
+                ? require("../../assets/images/profile-female.jpg")
+                : require("../../assets/images/profile.jpg")
+              : { uri: profileData.profileImage }
+          }
           style={styles.profileImage}
         />
         <View style={styles.statsContainer}>
@@ -263,9 +277,9 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </Modal>
 
-      {/* <View style={styles.containerVideo}>
+      <View style={styles.containerVideo}>
         <VideoCards userID={user.userID} />
-      </View> */}
+      </View>
 
       {loading ? (
         <View style={styles.loadingPanel}>
@@ -274,7 +288,7 @@ export default function ProfileScreen() {
       ) : (
         <></>
       )}
-      
+
       <Modal
         animationType="slide"
         transparent={true}
@@ -331,7 +345,7 @@ const styles = StyleSheet.create({
   containerVideo: {
     justifyContent: "center",
     alignItems: "center",
-    padding:20
+    padding: 20,
   },
   container: {
     flex: 1,

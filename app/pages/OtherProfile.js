@@ -20,7 +20,6 @@ import axios from "axios";
 
 export default function OtherProfileScreen() {
   const UserItem = useLocalSearchParams();
-  const [user, setUser] = useState({});
   const router = useRouter();
   const [isFollowing, setIsFollowing] = useState(false);
   const [profileUserName, setProfileUserName] = useState(null);
@@ -31,35 +30,39 @@ export default function OtherProfileScreen() {
     UserItem?.userID
       ? UserItem.userID
       : UserItem?.userData
-        ? JSON.parse(UserItem?.userData).userID
-        : null
+      ? JSON.parse(UserItem?.userData).userID
+      : null
   );
 
   useMemo(() => {
     if (UserItem.userData) {
+      console.log("First", UserItem.userData);
+
       const userData_ = JSON.parse(UserItem.userData);
       setFollowToUserID(userData_.userID);
 
       setProfileData({
-        username: user
+        userID: userData_.userID,
+        username: userData_
           ? userData_.userFirstName + userData_.userSurname
           : "Loading...",
         profileImage: userData_.profilePic
           ? `${process.env.EXPO_PUBLIC_API_BASE_URL}${userData_.profilePic}`
-          : "https://i.pinimg.com/736x/af/0d/7c/af0d7c8ce434deb503432cc5fce2c326.jpg", // Replace with actual image URL
+          : `set-default-${userData_.userGender}`, // Replace with actual image URL
         posts: userData_.posts ? userData_.posts : 0,
-        followers: userData_.followers ? userData_.followers : 0,
+        followers: userData_.totalFollowers ? userData_.totalFollowers : 0,
         following: userData_.followings ? userData_.followings : 0,
-        bio: `${userData_.userBio ? userData_.userBio : "✨ No bio available "
-          }`,
+        bio: `${
+          userData_.userBio ? userData_.userBio : "✨ No bio available "
+        }`,
         website: "www.donyetaylor.com",
         postImages: [
           "https://your-image-url.com/post1.jpg",
           "https://your-image-url.com/post2.jpg",
           "https://your-image-url.com/post3.jpg",
         ],
+        userEmail: userData_.userEmail,
       });
-      console.log("Other Profile Data = > ", profileData);
     } else if (UserItem.userID) {
       // hit api to get user data by userID
       setFollowToUserID(UserItem.userID);
@@ -67,29 +70,34 @@ export default function OtherProfileScreen() {
       const fetchUserData = async () => {
         try {
           const response = await fetch(
-            `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/getUserByEmail/testing@dev.com`
+            `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/by-userID/${UserItem.userID}`
           );
           const data = await response.json();
           const userData_ = data.data.length ? data.data[0] : {};
+          console.log("Second", userData_);
+
           setProfileData({
+            userID: userData_.userID,
             username:
               userData_.userFirstName + " " + userData_.userSurname ||
               "Undefined",
             profileImage: userData_.profilePic
               ? `${process.env.EXPO_PUBLIC_API_BASE_URL}${userData_.profilePic}`
-              : "https://i.pinimg.com/736x/af/0d/7c/af0d7c8ce434deb503432cc5fce2c326.jpg",
+              : `set-default-${userData_.userGender}`,
 
             posts: userData_.posts,
             followers: `${userData_.totalFollowers}`,
             following: `${userData_.followings}`,
-            bio: `${userData_.userBio ? userData_.userBio : "✨ No bio available "
-              }`,
+            bio: `${
+              userData_.userBio ? userData_.userBio : "✨ No bio available "
+            }`,
             website: "www.donyetaylor.com",
             postImages: [
               "https://your-image-url.com/post1.jpg",
               "https://your-image-url.com/post2.jpg",
               "https://your-image-url.com/post3.jpg",
             ],
+            userEmail: userData_.userEmail,
           });
         } catch (error) {
           console.error("Error fetching user data:", error);
@@ -137,10 +145,9 @@ export default function OtherProfileScreen() {
   };
 
   const followUser = async () => {
-
     try {
       const response = await axios.post(
-        "${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/follow/follow",
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/follow/follow`,
         {
           followBy: currentUserID,
           followTo: followToUserID,
@@ -148,14 +155,14 @@ export default function OtherProfileScreen() {
       );
       setIsFollowing(true);
     } catch (error) {
-      console.error("Error following user:", error);
+      console.error("Error following user:", error.response);
     }
   };
 
   const unfollowUser = async () => {
     try {
       const response = axios.post(
-        "${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/follow/unfollow",
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/follow/unfollow`,
         {
           followBy: currentUserID,
           followTo: followToUserID,
@@ -176,30 +183,43 @@ export default function OtherProfileScreen() {
         <View style={styles.profileContainer}>
           <Image
             source={
-              profileData.profileImage && profileData.profileImage.startsWith("set-default") ?
-                profileData.profileImage == "set-default-2" ?
-                  require("../../assets/images/profile-female.jpg") :
-                  require("../../assets/images/profile.jpg") :
-                { uri: profileData.profileImage }
-
+              profileData.profileImage &&
+              profileData.profileImage.startsWith("set-default")
+                ? profileData.profileImage == "set-default-2"
+                  ? require("../../assets/images/profile-female.jpg")
+                  : require("../../assets/images/profile.jpg")
+                : { uri: profileData.profileImage }
             }
             style={styles.profileImage}
           />
+
           <View style={styles.statsContainer}>
             <TouchableOpacity>
               <Text style={styles.statsText}>
                 {profileData.posts}
-                {"\n"}Posts1
+                {"\n"}Posts
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push("../pages/followers")}>
+            <TouchableOpacity
+              onPress={() =>
+                router.push({
+                  pathname: "../pages/followers",
+                  params: { userID: profileData.userID },
+                })
+              }
+            >
               <Text style={styles.statsText}>
                 {profileData.followers}
                 {"\n"}Followers
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => router.push("../pages/UserFollowing")}
+              onPress={() =>
+                router.push({
+                  pathname: "../pages/UserFollowing",
+                  params: { userID: profileData.userID },
+                })
+              }
             >
               <Text style={styles.statsText}>
                 {profileData.following}
@@ -233,7 +253,7 @@ export default function OtherProfileScreen() {
       </View>
 
       <View style={styles.containerVideo}>
-        <VideoCards userID={user.userID} />
+        <VideoCards userID={profileData.userID} />
       </View>
     </View>
   );

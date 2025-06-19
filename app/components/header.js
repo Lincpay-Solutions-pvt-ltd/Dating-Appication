@@ -53,7 +53,8 @@ export default function HeaderForm({ isTransparent = false }) {
       );
       if (response.data?.status) {
         const coins = response.data.data || [];
-        const totalCount = coins.length > 0 ? coins[coins.length - 1].totalCount : 0;
+        const totalCount =
+          coins.length > 0 ? coins[coins.length - 1].totalCount : 0;
         setUserCoins(totalCount);
       }
     } catch (error) {
@@ -82,7 +83,11 @@ export default function HeaderForm({ isTransparent = false }) {
   return (
     <>
       {/* Header */}
-      <View style={isTransparent ? stylesHeader.headerTransparent : stylesHeader.header}>
+      <View
+        style={
+          isTransparent ? stylesHeader.headerTransparent : stylesHeader.header
+        }
+      >
         <View style={stylesHeader.leftSection}>
           {/* Profile Image (Click to open menu) */}
           <TouchableOpacity
@@ -91,7 +96,9 @@ export default function HeaderForm({ isTransparent = false }) {
           >
             {user.profilePic ? (
               <Image
-                source={{ uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${user.profilePic}` }}
+                source={{
+                  uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${user.profilePic}`,
+                }}
                 style={stylesHeader.profileImageLarge}
               />
             ) : (
@@ -101,7 +108,7 @@ export default function HeaderForm({ isTransparent = false }) {
               />
             )}
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={stylesHeader.addButton}
             onPress={() => router.push("./coinScreen")}
@@ -109,18 +116,28 @@ export default function HeaderForm({ isTransparent = false }) {
             <View style={stylesHeader.coinContainer}>
               <Ionicons name="star" size={16} color="gold" />
               <Text style={stylesHeader.coinText}>{userCoins}</Text>
-              <Ionicons style={stylesHeader.plusIcon} name="add" size={16} color="black" />
+              <Ionicons
+                style={stylesHeader.plusIcon}
+                name="add"
+                size={16}
+                color="black"
+              />
             </View>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={stylesHeader.notificationIcon} onPress={toggleNotification}>
+        <TouchableOpacity
+          style={stylesHeader.notificationIcon}
+          onPress={toggleNotification}
+        >
           <Ionicons name="notifications-outline" size={30} color="black" />
         </TouchableOpacity>
       </View>
 
       {/* Sidebar Menu */}
-      <Animated.View style={[stylesHeader.menu, { transform: [{ translateX }] }]}>
+      <Animated.View
+        style={[stylesHeader.menu, { transform: [{ translateX }] }]}
+      >
         <TouchableOpacity
           style={stylesHeader.backIcon}
           onPress={() => router.replace("/home")}
@@ -134,7 +151,7 @@ export default function HeaderForm({ isTransparent = false }) {
               style={stylesHeader.profileRow}
               onPress={() => {
                 toggleMenu();
-                router.push("/profile");
+                router.push("../pages/profile");
               }}
             >
               {user.profilePic ? (
@@ -151,7 +168,9 @@ export default function HeaderForm({ isTransparent = false }) {
                 />
               )}
               <View style={stylesHeader.profileInfoContainer}>
-                <Text style={stylesHeader.profileName}>{user.userFirstName + " "}</Text>
+                <Text style={stylesHeader.profileName}>
+                  {user.userFirstName + " "}
+                </Text>
                 <View style={stylesHeader.statsRow}>
                   <Ionicons name="diamond-outline" size={16} color="gray" />
                   <Text style={stylesHeader.statsText}>0</Text>
@@ -175,7 +194,9 @@ export default function HeaderForm({ isTransparent = false }) {
           <Ionicons name="phone-portrait-outline" size={24} color="#000" />
           <View>
             <Text style={stylesHeader.menuText}>Get Tango App</Text>
-            <Text style={stylesHeader.subText}>Stay connected with your friends anywhere!</Text>
+            <Text style={stylesHeader.subText}>
+              Stay connected with your friends anywhere!
+            </Text>
           </View>
         </TouchableOpacity>
 
@@ -225,7 +246,7 @@ export default function HeaderForm({ isTransparent = false }) {
               AsyncStorage.removeItem("Authenticated");
               AsyncStorage.removeItem("User");
               dispatch(logout());
-              router.navigate("/login");
+              router.navigate("../pages/login");
             });
           }}
         >
@@ -236,15 +257,23 @@ export default function HeaderForm({ isTransparent = false }) {
 
       {/* Notification Panel */}
       <Animated.View
-        style={[stylesHeader.notificationBar, { transform: [{ translateX: translateZ }] }]}
+        style={[
+          stylesHeader.notificationBar,
+          { transform: [{ translateX: translateZ }] },
+        ]}
       >
-        <TouchableOpacity style={stylesHeader.backIcon} onPress={toggleNotification}>
+        <TouchableOpacity
+          style={stylesHeader.backIcon}
+          onPress={toggleNotification}
+        >
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={stylesHeader.notificationText}>Notifications</Text>
         {user.profilePic ? (
           <Image
-            source={{ uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${user.profilePic}` }}
+            source={{
+              uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${user.profilePic}`,
+            }}
             style={stylesHeader.profileImageLarge}
           />
         ) : (
@@ -254,7 +283,11 @@ export default function HeaderForm({ isTransparent = false }) {
           />
         )}
         <Text style={stylesHeader.followText}>+1 Followers</Text>
-        <EntypoIcons name="chevron-right" size={24} style={stylesHeader.rightArrow} />
+        <EntypoIcons
+          name="chevron-right"
+          size={24}
+          style={stylesHeader.rightArrow}
+        />
       </Animated.View>
     </>
   );
@@ -302,7 +335,6 @@ const stylesHeader = StyleSheet.create({
   },
   notificationIcon: {
     padding: 5,
-    
   },
   profileContainer: {
     width: 50,
@@ -432,7 +464,7 @@ const stylesHeader = StyleSheet.create({
   },
   notificationBar: {
     position: "absolute",
-    width: "100%", 
+    width: "100%",
     height: "100%",
     backgroundColor: "#111",
     paddingTop: 50,

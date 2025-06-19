@@ -11,7 +11,6 @@ import {
 import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { login, logout } from "../Redux/authSlice";
 import VideoCards from "../components/videoCards";
 import Footer from "../components/footer";
 import Header from "../components/header";

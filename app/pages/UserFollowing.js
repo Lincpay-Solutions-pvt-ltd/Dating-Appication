@@ -14,9 +14,11 @@ import { useState, useMemo } from "react";
 import axios from "axios";
 
 export default function UserFollowing() {
+  const { userID } = useLocalSearchParams();
   const [user, setUser] = useState({});
   const [followerName, setFollowerName] = useState("");
   const [followingData, setFollowingData] = useState([]);
+  const [totalFollowings, setTotalFollowings] = useState(0);
 
   useMemo(() => {
     const getUser = async () => {
@@ -32,21 +34,28 @@ export default function UserFollowing() {
 
     try {
       const response = await axios.get(
-        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/follow/getFollowingList/${user.userID}`
+        `${
+          process.env.EXPO_PUBLIC_API_BASE_URL
+        }/api/v1/follow/getFollowingList/${userID ? userID : user.userID}`
       );
       if (response.data.status === true) {
         setFollowingData(response.data.data);
-
         const followingList = response.data.data;
+        if (
+          followingList.length &&
+          followingList[followingList.length - 1].totalCount
+        ) {
+          setTotalFollowings(
+            followingList[followingList.length - 1].totalCount
+          );
+        }
         followingList.forEach((user) => {
           const fullName = `${user.userFirstName} ${user.userSurname}`;
           setFollowerName(fullName);
         });
-      } else {
-        console.error("Failed to fetch following data");
       }
     } catch (error) {
-      console.error("Error fetching following data:2", error.response.data);
+      console.log("Error fetching following data:2", error.response.data);
     }
   };
 
@@ -61,39 +70,41 @@ export default function UserFollowing() {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Following</Text>
-      <Text style={styles.subHeader}>
-        Total Following : Total Following count
-      </Text>
-      <FlatList
-        data={followingData}
-        keyExtractor={(item) => item.userID}
-        renderItem={({ item }) => {
-          console.log("Item ", item);
+      <Text style={styles.subHeader}>Total Following : {totalFollowings}</Text>
+      {followingData.length ? (
+        <FlatList
+          data={followingData}
+          keyExtractor={(item) => item.userID}
+          renderItem={({ item }) => {
+            console.log("Item ", item);
 
-          return (
-            <TouchableOpacity onPress={() => OpenUserProfile(item)}>
-              <View style={styles.userRow}>
-                {item.profilePic ? (
-                  <Image
-                    source={{
-                      uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
-                    }}
-                    style={styles.avatar}
-                  />
-                ) : (
-                  <View style={styles.avatarPlaceholder} />
-                )}
-                <View style={styles.userInfo}>
-                  <Text style={styles.username}>
-                    {item.userFirstName + " " + item.userSurname}
-                  </Text>
+            return (
+              <TouchableOpacity onPress={() => OpenUserProfile(item)}>
+                <View style={styles.userRow}>
+                  {item.profilePic ? (
+                    <Image
+                      source={{
+                        uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
+                      }}
+                      style={styles.avatar}
+                    />
+                  ) : (
+                    <View style={styles.avatarPlaceholder} />
+                  )}
+                  <View style={styles.userInfo}>
+                    <Text style={styles.username}>
+                      {item.userFirstName + " " + item.userSurname}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
-          );
-        }}
-        contentContainerStyle={styles.list}
-      />
+              </TouchableOpacity>
+            );
+          }}
+          contentContainerStyle={styles.list}
+        />
+      ) : (
+        <Text style={styles.header}>No Followings</Text>
+      )}
     </View>
   );
 }
@@ -101,13 +112,13 @@ export default function UserFollowing() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0d0d0d",
+    backgroundColor: "#fff",
     paddingTop: 50,
     paddingHorizontal: 15,
   },
   header: {
     fontSize: 20,
-    color: "white",
+    color: "#000",
     fontWeight: "bold",
     textAlign: "center",
   },

@@ -78,7 +78,7 @@ export default function ReelsComponent(props) {
       );
       const fetchedReels = response.data.data;
       const lastJson = fetchedReels[fetchedReels.length - 1];
-      setHaveMoreReels(lastJson.haveMore);
+      setHaveMoreReels(lastJson?.haveMore ?? false);
 
       setDatabase((prev) => [...prev, ...fetchedReels]);
     } catch (error) {
@@ -123,6 +123,7 @@ export default function ReelsComponent(props) {
     const [totalLikes, setTotalLikes] = useState(0);
     const [totalComments, setTotalComments] = useState(0);
     //const [isSaved, setIsSaved] = useState(false);
+    console.log("Reelitem", item);
 
     useMemo(() => {
       const getUser = async () => {
@@ -232,11 +233,15 @@ export default function ReelsComponent(props) {
       });
       try {
         await axios
-          .post(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/like`, data, {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
+          .post(
+            `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/like`,
+            data,
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
           .then(async function (response) {
             console.log(response.data);
           });
@@ -253,11 +258,15 @@ export default function ReelsComponent(props) {
       });
       try {
         await axios
-          .post(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/dislike`, data, {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
+          .post(
+            `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/dislike`,
+            data,
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
           .then(async function (response) {
             console.log(response.data);
           });
@@ -484,7 +493,12 @@ export default function ReelsComponent(props) {
           </View>
 
           <View style={styles.profileContainer}>
-            <Image source={item.postProfile} style={styles.profileImage} />
+            <Image
+              source={{
+                uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
+              }}
+              style={styles.profileImage}
+            />
             <TouchableOpacity
               onPress={() => {
                 router.push({
@@ -501,7 +515,6 @@ export default function ReelsComponent(props) {
           </View>
         </View>
 
-  
         <Modal
           animationType="slide"
           transparent={true}

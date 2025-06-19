@@ -22,7 +22,6 @@ const VideoCard = ({ item }) => {
 
   return (
     <View style={styles.card}>
-
       <Image
         onTouchEndCapture={() => {
           router.push({
@@ -46,22 +45,35 @@ const VideoList = (props) => {
   const [haveMoreReels, setHaveMoreReels] = useState(false);
 
   useEffect(() => {
+    console.log("props.userID", props.userID);
     props.userID
       ? fetchReel({ userID: props.userID })
       : fetchReel({ pageNumber: 1 });
   }, [props]);
 
   const fetchReel = async ({ userID = null, pageNumber = 1 }) => {
-
     var API = userID
       ? `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/by-userID/${userID}?page=${pageNumber}&limit=10`
       : `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/get-latest?page=${pageNumber}&limit=10`;
+    console.log("API", API);
+    console.log("props.userID", props.userID);
+
     axios
       .get(API)
       .then((response) => {
-        setDatabase((prev) => [...prev, ...response.data.data]);
-        const lastJson = response.data.data[response.data.data.length - 1];
-        setHaveMoreReels(lastJson.haveMore);
+        console.log(response.data.data);
+        if (response.data.data.length) {
+          setDatabase((prev) => [...prev, ...response.data.data]);
+          const lastJson = response.data.data[response.data.data.length - 1];
+          console.log("\n\nlastJson", lastJson);
+
+          setHaveMoreReels(lastJson?.haveMore ?? false);
+          console.log("Have More", lastJson?.haveMore ?? false);
+        } else {
+          setDatabase([]);
+          setHaveMoreReels(false);
+        }
+
         return response.data;
       })
       .catch((error) => {
@@ -79,19 +91,53 @@ const VideoList = (props) => {
   };
 
   return (
-    <FlatList
-      style={styles.container}
-      width={Dimensions.get("screen").width}
-      data={Database}
-      numColumns={2}
-      contentContainerStyle={{ padding: 0 }}
-      horizontal={false}
-      columnWrapperStyle={{ justifyContent: "space-between" }}
-      keyExtractor={(item, index) => `${item.id ?? "no-id"}-${index}`}
-      renderItem={({ item }) => <VideoCard item={item} />}
-      onEndReached={CheckLastReel}
-      onEndReachedThreshold={0.5}
-    />
+    <>
+      <View
+        style={{
+          display: props.userID ? "unset" : "none",
+          flexDirection: "row",
+          alignItems: "center",
+        }}
+      >
+        <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
+        <View>
+          <Text
+            style={{ ...styles.text, ...{ width: 70, textAlign: "center" } }}
+          >
+            Posts
+          </Text>
+        </View>
+        <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
+      </View>
+      {Database.length ? (
+        <FlatList
+          style={styles.container}
+          width={Dimensions.get("screen").width}
+          data={Database}
+          numColumns={2}
+          contentContainerStyle={{ padding: 0 }}
+          horizontal={false}
+          columnWrapperStyle={{ justifyContent: "space-between" }}
+          keyExtractor={(item, index) => `${item.id ?? "no-id"}-${index}`}
+          renderItem={({ item }) => <VideoCard item={item} />}
+          onEndReached={CheckLastReel}
+          onEndReachedThreshold={0.5}
+        />
+      ) : (
+        <View>
+          <Text
+            style={{
+              ...styles.text,
+              ...{
+                textAlign: "center",
+              },
+            }}
+          >
+            You Don't have any posts
+          </Text>
+        </View>
+      )}
+    </>
   );
 };
 
@@ -108,6 +154,7 @@ const styles = StyleSheet.create({
     padding: 0,
     margin: 2,
     borderRadius: 50,
+    backgroundColor: "#f0f",
   },
   text: {
     fontWeight: "bold",
