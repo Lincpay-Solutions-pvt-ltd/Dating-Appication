@@ -81,15 +81,15 @@ export default function Footer() {
       {/* Chat List */}
       <TouchableOpacity
         style={styles.item}
-        onPress={() => router.push("../pages/chatList")}
+        onPress={() => router.push("../pages/profile")}
       >
-        <MaterialCommunityIcons
+        <IoniconsIcons
           style={styles.icon}
-          name={isActive("/pages/chatList") ? "chat" : "chat-outline"}
+          name={isActive("/pages/profile") ? "person-circle-sharp" : "person-circle-outline"}
           size={28}
-          color={isActive("/pages/chatList") ? "#e91e63" : "#fff"}
+          color={isActive("/pages/profile") ? "#e91e63" : "#fff"}
         />
-        <Text style={styles.footerText}>Chats</Text>
+        <Text style={styles.footerText}>Profile</Text>
       </TouchableOpacity>
     </View>
   );

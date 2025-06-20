@@ -62,7 +62,7 @@ export default function ExploreScreen() {
     try {
       const response = await axios.get(
 
-        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/allUsers?search=${name}`,
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/allUsers?search=${searchTerm}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -133,7 +133,7 @@ export default function ExploreScreen() {
                     <Image
                       source={
                         item.profilePic
-                          ? { uri: `https://58f7-182-70-116-29.ngrok-free.app${item.profilePic}` }
+                          ? { uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}` }
                           : item.userGender == 2
                             ? require("../../assets/images/profile-female.jpg")
                             : require("../../assets/images/profile.jpg")

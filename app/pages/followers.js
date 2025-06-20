@@ -10,14 +10,17 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import IoniconsIcons from "react-native-vector-icons/Ionicons";
 import { useState, useMemo } from "react";
 import axios from "axios";
 
 export default function followers() {
+  const { userID } = useLocalSearchParams();
   const [user, setUser] = useState({});
   const [followerName, setFollowerName] = useState("");
-  const [followingData, setFollowingData] = useState([]);
+  const [followersData, setFollowersData] = useState([]);
   const [selectedImage, setSelectedImage] = useState("");
+  const [totalFollowers, setTotalFollowers] = useState(0);
 
   useMemo(() => {
     const getUser = async () => {
@@ -29,26 +32,31 @@ export default function followers() {
   }, []);
 
   const fetchFollowersData = async (user) => {
-
     let data = JSON.stringify({
       userID: user.userID,
     });
     try {
       const response = await axios.get(
-        `https://58f7-182-70-116-29.ngrok-free.app/api/v1/follow/getFollowersList/${user.userID}`
+        `${
+          process.env.EXPO_PUBLIC_API_BASE_URL
+        }/api/v1/follow/getFollowersList/${userID ? userID : user.userID}`
       );
       if (response.data.status === true) {
         // setUserData(response.data.data);
-        setFollowingData(response.data.data);
+        setFollowersData(response.data.data);
         setSelectedImage(response.data.data[0].profilePic);
 
-        const followingList = response.data.data;
-        followingList.forEach((user) => {
+        const followerList = response.data.data;
+        if (
+          followerList.length &&
+          followerList[followerList.length - 1].totalCount
+        ) {
+          setTotalFollowers(followerList[followerList.length - 1].totalCount);
+        }
+        followerList.forEach((user) => {
           const fullName = `${user.userFirstName} ${user.userSurname}`;
           setFollowerName(fullName);
         });
-      } else {
-        console.error("Failed to fetch followers data");
       }
     } catch (error) {
       console.error("Error fetching followers data:", error);
@@ -65,41 +73,45 @@ export default function followers() {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity onPress={() => router.back()}>
+        <IoniconsIcons name="arrow-back" size={24} color="black" />
+      </TouchableOpacity>
       <Text style={styles.header}>Followers</Text>
-      <Text style={styles.subHeader}>
-        Total Followers : Total Followers count
-      </Text>
+      <Text style={styles.subHeader}>Total Followers : {totalFollowers}</Text>
+      {followersData.length ? (
+        <FlatList
+          data={followersData}
+          keyExtractor={(item) => item.userID}
+          renderItem={({ item }) => {
+            console.log("Item ", item);
 
-      <FlatList
-        data={followingData}
-        keyExtractor={(item) => item.userID}
-        renderItem={({ item }) => {
-          console.log("Item ", item);
-
-          return (
-            <TouchableOpacity onPress={() => OpenUserProfile(item)}>
-              <View style={styles.userRow}>
-                {item.profilePic ? (
-                  <Image
-                    source={{
-                      uri: `https://58f7-182-70-116-29.ngrok-free.app${item.profilePic}`,
-                    }}
-                    style={styles.avatar}
-                  />
-                ) : (
-                  <View style={styles.avatarPlaceholder} />
-                )}
-                <View style={styles.userInfo}>
-                  <Text style={styles.username}>
-                    {item.userFirstName + " " + item.userSurname}
-                  </Text>
+            return (
+              <TouchableOpacity onPress={() => OpenUserProfile(item)}>
+                <View style={styles.userRow}>
+                  {item.profilePic ? (
+                    <Image
+                      source={{
+                        uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
+                      }}
+                      style={styles.avatar}
+                    />
+                  ) : (
+                    <View style={styles.avatarPlaceholder} />
+                  )}
+                  <View style={styles.userInfo}>
+                    <Text style={styles.username}>
+                      {item.userFirstName + " " + item.userSurname}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
-          );
-        }}
-        contentContainerStyle={styles.list}
-      />
+              </TouchableOpacity>
+            );
+          }}
+          contentContainerStyle={styles.list}
+        />
+      ) : (
+        <Text style={styles.header}>No Followers</Text>
+      )}
     </View>
   );
 }
@@ -107,13 +119,13 @@ export default function followers() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0d0d0d",
+    backgroundColor: "#fff",
     paddingTop: 50,
     paddingHorizontal: 15,
   },
   header: {
     fontSize: 20,
-    color: "white",
+    color: "#000",
     fontWeight: "bold",
     textAlign: "center",
   },

@@ -15,6 +15,7 @@ import {
   TouchableWithoutFeedback,
   TouchableOpacity,
   Keyboard,
+  Alert,
 } from "react-native";
 import { Video, ResizeMode } from "expo-av";
 import { FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
@@ -78,7 +79,7 @@ export default function ReelsComponent(props) {
       );
       const fetchedReels = response.data.data;
       const lastJson = fetchedReels[fetchedReels.length - 1];
-      setHaveMoreReels(lastJson.haveMore);
+      setHaveMoreReels(lastJson?.haveMore ?? false);
 
       setDatabase((prev) => [...prev, ...fetchedReels]);
     } catch (error) {
@@ -232,11 +233,15 @@ export default function ReelsComponent(props) {
       });
       try {
         await axios
-          .post(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/like`, data, {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
+          .post(
+            `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/like`,
+            data,
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
           .then(async function (response) {
             console.log(response.data);
           });
@@ -253,11 +258,15 @@ export default function ReelsComponent(props) {
       });
       try {
         await axios
-          .post(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/dislike`, data, {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
+          .post(
+            `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/dislike`,
+            data,
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
           .then(async function (response) {
             console.log(response.data);
           });
@@ -267,11 +276,15 @@ export default function ReelsComponent(props) {
     };
 
     const deleteReel = async () => {
+      console.log("Clicked Delete");
+
       try {
         await axios.delete(
           `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/delete/${item.reelId}`
         );
         setShowMoreOptionsModal(false);
+        Alert.alert("Deleted Successfully", "Your Post Deleted Successfully");
+        router.replace("../pages/profile");
       } catch (error) {
         console.log("Cannot delete the reel => ", error);
       }
@@ -484,7 +497,12 @@ export default function ReelsComponent(props) {
           </View>
 
           <View style={styles.profileContainer}>
-            <Image source={item.postProfile} style={styles.profileImage} />
+            <Image
+              source={{
+                uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
+              }}
+              style={styles.profileImage}
+            />
             <TouchableOpacity
               onPress={() => {
                 router.push({
@@ -501,7 +519,6 @@ export default function ReelsComponent(props) {
           </View>
         </View>
 
-  
         <Modal
           animationType="slide"
           transparent={true}

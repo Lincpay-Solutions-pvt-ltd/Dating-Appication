@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+
 import {
   View,
   Text,
@@ -10,6 +11,7 @@ import {
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import EntypoIcons from "react-native-vector-icons/Entypo";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useDispatch } from "react-redux";
@@ -27,6 +29,9 @@ export default function HeaderForm({ isTransparent = false }) {
   const translateZ = useState(new Animated.Value(screenWidth))[0];
   const router = useRouter();
   const dispatch = useDispatch();
+
+  // Helper to determine if a route is active
+  const isActive = (route) => pathname === route;
 
   const toggleMenu = () => {
     Animated.timing(translateX, {
@@ -53,7 +58,8 @@ export default function HeaderForm({ isTransparent = false }) {
       );
       if (response.data?.status) {
         const coins = response.data.data || [];
-        const totalCount = coins.length > 0 ? coins[coins.length - 1].totalCount : 0;
+        const totalCount =
+          coins.length > 0 ? coins[coins.length - 1].totalCount : 0;
         setUserCoins(totalCount);
       }
     } catch (error) {
@@ -82,7 +88,11 @@ export default function HeaderForm({ isTransparent = false }) {
   return (
     <>
       {/* Header */}
-      <View style={isTransparent ? stylesHeader.headerTransparent : stylesHeader.header}>
+      <View
+        style={
+          isTransparent ? stylesHeader.headerTransparent : stylesHeader.header
+        }
+      >
         <View style={stylesHeader.leftSection}>
           {/* Profile Image (Click to open menu) */}
           <TouchableOpacity
@@ -91,7 +101,9 @@ export default function HeaderForm({ isTransparent = false }) {
           >
             {user.profilePic ? (
               <Image
-                source={{ uri: `https://58f7-182-70-116-29.ngrok-free.app${user.profilePic}` }}
+                source={{
+                  uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${user.profilePic}`,
+                }}
                 style={stylesHeader.profileImageLarge}
               />
             ) : (
@@ -101,7 +113,7 @@ export default function HeaderForm({ isTransparent = false }) {
               />
             )}
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={stylesHeader.addButton}
             onPress={() => router.push("./coinScreen")}
@@ -109,21 +121,35 @@ export default function HeaderForm({ isTransparent = false }) {
             <View style={stylesHeader.coinContainer}>
               <Ionicons name="star" size={16} color="gold" />
               <Text style={stylesHeader.coinText}>{userCoins}</Text>
-              <Ionicons style={stylesHeader.plusIcon} name="add" size={16} color="black" />
+              <Ionicons
+                style={stylesHeader.plusIcon}
+                name="add"
+                size={16}
+                color="black"
+              />
             </View>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={stylesHeader.notificationIcon} onPress={toggleNotification}>
-          <Ionicons name="notifications-outline" size={30} color="black" />
+        <TouchableOpacity
+          style={stylesHeader.notificationIcon}
+          onPress={()=>router.push("../pages/chatList")}
+        >
+          <MaterialIcons
+            name="chat-bubble-outline"
+            size={24}
+            style={{ transform: [{ scaleX: -1 }] }}
+          />
         </TouchableOpacity>
       </View>
 
       {/* Sidebar Menu */}
-      <Animated.View style={[stylesHeader.menu, { transform: [{ translateX }] }]}>
+      <Animated.View
+        style={[stylesHeader.menu, { transform: [{ translateX }] }]}
+      >
         <TouchableOpacity
           style={stylesHeader.backIcon}
-          onPress={() => router.replace("/home")}
+          onPress={() => router.replace("../pages/home")}
         >
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
@@ -134,13 +160,13 @@ export default function HeaderForm({ isTransparent = false }) {
               style={stylesHeader.profileRow}
               onPress={() => {
                 toggleMenu();
-                router.push("/profile");
+                router.replace("../pages/home");
               }}
             >
               {user.profilePic ? (
                 <Image
                   source={{
-                    uri: `https://58f7-182-70-116-29.ngrok-free.app${user.profilePic}`,
+                    uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${user.profilePic}`,
                   }}
                   style={stylesHeader.profileImageLarge}
                 />
@@ -151,7 +177,9 @@ export default function HeaderForm({ isTransparent = false }) {
                 />
               )}
               <View style={stylesHeader.profileInfoContainer}>
-                <Text style={stylesHeader.profileName}>{user.userFirstName + " "}</Text>
+                <Text style={stylesHeader.profileName}>
+                  {user.userFirstName + " "}
+                </Text>
                 <View style={stylesHeader.statsRow}>
                   <Ionicons name="diamond-outline" size={16} color="gray" />
                   <Text style={stylesHeader.statsText}>0</Text>
@@ -175,7 +203,9 @@ export default function HeaderForm({ isTransparent = false }) {
           <Ionicons name="phone-portrait-outline" size={24} color="#000" />
           <View>
             <Text style={stylesHeader.menuText}>Get Tango App</Text>
-            <Text style={stylesHeader.subText}>Stay connected with your friends anywhere!</Text>
+            <Text style={stylesHeader.subText}>
+              Stay connected with your friends anywhere!
+            </Text>
           </View>
         </TouchableOpacity>
 
@@ -183,7 +213,7 @@ export default function HeaderForm({ isTransparent = false }) {
           style={stylesHeader.menuItem}
           onPress={() => {
             toggleMenu();
-            router.push("/(sidebar)/agency");
+            router.push("../pages/agency");
           }}
         >
           <Ionicons name="briefcase-outline" size={24} color="#000" />
@@ -194,7 +224,7 @@ export default function HeaderForm({ isTransparent = false }) {
           style={stylesHeader.menuItem}
           onPress={() => {
             toggleMenu();
-            router.push("/fanPage");
+            router.push("../pages/fanPage");
           }}
         >
           <Ionicons name="heart-outline" size={24} color="#000" />
@@ -225,7 +255,7 @@ export default function HeaderForm({ isTransparent = false }) {
               AsyncStorage.removeItem("Authenticated");
               AsyncStorage.removeItem("User");
               dispatch(logout());
-              router.navigate("/login");
+              router.navigate("../pages/login");
             });
           }}
         >
@@ -236,15 +266,23 @@ export default function HeaderForm({ isTransparent = false }) {
 
       {/* Notification Panel */}
       <Animated.View
-        style={[stylesHeader.notificationBar, { transform: [{ translateX: translateZ }] }]}
+        style={[
+          stylesHeader.notificationBar,
+          { transform: [{ translateX: translateZ }] },
+        ]}
       >
-        <TouchableOpacity style={stylesHeader.backIcon} onPress={toggleNotification}>
+        <TouchableOpacity
+          style={stylesHeader.backIcon}
+          onPress={toggleNotification}
+        >
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={stylesHeader.notificationText}>Notifications</Text>
         {user.profilePic ? (
           <Image
-            source={{ uri: `https://58f7-182-70-116-29.ngrok-free.app${user.profilePic}` }}
+            source={{
+              uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${user.profilePic}`,
+            }}
             style={stylesHeader.profileImageLarge}
           />
         ) : (
@@ -254,7 +292,11 @@ export default function HeaderForm({ isTransparent = false }) {
           />
         )}
         <Text style={stylesHeader.followText}>+1 Followers</Text>
-        <EntypoIcons name="chevron-right" size={24} style={stylesHeader.rightArrow} />
+        <EntypoIcons
+          name="chevron-right"
+          size={24}
+          style={stylesHeader.rightArrow}
+        />
       </Animated.View>
     </>
   );
@@ -302,7 +344,6 @@ const stylesHeader = StyleSheet.create({
   },
   notificationIcon: {
     padding: 5,
-    
   },
   profileContainer: {
     width: 50,
@@ -432,7 +473,7 @@ const stylesHeader = StyleSheet.create({
   },
   notificationBar: {
     position: "absolute",
-    width: "100%", 
+    width: "100%",
     height: "100%",
     backgroundColor: "#111",
     paddingTop: 50,

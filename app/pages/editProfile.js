@@ -27,14 +27,12 @@ export default function EditProfileScreen() {
   const [currentUserFirstName, setCurrentUserFirstName] = useState("Testing");
   const [currentUserSurName, setCurrentUserSurName] = useState("Dev");
   //const [pronouns, setPronouns] = useState("");
-  const [userBio, setUserBio] = useState("No bio");
+  const [userBio, setUserBio] = useState("");
   const [user, setUser] = useState({});
   const [gender, setGender] = useState("Male");
   const [modalVisible, setModalVisible] = useState(false);
   const [currentUserID, setCurrentUserID] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(
-    "https://58f7-182-70-116-29.ngrok-free.app/api/v1/uploads/win_20250529_13_01_49_pro-1748503944346.jpg?dfault=0"
-  ); // Default image
+  const [selectedImage, setSelectedImage] = useState(``); // Default image
 
   //const [userProfileData, setUserProfileData] = useState(username,userBio,userGender, /*userProfileImage*/);
   const router = useRouter();
@@ -88,6 +86,16 @@ export default function EditProfileScreen() {
     };
     launchCamera(options, handleResponse);
   };
+  const handleResetNavigation = async () => {
+    router.replace("../pages/home"); // Start with homePage
+
+    setTimeout(() => {
+      router.push("../pages/profile"); // Then profilePage
+      setTimeout(() => {
+        router.push("../pages/editProfile"); // Finally editProfile
+      }, 2);
+    }, 1);
+  };
 
   const handleResponse = async (response) => {
     if (response.didCancel) {
@@ -100,12 +108,12 @@ export default function EditProfileScreen() {
         const { uri, fileName, type } = asset;
 
         try {
+          if (!uri || !uri.startsWith("file://")) {
+            Alert.alert("Invalid image", "Please pick a valid image again.");
+            return;
+          }
           const formData = new FormData();
-
-          // Append the userID as a regular field
           formData.append("userID", currentUserID);
-
-          // Append the file - structure is important
           formData.append("file", {
             uri: uri, // Local file URI
             name: "upload.jpg", // File name
@@ -119,83 +127,120 @@ export default function EditProfileScreen() {
               headers: {
                 "Content-Type": "multipart/form-data",
               },
+              timeout: 10000,
             }
           );
 
           if (response.status === 200) {
             setSelectedImage(response.data.filePath);
-            hideOptions();
+            setTimeout(async () => {
+              hideOptions();
+              await axios.post(
+                `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/update-user`,
+                {
+                  profilePic: `${response.data.filePath}`,
+                  userID: `${currentUserID}`,
+                },
+                {
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${user.accessToken}`,
+                  },
+                }
+              );
+              // Update in Async storeage
+              var ASYNC_USER = JSON.parse(await AsyncStorage.getItem("User"));
+              ASYNC_USER.profilePic = response.data.filePath;
+              await AsyncStorage.setItem("User", JSON.stringify(ASYNC_USER));
+              setTimeout(() => {
+                handleResetNavigation();
+              }, 200); // Allow modal to dismiss cleanly
+            }, 50);
           } else {
             alert("Failed to upload image. Please try again.");
           }
         } catch (error) {
-          alert("An error occurred while uploading the image.",error.message);
+          console.log("Axios error object:", error);
+
+          if (error.response) {
+            console.log("Server responded with:", error.response.data);
+          } else if (error.request) {
+            console.log(
+              "Request was made but no response received:",
+              error.request
+            );
+          } else {
+            console.log(
+              "Something happened in setting up the request:",
+              error.message
+            );
+          }
+
+          alert("An error occurred while uploading the image.", error.message);
         }
       }
     }
     setModalVisible(false);
   };
 
-  
-
   const savingData = async () => {
-  try {
-    console.log("Saving data...");
-    const data = JSON.stringify({
-      userID: currentUserID,
-      userFirstName : currentUserFirstName,
-      bio : userBio,
-      gender:gender,
-      profilePic: selectedImage,
-    });
-
-    const response = await axios.post(
-      `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/update-user`,
-      data,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.accessToken}`,
-        },
-      }
-    );
-
-    if (response.status === 200) {
-      console.log("Data saved successfully:", response.data);
-      const profileData = {
+    try {
+      console.log("Saving data...");
+      const data = JSON.stringify({
         userID: currentUserID,
-        userFirstName : currentUserFirstName,
-        bio : userBio,
-        gender,
+        userFirstName: currentUserFirstName,
+        bio: userBio,
+        gender: gender,
         profilePic: selectedImage,
-      };
+      });
 
-      await AsyncStorage.setItem("User", JSON.stringify(profileData));
-      console.log("User data saved to AsyncStorage");
-
-      Alert.alert(
-        "Success",
-        "Profile saved successfully!",
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              router.replace("../pages/profile"); // Navigate to profile page
-              // navigation.navigate('Profile'); // <- Adjust based on your navigation
-            },
+      const response = await axios.post(
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/update-user`,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.accessToken}`,
           },
-        ],
-        { cancelable: false }
+        }
       );
-    } else {
-      console.error("Error saving data:", response.statusText);
-      Alert.alert("Error", "Failed to update profile. Please try again.");
+
+      if (response.status === 200) {
+        console.log("Data saved successfully:", response.data);
+        const profileData = {
+          userID: currentUserID,
+          userFirstName: currentUserFirstName,
+          bio: userBio,
+          gender,
+          profilePic: selectedImage,
+        };
+
+        await AsyncStorage.setItem("User", JSON.stringify(profileData));
+        console.log("User data saved to AsyncStorage");
+
+        Alert.alert(
+          "Success",
+          "Profile saved successfully!",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                router.replace("../pages/profile"); // Navigate to profile page
+                // navigation.navigate('Profile'); // <- Adjust based on your navigation
+              },
+            },
+          ],
+          { cancelable: false }
+        );
+      } else {
+        console.error("Error saving data:", response.statusText);
+        Alert.alert("Error", "Failed to update profile. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      Alert.alert("Error", "Something went wrong. Please try again later.");
     }
-  } catch (error) {
-    console.error("Error:", error);
-    Alert.alert("Error", "Something went wrong. Please try again later.");
-  }
-};
+  };
 
   return (
     <>
@@ -209,8 +254,9 @@ export default function EditProfileScreen() {
 
         <View style={styles.avatarContainer}>
           <Image
-            source={{ uri: `http://192.168.0.101:5000${selectedImage}` }}
-            source={{ uri: `https://58f7-182-70-116-29.ngrok-free.app${selectedImage}` }}
+            source={{
+              uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${selectedImage}`,
+            }}
             style={styles.avatar}
           />
           <TouchableOpacity onPress={showOptions}>
@@ -229,7 +275,11 @@ export default function EditProfileScreen() {
 
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Bio</Text>
-          <TextInput style={styles.input} value={userBio} onChangeText={setUserBio} />
+          <TextInput
+            style={styles.input}
+            value={userBio}
+            onChangeText={setUserBio}
+          />
         </View>
 
         <View style={styles.inputGroup}>
