@@ -15,6 +15,7 @@ import {
   TouchableWithoutFeedback,
   TouchableOpacity,
   Keyboard,
+  Alert,
 } from "react-native";
 import { Video, ResizeMode } from "expo-av";
 import { FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
@@ -123,7 +124,6 @@ export default function ReelsComponent(props) {
     const [totalLikes, setTotalLikes] = useState(0);
     const [totalComments, setTotalComments] = useState(0);
     //const [isSaved, setIsSaved] = useState(false);
-    console.log("Reelitem", item);
 
     useMemo(() => {
       const getUser = async () => {
@@ -276,11 +276,15 @@ export default function ReelsComponent(props) {
     };
 
     const deleteReel = async () => {
+      console.log("Clicked Delete");
+
       try {
         await axios.delete(
           `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/delete/${item.reelId}`
         );
         setShowMoreOptionsModal(false);
+        Alert.alert("Deleted Successfully", "Your Post Deleted Successfully");
+        router.replace("../pages/profile");
       } catch (error) {
         console.log("Cannot delete the reel => ", error);
       }

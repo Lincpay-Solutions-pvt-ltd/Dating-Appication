@@ -86,6 +86,16 @@ export default function EditProfileScreen() {
     };
     launchCamera(options, handleResponse);
   };
+  const handleResetNavigation = async () => {
+    router.replace("../pages/home"); // Start with homePage
+
+    setTimeout(() => {
+      router.push("../pages/profile"); // Then profilePage
+      setTimeout(() => {
+        router.push("../pages/editProfile"); // Finally editProfile
+      }, 2);
+    }, 1);
+  };
 
   const handleResponse = async (response) => {
     if (response.didCancel) {
@@ -98,6 +108,10 @@ export default function EditProfileScreen() {
         const { uri, fileName, type } = asset;
 
         try {
+          if (!uri || !uri.startsWith("file://")) {
+            Alert.alert("Invalid image", "Please pick a valid image again.");
+            return;
+          }
           const formData = new FormData();
           formData.append("userID", currentUserID);
           formData.append("file", {
@@ -113,33 +127,55 @@ export default function EditProfileScreen() {
               headers: {
                 "Content-Type": "multipart/form-data",
               },
+              timeout: 10000,
             }
           );
 
           if (response.status === 200) {
             setSelectedImage(response.data.filePath);
-            hideOptions();
-            await axios.post(
-              `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/update-user`,
-              {
-                profilePic: `${response.data.filePath}`,
-                userID: `${currentUserID}`,
-              },
-              {
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${user.accessToken}`,
+            setTimeout(async () => {
+              hideOptions();
+              await axios.post(
+                `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/update-user`,
+                {
+                  profilePic: `${response.data.filePath}`,
+                  userID: `${currentUserID}`,
                 },
-              }
-            );
-            // Update in Async storeage
-            var ASYNC_USER = JSON.parse(await AsyncStorage.getItem("User"));
-            ASYNC_USER.profilePic = response.data.filePath;
-            await AsyncStorage.setItem("User", JSON.stringify(ASYNC_USER));
+                {
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${user.accessToken}`,
+                  },
+                }
+              );
+              // Update in Async storeage
+              var ASYNC_USER = JSON.parse(await AsyncStorage.getItem("User"));
+              ASYNC_USER.profilePic = response.data.filePath;
+              await AsyncStorage.setItem("User", JSON.stringify(ASYNC_USER));
+              setTimeout(() => {
+                handleResetNavigation();
+              }, 200); // Allow modal to dismiss cleanly
+            }, 50);
           } else {
             alert("Failed to upload image. Please try again.");
           }
         } catch (error) {
+          console.log("Axios error object:", error);
+
+          if (error.response) {
+            console.log("Server responded with:", error.response.data);
+          } else if (error.request) {
+            console.log(
+              "Request was made but no response received:",
+              error.request
+            );
+          } else {
+            console.log(
+              "Something happened in setting up the request:",
+              error.message
+            );
+          }
+
           alert("An error occurred while uploading the image.", error.message);
         }
       }

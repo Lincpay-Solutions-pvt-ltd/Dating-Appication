@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import IoniconsIcons from "react-native-vector-icons/Ionicons";
 import { useState, useMemo } from "react";
 import axios from "axios";
 
@@ -72,6 +73,9 @@ export default function followers() {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity onPress={() => router.back()}>
+        <IoniconsIcons name="arrow-back" size={24} color="black" />
+      </TouchableOpacity>
       <Text style={styles.header}>Followers</Text>
       <Text style={styles.subHeader}>Total Followers : {totalFollowers}</Text>
       {followersData.length ? (

@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import IoniconsIcons from "react-native-vector-icons/Ionicons";
 import { useState, useMemo } from "react";
 import axios from "axios";
 
@@ -69,6 +70,11 @@ export default function UserFollowing() {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity
+        onPress={() => router.back()}
+      >
+        <IoniconsIcons name="arrow-back" size={24} color="black" />
+      </TouchableOpacity>
       <Text style={styles.header}>Following</Text>
       <Text style={styles.subHeader}>Total Following : {totalFollowings}</Text>
       {followingData.length ? (
@@ -112,70 +118,116 @@ export default function UserFollowing() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f2f2f7", // light gray background
     paddingTop: 50,
-    paddingHorizontal: 15,
+    paddingHorizontal: 20,
   },
+
+  backIcon: {
+    position: "absolute",
+    left: 20,
+    top: 50,
+    zIndex: 10,
+  },
+
   header: {
-    fontSize: 20,
-    color: "#000",
-    fontWeight: "bold",
+    fontSize: 26,
+    fontWeight: "800",
+    color: "#1f2937",
     textAlign: "center",
+    marginBottom: 4,
   },
+
   subHeader: {
     fontSize: 14,
-    color: "gray",
-    marginBottom: 10,
+    color: "#6b7280",
     textAlign: "center",
+    marginBottom: 30,
   },
+
+  noFollowings: {
+    fontSize: 16,
+    textAlign: "center",
+    color: "#9ca3af",
+    fontStyle: "italic",
+    marginTop: 30,
+  },
+
   search: {
-    backgroundColor: "#1a1a1a",
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 10,
-    color: "white",
+    backgroundColor: "#ffffff",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+    fontSize: 15,
+    color: "#111",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
   },
+
   list: {
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
+
   userRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 15,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 12,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 6,
+    elevation: 3,
   },
+
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    marginRight: 10,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 14,
+    borderWidth: 2,
+    borderColor: "#2563eb",
   },
-  avatarPlaceholder: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    marginRight: 10,
-    backgroundColor: "#333",
-  },
+
   userInfo: {
     flex: 1,
   },
+
   username: {
-    color: "white",
-    fontSize: 15,
-    fontWeight: "500",
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#111827",
   },
+
   name: {
-    color: "#aaa",
     fontSize: 13,
+    color: "#9ca3af",
+    marginTop: 2,
   },
+
   followButton: {
-    backgroundColor: "#3b82f6",
-    paddingVertical: 6,
-    paddingHorizontal: 15,
-    borderRadius: 6,
+    backgroundColor: "#2563eb",
+    paddingVertical: 7,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    shadowColor: "#2563eb",
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 4,
   },
+
   followText: {
-    color: "white",
+    color: "#fff",
+    fontSize: 14,
     fontWeight: "600",
   },
 });
+
+

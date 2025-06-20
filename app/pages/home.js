@@ -23,7 +23,7 @@ export default function HomeScreen() {
     <>
       <Header />
       <View style={styles.container}>
-        <VideoCards />
+        <VideoCards userID={null} />
       </View>
       <Footer />
       <View style={styles.imageWrapper}>

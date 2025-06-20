@@ -187,6 +187,7 @@ export default function ProfileScreen() {
         description
       );
       setLoading(false);
+      router.replace("../pages/profile");
     } else {
       Alert.alert("Error", "Please provide a description.");
     }
@@ -283,7 +284,7 @@ export default function ProfileScreen() {
 
       {loading ? (
         <View style={styles.loadingPanel}>
-          <ActivityIndicator size={60} color={"white"} />
+          <ActivityIndicator size={60} color={"#000"} />
         </View>
       ) : (
         <></>
@@ -304,7 +305,13 @@ export default function ProfileScreen() {
               </TouchableOpacity>
               <Text style={styles.modalTitle}>Add Post</Text>
 
-              <TouchableOpacity onPress={() => handleUpload()}>
+              <TouchableOpacity
+                onPress={() =>
+                  description.length
+                    ? handleUpload()
+                    : Alert.alert("Please Fill the Caption")
+                }
+              >
                 <Text style={styles.shareText}>Share</Text>
               </TouchableOpacity>
             </View>
@@ -329,9 +336,10 @@ export default function ProfileScreen() {
             <TextInput
               style={styles.captionInput}
               placeholder="Write a caption..."
+              placeholderTextColor="#888"
               value={description}
               onChangeText={setDescription}
-              multiline
+              multiline={true}
             />
           </View>
         </View>
@@ -469,7 +477,7 @@ const styles = StyleSheet.create({
   },
   option: {
     padding: 15,
-    borderBottomColor: "#ccc",
+    borderBottomColor: "#999",
     borderBottomWidth: 1,
   },
   optionText: {
@@ -484,7 +492,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     textAlign: "center",
     backgroundColor: "#d91859",
-    color: "white",
+    color: "#000",
   },
   cancelText: {
     color: "white",
@@ -495,7 +503,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalView: {
-    backgroundColor: "white",
+    backgroundColor: "#fff",
     padding: 25,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
@@ -545,7 +553,7 @@ const styles = StyleSheet.create({
   },
   captionInput: {
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "#999",
     paddingVertical: 10,
     fontSize: 16,
     marginBottom: 15,
@@ -556,7 +564,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "#999",
   },
   optionText: {
     fontSize: 16,

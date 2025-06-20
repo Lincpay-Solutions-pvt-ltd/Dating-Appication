@@ -1,21 +1,15 @@
-import React from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   View,
   Text,
   Image,
   StyleSheet,
-  TouchableOpacity,
   FlatList,
-  Pressable,
   Dimensions,
-  ActivityIndicator,
 } from "react-native";
-import { Video, ResizeMode } from "expo-av";
-import { useState, useEffect } from "react";
-import { Database } from "./Database";
-import { router, useRouter } from "expo-router";
+import { ResizeMode } from "expo-av";
+import { useRouter } from "expo-router";
 import axios from "axios";
-const _db = Database;
 
 const VideoCard = ({ item }) => {
   const router = useRouter();
@@ -43,55 +37,75 @@ const VideoList = (props) => {
   const [Database, setDatabase] = useState([]);
   const [pageNumber, setPageNumber] = useState(1);
   const [haveMoreReels, setHaveMoreReels] = useState(false);
+  const [isFirstLoaded, setIsFirstLoaded] = useState(false);
+  const router = useRouter();
 
+  // Fetch data once on mount
   useEffect(() => {
-    console.log("props.userID", props.userID);
-    props.userID
-      ? fetchReel({ userID: props.userID })
-      : fetchReel({ pageNumber: 1 });
-  }, [props]);
+    // only fetch if userID is non-null or explicitly undefined (never changing later)
+    if (props.userID === undefined) return;
 
-  const fetchReel = async ({ userID = null, pageNumber = 1 }) => {
-    var API = userID
-      ? `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/by-userID/${userID}?page=${pageNumber}&limit=10`
-      : `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/get-latest?page=${pageNumber}&limit=10`;
-    console.log("API", API);
-    console.log("props.userID", props.userID);
+    const initialFetch = async () => {
+      if (props.userID) {
+        await fetchReel({ userID: props.userID, pageNumber: 1 });
+      } else {
+        setIsFirstLoaded(true);
+        await fetchReel({ pageNumber: 1 });
+      }
+    };
 
-    axios
-      .get(API)
-      .then((response) => {
-        console.log(response.data.data);
-        if (response.data.data.length) {
-          setDatabase((prev) => [...prev, ...response.data.data]);
-          const lastJson = response.data.data[response.data.data.length - 1];
-          console.log("\n\nlastJson", lastJson);
+    initialFetch();
+  }, [props.userID, fetchReel]);
 
+  const fetchReel = useCallback(
+    async ({ userID = null, pageNumber = 1 }) => {
+      const API = userID
+        ? `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/by-userID/${userID}?page=${pageNumber}&limit=10`
+        : `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/get-latest?page=${pageNumber}&limit=10`;
+
+      try {
+        const response = await axios.get(API);
+        const data = response.data.data;
+
+        if (data.length) {
+          if (isFirstLoaded) {
+            setDatabase([...data]);
+            setIsFirstLoaded(false);
+          } else {
+            setDatabase((prev) => {
+              const ids = new Set(prev.map((item) => item.id));
+              const newItems = data.filter((item) => !ids.has(item.id));
+              return [...prev, ...newItems];
+            });
+          }
+
+          const lastJson = data[data.length - 1];
           setHaveMoreReels(lastJson?.haveMore ?? false);
-          console.log("Have More", lastJson?.haveMore ?? false);
         } else {
           setDatabase([]);
           setHaveMoreReels(false);
         }
+      } catch (error) {
+        console.log("Fetch error", error);
+      }
+    },
+    [isFirstLoaded] // include all external dependencies
+  );
 
-        return response.data;
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
-
-  const CheckLastReel = async () => {
+  const CheckLastReel = useCallback(() => {
     if (haveMoreReels) {
-      setPageNumber((prev) => prev + 1);
-      props.userID
-        ? fetchReel({ userID: props.userID, pageNumber: pageNumber + 1 })
-        : fetchReel({ pageNumber: pageNumber + 1 });
-    }
-  };
+      const nextPage = pageNumber + 1;
+      setPageNumber(nextPage);
 
-  return (
-    <>
+      props.userID
+        ? fetchReel({ userID: props.userID, pageNumber: nextPage })
+        : fetchReel({ pageNumber: nextPage });
+    }
+  }, [haveMoreReels, pageNumber, props.userID, fetchReel]);
+
+  // Memoize header to render only once per call
+  const staticHeader = useMemo(
+    () => (
       <View
         style={{
           display: props.userID ? "unset" : "none",
@@ -109,10 +123,19 @@ const VideoList = (props) => {
         </View>
         <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
       </View>
+    ),
+    [props.userID]
+  );
+
+  const screenWidth = Dimensions.get("screen").width;
+
+  return (
+    <>
+      {staticHeader}
       {Database.length ? (
         <FlatList
           style={styles.container}
-          width={Dimensions.get("screen").width}
+          width={screenWidth}
           data={Database}
           numColumns={2}
           contentContainerStyle={{ padding: 0 }}
@@ -128,12 +151,10 @@ const VideoList = (props) => {
           <Text
             style={{
               ...styles.text,
-              ...{
-                textAlign: "center",
-              },
+              textAlign: "center",
             }}
           >
-            You Don't have any posts
+            No Posts available
           </Text>
         </View>
       )}
@@ -141,15 +162,15 @@ const VideoList = (props) => {
   );
 };
 
-let width = Dimensions.get("screen").width / 2;
+const width = Dimensions.get("screen").width / 2;
+
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#fff",
     padding: 10,
   },
-
   card: {
-    width: width - 15, // Adjust width to fit the screen better
+    width: width - 15,
     height: 300,
     padding: 0,
     margin: 2,
@@ -166,9 +187,6 @@ const styles = StyleSheet.create({
     height: "100%",
     objectFit: "cover",
     borderRadius: 5,
-  },
-  imageContainer: {
-    position: "relative",
   },
 });
 

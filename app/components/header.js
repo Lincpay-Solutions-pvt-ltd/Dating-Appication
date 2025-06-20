@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+
 import {
   View,
   Text,
@@ -10,6 +11,7 @@ import {
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import EntypoIcons from "react-native-vector-icons/Entypo";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useDispatch } from "react-redux";
@@ -27,6 +29,9 @@ export default function HeaderForm({ isTransparent = false }) {
   const translateZ = useState(new Animated.Value(screenWidth))[0];
   const router = useRouter();
   const dispatch = useDispatch();
+
+  // Helper to determine if a route is active
+  const isActive = (route) => pathname === route;
 
   const toggleMenu = () => {
     Animated.timing(translateX, {
@@ -128,9 +133,13 @@ export default function HeaderForm({ isTransparent = false }) {
 
         <TouchableOpacity
           style={stylesHeader.notificationIcon}
-          onPress={toggleNotification}
+          onPress={()=>router.push("../pages/chatList")}
         >
-          <Ionicons name="notifications-outline" size={30} color="black" />
+          <MaterialIcons
+            name="chat-bubble-outline"
+            size={24}
+            style={{ transform: [{ scaleX: -1 }] }}
+          />
         </TouchableOpacity>
       </View>
 
@@ -140,7 +149,7 @@ export default function HeaderForm({ isTransparent = false }) {
       >
         <TouchableOpacity
           style={stylesHeader.backIcon}
-          onPress={() => router.replace("/home")}
+          onPress={() => router.replace("../pages/home")}
         >
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
@@ -151,7 +160,7 @@ export default function HeaderForm({ isTransparent = false }) {
               style={stylesHeader.profileRow}
               onPress={() => {
                 toggleMenu();
-                router.push("../pages/profile");
+                router.replace("../pages/home");
               }}
             >
               {user.profilePic ? (
@@ -204,7 +213,7 @@ export default function HeaderForm({ isTransparent = false }) {
           style={stylesHeader.menuItem}
           onPress={() => {
             toggleMenu();
-            router.push("/(sidebar)/agency");
+            router.push("../pages/agency");
           }}
         >
           <Ionicons name="briefcase-outline" size={24} color="#000" />
@@ -215,7 +224,7 @@ export default function HeaderForm({ isTransparent = false }) {
           style={stylesHeader.menuItem}
           onPress={() => {
             toggleMenu();
-            router.push("/fanPage");
+            router.push("../pages/fanPage");
           }}
         >
           <Ionicons name="heart-outline" size={24} color="#000" />

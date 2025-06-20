@@ -3,13 +3,12 @@ import { Provider } from "react-redux";
 import store from "../Redux/store";
 import { BackHandler, Alert } from "react-native";
 import React, { useEffect } from "react";
-import { useNavigationContainerRef, usePathname } from 'expo-router';
+import { useNavigationContainerRef, usePathname, useRouter } from 'expo-router';
 import { ToastProvider } from 'react-native-toast-notifications';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 export default function Layout() {
   const pathName = usePathname();
-console.log("API_URL", process.env);
 
   useFocusEffect(
     React.useCallback(() => {
