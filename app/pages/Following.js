@@ -1,180 +1,254 @@
-import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView, Image, FlatList } from "react-native";
-import MaterialIcon from "react-native-vector-icons/MaterialIcons";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import React, { useEffect, useState, useMemo } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Image,
+  FlatList,
+  ActivityIndicator,
+} from "react-native";
 import Header from "../components/header";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Footer from '../components/footer';
-
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Footer from "../components/footer";
+import axios from "axios";
+import { useRouter } from "expo-router";
 
 export default function FollowingScreen() {
-    const [videos, setVideos] = useState([]);
-    const [msg, setMsg] = useState("loading...");
+  const [user, setUser] = useState({});
+  const [followingData, setFollowingData] = useState([]);
+  const router = useRouter();
+  const [suggestedUsers, setSuggestedUsers] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [accessToken, setAccessToken] = useState(""); // if needed
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchVideos = async () => {
-            setVideos([
-                { id: "1", title: "Product 1", price: "Rs. 100" },
-                { id: "2", title: "Product 2", price: "Rs. 200" },
-                { id: "3", title: "Product 3", price: "Rs. 300" },
-                { id: "4", title: "Product 4", price: "Rs. 400" },
-                { id: "5", title: "Product 5", price: "Rs. 500" },
-                { id: "6", title: "Product 6", price: "Rs. 600" },
-                { id: "7", title: "Product 7", price: "Rs. 700" },
-                { id: "8", title: "Product 8", price: "Rs. 800" },
-                { id: "9", title: "Product 9", price: "Rs. 900" },
-            ]);
-            setMsg("No related videos found");
+  useMemo(() => {
+    const getUser = async () => {
+      const User = await AsyncStorage.getItem("User");
+      const Token = await AsyncStorage.getItem("accessToken");
+
+      const parsedUser = JSON.parse(User);
+      setUser(parsedUser);
+      setAccessToken(Token);
+      showFollowers(parsedUser);
+
+      // If no followers after fetch, then fetch suggestions
+      setTimeout(() => {
+        if (followingData.length === 0) {
+          fetchSuggestedUsers(Token, parsedUser.userID);
         }
-        fetchVideos();
-    }, []);
-
-
-
-    const VideoList = () => {
-        return (
-            !videos.length ? <Text style={styles.textMsg}>{msg}</Text> :
-                <View style={styles.cardContainer}>
-                    <FlatList
-                        data={videos}
-                        keyExtractor={(item) => item.id}
-                        numColumns={2}
-                        renderItem={({ item }) => (
-                            <View style={styles.card}>
-                                <Image
-                                    style={styles.image}
-                                    source={require("../../assets/images/flower.jpg")}
-                                />
-                            </View>)}
-                    />
-                </View>
-        );
+      }, 1000); // slight delay to ensure followingData is updated
     };
 
-    return (
-        <>
-            <FlatList
-                ListHeaderComponent={
-                    <>
-                        <Header />
-                        <SafeAreaView>
-                            <View style={styles.containerTop}>
-                                <MaterialCommunityIcons
-                                    style={styles.icon}
-                                    name="account-group-outline"
-                                    size={100}
-                                    color="#fff"
-                                />
-                                <Text style={styles.followingText}>No active Followings yet</Text>
-                            </View>
-                            <View style={styles.containerMid}>
-                                <Text style={styles.text}>You may also like</Text>
-                            </View>
-                        </SafeAreaView>
-                    </>
-                }
-                data={[{ key: "VideoList" }]} // Placeholder data
-                renderItem={() => <VideoList />}
-                keyExtractor={(item) => item.key}
-                ListFooterComponent={
-                    <>
-                        <View style={styles.containerFloat}>
-                            <Image
-                                style={styles.image}
-                                source={require("../../assets/images/video-camera.png")}
-                            />
-                        </View>
-                    </>
-                }
-            />
-            <Footer />
-        </>
+    getUser();
+  }, []);
 
+  const showFollowers = async (user) => {
+    console.log("Fetching following data for user:", user.userID);
+    setIsLoading(true);
+    try {
+      const response = await axios.get(
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/follow/getFollowingList/${user.userID}`
+      );
+      if (response.data.status === true) {
+        setFollowingData(response.data.data);
+        setIsLoading(false);
+      } else {
+        setFollowingData([]);
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error("Error fetching following data:", error.response.data);
+    }
+  };
+
+  const OpenUserProfile = (item) => {
+    router.push({
+      pathname: "../pages/OtherProfile",
+      params: { userData: JSON.stringify(item) },
+    });
+  };
+
+  const fetchSuggestedUsers = async (token, currentUserID) => {
+    setIsSuggestionsLoading(true);
+    try {
+      const response = await axios.get(
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/allUsers`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const allUsers = response.data.data;
+      const filtered = allUsers.filter((item) => item.userID !== currentUserID);
+
+      setSuggestedUsers(filtered);
+      setShowSuggestions(true);
+      setIsSuggestionsLoading(false);
+    } catch (error) {
+      console.log("Suggested user fetch error:", error);
+    }
+  };
+
+  const VideoList = () => {
+    return (
+      <View>
+        {/* My Followings Section */}
+        {isLoading ? (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color="#000" />
+            <Text>Loading Followings...</Text>
+          </View>
+        ) : followingData.length === 0 ? (
+          <Text style={styles.textMsg}>You don't follow anyone</Text>
+        ) : (
+          <>
+            <Text style={styles.textMsg}>My Followings</Text>
+            <View style={styles.cardContainer}>
+              <FlatList
+                data={followingData}
+                keyExtractor={(item) => item.id?.toString()}
+                numColumns={2}
+                renderItem={({ item }) => (
+                  <View style={styles.card}>
+                    <TouchableOpacity onPress={() => OpenUserProfile(item)}>
+                      <Image
+                        source={{
+                          uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
+                        }}
+                        style={styles.card}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                )}
+              />
+            </View>
+          </>
+        )}
+
+        {/* Suggested Users Section */}
+        {showSuggestions &&
+          (isSuggestionsLoading ? (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color="#000" />
+              <Text>Loading Suggestions...</Text>
+            </View>
+          ) : suggestedUsers.length > 0 ? (
+            <>
+              <Text style={styles.textMsg}>Suggested Users</Text>
+              <View style={styles.cardContainer}>
+                <FlatList
+                  data={suggestedUsers}
+                  keyExtractor={(item) => item.id?.toString()}
+                  numColumns={2}
+                  renderItem={({ item }) => (
+                    <View style={styles.card}>
+                      <TouchableOpacity onPress={() => OpenUserProfile(item)}>
+                        <Image
+                          source={
+                            item.profilePic
+                              ? {
+                                  uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
+                                }
+                              : item.userGender == 2
+                              ? require("../../assets/images/profile-female.jpg")
+                              : require("../../assets/images/profile.jpg")
+                          }
+                          style={styles.card}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                />
+              </View>
+            </>
+          ) : null)}
+      </View>
     );
+  };
+
+  return (
+    <>
+      <Header />
+      <FlatList
+        data={[{ key: "VideoList" }]} // Placeholder data
+        renderItem={() => <VideoList />}
+        keyExtractor={(item) => item.key}
+      />
+      <Footer />
+    </>
+  );
 }
 
 const styles = StyleSheet.create({
-    containerTop: {
-        display: "flex",
-        alignItems: "center",
-        backgroundColor: "#000",
-    },
-    containerMid: {
-        padding: 30,
-        backgroundColor: "#000",
-    },
-    icon: {
-        justifyContent: "center",
-        alignItems: "center",
-        fontSize: 100,
-        padding: 30,
-        paddingBottom: 20
-    },
-    button: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    followingText: {
-        fontSize: 30,
-        color: "#fff",
-        justifyContent: "center",
-        backgroundColor: "#000",
-        paddingBottom: 10
-    },
-    text: {
-        fontSize: 30,
-        fontWeight: "bold",
-        color: "#fff",
-        alignItems: "flex-start",
-        backgroundColor: "#000",
-    },
-    containerFloat: {
-        position: "absolute",
-        bottom: 50,
-        left: "50%",
-        transform: [{ translateX: "-50%" }, { translateY: "-50%" }],
-    },
-    // image: {
-    //     justifyContent: "center",
-    //     width: 70,
-    //     height: 70,
-    // },
-    cardContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'flex-start',
-        backgroundColor: '#000',
-    },
-    card: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        width: "50%",  // Adjust width to fit the screen better
-        height: 300,
-        padding: 3,
-        minHeight: 350,
-    },
-    // text: {
-    //     fontWeight: 'bold',
-    //     textAlign: 'center',
-    //     flexWrap: 'nowrap'
-    // },
-    textMsg: {
-        fontWeight: 'bold',
-        textAlign: 'center',
-        flexWrap: 'nowrap',
-        fontSize: 20,
-        marginTop: 50
-    },
-    image: {
-        width: "100%",
-        height: "100%",
-        objectFit: "cover",
-    },
-}
-);
+  containerTop: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
 
-
+  icon: {
+    justifyContent: "center",
+    alignItems: "center",
+    fontSize: 100,
+    paddingVertical: 20,
+  },
+  button: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  followingText: {
+    fontSize: 24,
+    fontWeight: "600",
+    color: "#222",
+    marginBottom: 10,
+    paddingHorizontal: 20,
+  },
+  text: {
+    fontSize: 22,
+    fontWeight: "600",
+    color: "#111",
+    paddingHorizontal: 20,
+    marginBottom: 12,
+  },
+  cardContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    paddingHorizontal: 26,
+    paddingBottom: 30,
+    backgroundColor: "#f3f3f3",
+  },
+  card: {
+    width: 160,
+    height: 200,
+    padding: 15,
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  textMsg: {
+    fontSize: 20,
+    fontWeight: "500",
+    color: "#333",
+    marginVertical: 20,
+    marginLeft: 20,
+  },
+  loaderContainer: {
+    paddingVertical: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    color: "#000",
+  },
+});

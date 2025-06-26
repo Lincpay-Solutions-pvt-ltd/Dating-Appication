@@ -70,7 +70,7 @@ export default function ExploreMore() {
                     </SafeAreaView>
                 }
                 data={[{ key: "VideoList" }]} // Placeholder data
-                renderItem={() => <VideoList />}
+                renderItem={() => <VideoList userID={null} />}
                 keyExtractor={(item) => item.key}
             />
             <View style={styles.containerFloat}>

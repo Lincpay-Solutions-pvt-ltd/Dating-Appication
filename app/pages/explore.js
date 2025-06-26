@@ -1,5 +1,3 @@
-import { StatusBar } from "expo-status-bar";
-import React from "react";
 import {
   View,
   Text,
@@ -7,220 +5,211 @@ import {
   Image,
   StyleSheet,
   Dimensions,
-  ScrollView,
   TouchableOpacity,
   TextInput,
-  Button,
+  ActivityIndicator,
 } from "react-native";
+
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Header from "../components/header";
 import Footer from "../components/footer";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-
-const data = [
-  {
-    id: "1",
-    name: "Name",
-    image: "https://picsum.photos/200/300", // Replace with actual image URL
-    views: "7",
-    likes: "1.22M",
-  },
-  {
-    id: "2",
-    name: "Name",
-    image: "https://picsum.photos/200/300",
-    views: "14",
-    likes: "22.57M",
-  },
-  {
-    id: "3",
-    name: "Name",
-    image: "https://picsum.photos/200/300",
-    views: "14",
-    likes: "22.57M",
-  },
-  {
-    id: "4",
-    name: "Name",
-    image: "https://picsum.photos/200/300",
-    views: "14",
-    likes: "22.57M",
-  },
-  {
-    id: "5",
-    name: "Name",
-    image: "https://picsum.photos/200/300",
-    views: "14",
-    likes: "22.57M",
-  },
-  {
-    id: "6",
-    name: "Name",
-    image: "https://picsum.photos/200/300",
-    views: "14",
-    likes: "22.57M",
-  },
-];
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
-const titles = ["Nearby", "New", "Gamer", "Artists"];
 
-export default ExploreScreen = () => {
+export default function ExploreScreen() {
   const [searchText, setSearchText] = useState("");
+  const [database, setDatabase] = useState([]);
+  const [currentUserID, setCurrentUserID] = useState(null);
+  const [accessToken, setAccessToken] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const debounceTimeout = useRef(null);
+
   const router = useRouter();
 
-  const fetchReelsByUserName = async ({ userName }) => {
+  // Fetch user info on mount
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const userData = await AsyncStorage.getItem("User");
+        const token = await AsyncStorage.getItem("accessToken");
+        if (userData) {
+          const parsedUser = JSON.parse(userData);
+          setCurrentUserID(parsedUser.userID);
+        }
+        if (token) {
+          setAccessToken(token);
+        }
+      } catch (err) {
+        console.error("Error reading AsyncStorage:", err);
+      }
+    };
+    getUser();
+  }, []);
+
+  // Fetch users matching search query
+  const fetchUsers = async (searchTerm) => {
+    if (!searchTerm) {
+      setShowSearch(false);
+      setDatabase([]);
+      return;
+    }
+
+    setLoading(true);
     try {
       const response = await axios.get(
-        `http://192.168.0.108:5000/api/v1/reels/get-latest?page=${pageNumber}&limit=10`
-      );
-      const fetchedReels = response.data.data;
-      console.log("fetchedReels First", fetchedReels[0]);
-      const lastJson = fetchedReels[fetchedReels.length - 1];
-      setHaveMoreReels(lastJson.haveMore);
- 
-      setDatabase((prev) => [...prev, ...fetchedReels]);
 
-      console.log("Database length= ", Database.length);
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/allUsers?search=${searchTerm}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+      const users = response.data.data.filter(
+        (user) => user.userID !== currentUserID
+      );
+      setDatabase(users);
+      setShowSearch(true);
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching users:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSearch = (text) => {
+  const handleSearchChange = (text) => {
     setSearchText(text);
-    console.log("Search input changed:", text);
-    // Optionally call a search function here
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+
+    debounceTimeout.current = setTimeout(() => {
+      if (text.length >= 1) {
+        fetchUsers(text);
+      } else {
+        setShowSearch(false);
+        setDatabase([]);
+      }
+    }, 500); // 500ms delay, adjust as needed
+  };
+
+  const openUserProfile = (item) => {
+    router.push({
+      pathname: "../pages/OtherProfile",
+      params: { userData: JSON.stringify(item) },
+    });
   };
 
   return (
     <>
       <Header />
-      <ScrollView style={styles.container}>
+      <View style={styles.container}>
+        {/* Search Bar */}
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
             placeholder="Search By UserName"
             value={searchText}
-            onChangeText={handleSearch}
+            onChangeText={handleSearchChange}
             placeholderTextColor="#888"
           />
-          <TouchableOpacity>
-            <MaterialCommunityIcons
-              name="magnify"
-              size={35}
-              margin={15}
-              color="#fff"
-            />
-          </TouchableOpacity>
+          {loading && <ActivityIndicator size="small" color="#000" style={styles.loading} />}
         </View>
-        {titles.map((title, index) => (
-          <View key={index}>
-            <Text style={styles.title}>{title}</Text>
-            <TouchableOpacity
-              onPress={() => router.push("../pages/exploreMore")}
-            >
-              <Text
-                style={[
-                  styles.moreText,
-                  { alignSelf: "flex-end", marginRight: 15 },
-                ]}
-              >
-                More
-              </Text>
-            </TouchableOpacity>
+
+        {/* Search Results */}
+        {showSearch ? (
+          database.length > 0 ? (
             <FlatList
-              data={data}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item) => item.id}
+              data={database}
+              keyExtractor={(item) => item.id || item.userID.toString()}
               renderItem={({ item }) => (
-                <View style={styles.card}>
-                  <Image source={{ uri: item.image }} style={styles.image} />
-                  <View style={styles.overlay}>
-                    <Text style={styles.views}>👁 {item.views}</Text>
-                    <Text style={styles.name}>{item.name}</Text>
-                    <Text style={styles.likes}>💎 {item.likes}</Text>
+                <TouchableOpacity onPress={() => openUserProfile(item)}>
+                  <View style={styles.messageItem}>
+                    <Image
+                      source={
+                        item.profilePic
+                          ? { uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}` }
+                          : item.userGender == 2
+                            ? require("../../assets/images/profile-female.jpg")
+                            : require("../../assets/images/profile.jpg")
+                      }
+                      style={styles.messageAvatar}
+                    />
+                    <View style={styles.messageContent}>
+                      <Text style={styles.messageName}>
+                        {item.userFirstName} {item.userSurname}
+                      </Text>
+                    </View>
                   </View>
-                </View>
+                </TouchableOpacity>
               )}
             />
-          </View>
-        ))}
-      </ScrollView>
+          ) : (
+            <Text style={styles.noResultsText}>No users found.</Text>
+          )
+        ) : null}
+      </View>
       <Footer />
     </>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
-  },
-  title: {
-    fontSize: 30,
-    color: "#fff",
-    fontWeight: "bold",
-    marginLeft: 15,
-    top: 13,
-  },
-  moreText: {
-    color: "#fff",
-    fontSize: 30,
-    fontWeight: "bold",
-    bottom: 15,
-  },
-  card: {
-    width: width * 0.5,
-    height: 300,
-    margin: 3,
-    borderRadius: 5,
-    overflow: "hidden",
-    position: "relative",
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-  },
-  overlay: {
-    position: "absolute",
-    bottom: 10,
-    left: 10,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    padding: 5,
-    borderRadius: 5,
-  },
-  views: {
-    color: "#fff",
-    fontSize: 14,
-  },
-  name: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  likes: {
-    color: "#fff",
-    fontSize: 14,
+    backgroundColor: "#fff",
   },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
     margin: 10,
+    paddingHorizontal: 10,
   },
   searchInput: {
     flex: 1,
     height: 50,
-    borderColor: "#fff",
+    borderColor: "#ccc",
     borderWidth: 1,
-    borderRadius: 30,
+    borderRadius: 25,
     paddingHorizontal: 15,
-    fontSize: 20,
-    marginBottom: 10,
-    color: "#fff",
-    marginLeft: 15,
-    marginRight: 15,
+    fontSize: 16,
+    backgroundColor: "#fff",
+  },
+  loading: {
+    marginLeft: 10,
+  },
+  messageItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f3f3f3",
+    padding: 10,
+    marginHorizontal: 10,
+    borderRadius: 10,
+    marginVertical: 5,
+  },
+  messageAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  messageContent: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  messageName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  noResultsText: {
+    textAlign: "center",
+    marginTop: 20,
+    color: "#555",
+    fontSize: 16,
   },
 });

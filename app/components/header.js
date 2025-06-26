@@ -1,31 +1,37 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
+
 import {
   View,
   Text,
   TouchableOpacity,
   Image,
   Animated,
-  StyleSheet,
   Dimensions,
+  StyleSheet,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import EntypoIcons from "react-native-vector-icons/Entypo";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { useDispatch, useSelector } from "react-redux";
-import { login, logout } from "../Redux/authSlice";
-import { BackHandler, Alert } from "react-native";
-import { usePathname, Link, useFocusEffect } from "expo-router";
-import Layout from "../pages/_layout";
+import { useDispatch } from "react-redux";
+import axios from "axios";
+import { logout } from "../Redux/authSlice";
 
 const screenWidth = Dimensions.get("window").width;
 
-export default function HeaderForm({ showStatusBar, isTransparent = false }) {
+export default function HeaderForm({ isTransparent = false }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [user, setUser] = useState({});
-  const translateX = useState(new Animated.Value(-screenWidth))[0];
   const [notificationOpen, setNotificationOpen] = useState(false);
-  const translateZ = useState(new Animated.Value(-screenWidth))[0];
+  const [user, setUser] = useState({});
+  const [userCoins, setUserCoins] = useState(0);
+  const translateX = useState(new Animated.Value(-screenWidth))[0];
+  const translateZ = useState(new Animated.Value(screenWidth))[0];
+  const router = useRouter();
+  const dispatch = useDispatch();
+
+  // Helper to determine if a route is active
+  const isActive = (route) => pathname === route;
 
   const toggleMenu = () => {
     Animated.timing(translateX, {
@@ -33,7 +39,6 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
       duration: 300,
       useNativeDriver: true,
     }).start();
-    console.log("menuOpen");
     setMenuOpen(!menuOpen);
   };
 
@@ -46,19 +51,43 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
     setNotificationOpen(!notificationOpen);
   };
 
-  const router = useRouter();
-  const dispatch = useDispatch();
+  const fetchUserCoins = async (userID) => {
+    try {
+      const response = await axios.get(
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/user-total-coin/${userID}`
+      );
+      if (response.data?.status) {
+        const coins = response.data.data || [];
+        const totalCount =
+          coins.length > 0 ? coins[coins.length - 1].totalCount : 0;
+        setUserCoins(totalCount);
+      }
+    } catch (error) {
+      console.error("Error fetching user coins:", error.message);
+    }
+  };
+
   useEffect(() => {
     const getUser = async () => {
-      const User = await AsyncStorage.getItem("User");
-      setUser(JSON.parse(User));
+      try {
+        const storedUser = await AsyncStorage.getItem("User");
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          if (parsedUser?.userID) {
+            fetchUserCoins(parsedUser.userID);
+          }
+        }
+      } catch (e) {
+        console.error("Error loading user from AsyncStorage:", e);
+      }
     };
     getUser();
-    console.log(user);
   }, []);
+
   return (
     <>
-      {/* Normal Header Bar */}
+      {/* Header */}
       <View
         style={
           isTransparent ? stylesHeader.headerTransparent : stylesHeader.header
@@ -70,31 +99,47 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
             onPress={toggleMenu}
             style={stylesHeader.profileContainer}
           >
-            <Image
-              source={require("../../assets/images/profile.jpg")}
-              style={stylesHeader.profileImage}
-            />
+            {user.profilePic ? (
+              <Image
+                source={{
+                  uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${user.profilePic}`,
+                }}
+                style={stylesHeader.profileImageLarge}
+              />
+            ) : (
+              <Image
+                source={require("../../assets/images/profile.jpg")}
+                style={stylesHeader.profileImageLarge}
+              />
+            )}
           </TouchableOpacity>
 
-          {/* Coins and Add Button */}
-          <View style={stylesHeader.coinContainer}>
-            <Ionicons name="star" size={16} color="gold" />
-            <Text style={stylesHeader.coinText}>0</Text>
-            <TouchableOpacity
-              style={stylesHeader.addButton}
-              onPress={() => router.push("../pages/coinScreen")}
-            >
-              <Ionicons name="add" size={16} color="black" />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={stylesHeader.addButton}
+            onPress={() => router.push("./coinScreen")}
+          >
+            <View style={stylesHeader.coinContainer}>
+              <Ionicons name="star" size={16} color="gold" />
+              <Text style={stylesHeader.coinText}>{userCoins}</Text>
+              <Ionicons
+                style={stylesHeader.plusIcon}
+                name="add"
+                size={16}
+                color="black"
+              />
+            </View>
+          </TouchableOpacity>
         </View>
 
-        {/* Right Side: Notification Bell */}
         <TouchableOpacity
           style={stylesHeader.notificationIcon}
-          onPress={toggleNotification}
+          onPress={()=>router.push("../pages/chatList")}
         >
-          <Ionicons name="notifications-outline" size={30} color="white" />
+          <MaterialIcons
+            name="chat-bubble-outline"
+            size={24}
+            style={{ transform: [{ scaleX: -1 }] }}
+          />
         </TouchableOpacity>
       </View>
 
@@ -102,33 +147,39 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
       <Animated.View
         style={[stylesHeader.menu, { transform: [{ translateX }] }]}
       >
-        {/* Back Icon to Close Sidebar */}
         <TouchableOpacity
           style={stylesHeader.backIcon}
           onPress={() => router.replace("../pages/home")}
         >
-          <Ionicons name="arrow-back" size={24} color="white" />
+          <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-        {/* Profile Section */}
+
         <View style={stylesHeader.profileSection}>
           <View style={stylesHeader.profileRowContainer}>
-            {/* Profile Row */}
             <TouchableOpacity
               style={stylesHeader.profileRow}
               onPress={() => {
                 toggleMenu();
-                router.push("../pages/profile");
+                router.replace("../pages/home");
               }}
             >
-              <Image
-                source={require("../../assets/images/profile.jpg")}
-                style={stylesHeader.profileImageLarge}
-              />
+              {user.profilePic ? (
+                <Image
+                  source={{
+                    uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${user.profilePic}`,
+                  }}
+                  style={stylesHeader.profileImageLarge}
+                />
+              ) : (
+                <Image
+                  source={require("../../assets/images/profile.jpg")}
+                  style={stylesHeader.profileImageLarge}
+                />
+              )}
               <View style={stylesHeader.profileInfoContainer}>
                 <Text style={stylesHeader.profileName}>
-                  {user.userFirstName}
+                  {user.userFirstName + " "}
                 </Text>
-                {/* Stats Row Below Profile Name */}
                 <View style={stylesHeader.statsRow}>
                   <Ionicons name="diamond-outline" size={16} color="gray" />
                   <Text style={stylesHeader.statsText}>0</Text>
@@ -140,19 +191,16 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
               </View>
             </TouchableOpacity>
 
-            {/* Broadcast Button (Shifted to Right) */}
             <TouchableOpacity style={stylesHeader.broadcastButton}>
-              <Ionicons name="videocam" size={24} color="white" />
+              <Ionicons name="videocam" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Horizontal Line */}
         <View style={stylesHeader.divider} />
 
-        {/* Menu Items */}
         <TouchableOpacity style={stylesHeader.menuItem}>
-          <Ionicons name="phone-portrait-outline" size={24} color="white" />
+          <Ionicons name="phone-portrait-outline" size={24} color="#000" />
           <View>
             <Text style={stylesHeader.menuText}>Get Tango App</Text>
             <Text style={stylesHeader.subText}>
@@ -165,10 +213,10 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
           style={stylesHeader.menuItem}
           onPress={() => {
             toggleMenu();
-            router.push("../pages/(sidebar)/agency");
+            router.push("../pages/agency");
           }}
         >
-          <Ionicons name="briefcase-outline" size={24} color="white" />
+          <Ionicons name="briefcase-outline" size={24} color="#000" />
           <Text style={stylesHeader.menuText}>Agency Program</Text>
         </TouchableOpacity>
 
@@ -179,75 +227,70 @@ export default function HeaderForm({ showStatusBar, isTransparent = false }) {
             router.push("../pages/fanPage");
           }}
         >
-          <Ionicons name="heart-outline" size={24} color="white" />
+          <Ionicons name="heart-outline" size={24} color="#000" />
           <Text style={stylesHeader.menuText}>My Fans</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={stylesHeader.menuItem}>
-          <Ionicons name="card-outline" size={24} color="white" />
+          <Ionicons name="card-outline" size={24} color="#000" />
           <Text style={stylesHeader.menuText}>Tango Cards Auction</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={stylesHeader.menuItem}>
-          <Ionicons name="game-controller-outline" size={24} color="white" />
+          <Ionicons name="game-controller-outline" size={24} color="#000" />
           <Text style={stylesHeader.menuText}>Social Games</Text>
         </TouchableOpacity>
 
-        {/* Horizontal Line */}
         <View style={stylesHeader.divider} />
 
-        {/* Logout Button */}
         <TouchableOpacity
-          style={[stylesHeader.menuItem]}
+          style={stylesHeader.menuItem}
           onPress={async () => {
-            // Close the sidebar first
             Animated.timing(translateX, {
               toValue: -screenWidth,
               duration: 300,
               useNativeDriver: true,
             }).start(() => {
-              // After animation completes, perform logout
-              setMenuOpen(false); // Ensure menu state is updated
-
-              // Clear AsyncStorage
+              setMenuOpen(false);
               AsyncStorage.removeItem("Authenticated");
               AsyncStorage.removeItem("User");
-
-              // Dispatch logout action
               dispatch(logout());
-
-              // Navigate to login page
               router.navigate("../pages/login");
             });
           }}
         >
-          <Ionicons name="log-out-outline" size={24} color="white" />
+          <Ionicons name="log-out-outline" size={24} color="#000" />
           <Text style={stylesHeader.menuText}>Logout</Text>
         </TouchableOpacity>
       </Animated.View>
 
-      {/* Overlay when menu is open */}
-      {/* {notificationOpen && <TouchableOpacity style={stylesHeader.overlay} onPress={toggleNotification} />} */}
-
-      {/* /// Notification Sidebar */}
+      {/* Notification Panel */}
       <Animated.View
         style={[
           stylesHeader.notificationBar,
           { transform: [{ translateX: translateZ }] },
         ]}
       >
-        {/* Back Icon to Close Sidebar */}
         <TouchableOpacity
           style={stylesHeader.backIcon}
           onPress={toggleNotification}
         >
-          <Ionicons name="arrow-back" size={24} color="white" />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={stylesHeader.notificationText}>Notifications</Text>
-        <Image
-          source={require("../../assets/images/profile.jpg")}
-          style={stylesHeader.profileIcon}
-        />
+        {user.profilePic ? (
+          <Image
+            source={{
+              uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${user.profilePic}`,
+            }}
+            style={stylesHeader.profileImageLarge}
+          />
+        ) : (
+          <Image
+            source={require("../../assets/images/profile.jpg")}
+            style={stylesHeader.profileImageLarge}
+          />
+        )}
         <Text style={stylesHeader.followText}>+1 Followers</Text>
         <EntypoIcons
           name="chevron-right"
@@ -266,9 +309,7 @@ const stylesHeader = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 15,
     paddingVertical: 10,
-    backgroundColor: "#545454",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: "#f3f3f3",
   },
   headerTransparent: {
     flexDirection: "row",
@@ -276,7 +317,7 @@ const stylesHeader = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 15,
     paddingVertical: 10,
-    backgroundColor: "#4f4d4d",
+    backgroundColor: "black",
   },
   leftSection: {
     flexDirection: "row",
@@ -285,7 +326,7 @@ const stylesHeader = StyleSheet.create({
   coinContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#222",
+    backgroundColor: "#999",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -298,7 +339,6 @@ const stylesHeader = StyleSheet.create({
   },
   addButton: {
     marginLeft: 5,
-    backgroundColor: "white",
     borderRadius: 12,
     padding: 5,
   },
@@ -322,7 +362,7 @@ const stylesHeader = StyleSheet.create({
     left: 0,
     width: "100%", // Full width
     height: "100%",
-    backgroundColor: "#111",
+    backgroundColor: "#f3f3f3",
     paddingTop: 50,
     paddingHorizontal: 20,
     zIndex: 2,
@@ -348,7 +388,7 @@ const stylesHeader = StyleSheet.create({
     borderRadius: 25,
   },
   profileName: {
-    color: "white",
+    color: "black",
     fontSize: 18,
     marginLeft: 10,
   },
@@ -376,7 +416,7 @@ const stylesHeader = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: "#444",
+    backgroundColor: "#111",
     marginVertical: 15,
   },
   menuItem: {
@@ -385,7 +425,7 @@ const stylesHeader = StyleSheet.create({
     paddingVertical: 15,
   },
   menuText: {
-    color: "white",
+    color: "black",
     fontSize: 18,
     marginLeft: 10,
   },
@@ -395,16 +435,10 @@ const stylesHeader = StyleSheet.create({
     marginLeft: 10,
   },
   notificationText: {
-    color: "white",
+    color: "#fff",
     fontSize: 26,
     marginLeft: 40,
     bottom: 20,
-  },
-  folllowerText: {
-    color: "white",
-    fontSize: 26,
-    marginLeft: 40,
-    bottom: 22,
   },
   profileIcon: {
     width: 50,
@@ -418,11 +452,11 @@ const stylesHeader = StyleSheet.create({
     left: 0,
     width: "100%",
     height: "100%",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(207, 42, 42, 0.5)",
     zIndex: 1,
   },
   followText: {
-    color: "white",
+    color: "#fff",
     fontSize: 30,
     paddingLeft: 70,
     bottom: 40,
@@ -439,11 +473,18 @@ const stylesHeader = StyleSheet.create({
   },
   notificationBar: {
     position: "absolute",
-    width: "100%", // Full width
+    width: "100%",
     height: "100%",
     backgroundColor: "#111",
     paddingTop: 50,
     paddingHorizontal: 20,
     zIndex: 2,
+  },
+  plusIcon: {
+    backgroundColor: "#fff",
+    padding: 5,
+    borderRadius: 50,
+    marginLeft: 5,
+    color: "black",
   },
 });

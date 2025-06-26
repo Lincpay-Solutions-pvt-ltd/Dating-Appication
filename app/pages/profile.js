@@ -25,16 +25,11 @@ import UploadReels from "../components/UploadReels";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { ScrollView } from "react-native";
 import { Platform } from "react-native";
-import Geolocation from "react-native-geolocation-service";
 import { ActivityIndicator } from "react-native";
-import { set } from "react-hook-form";
-import { isLoading } from "expo-font";
-import { use } from "react";
 
 export default function ProfileScreen() {
   const [selectedImage, setSelectedImage] = useState([""]);
   const [user, setUser] = useState({});
-  const [index, setIndex] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [title, setTitle] = useState("untitled");
   const [description, setDescription] = useState("");
@@ -44,37 +39,45 @@ export default function ProfileScreen() {
   const slideAnim = useRef(new Animated.Value(height)).current;
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  const [routes] = useState([
-    { key: "grid", title: "Grid" },
-    { key: "reels", title: "Reels" },
-    { key: "tagged", title: "Tagged" },
-  ]);
-
-  const profileData = {
-    username: "donyetaylor",
-    profileImage:
-      "https://i.pinimg.com/736x/af/0d/7c/af0d7c8ce434deb503432cc5fce2c326.jpg", // Replace with actual image URL
-    posts: 536,
-    followers: "39,3K",
-    following: 1629,
-    bio: "Just for fun\n📍 Los Angeles\n💄 Digital Creator, Educator, Strategist\n✨ Director @fohr.co\n📩 Sign up for my newsletter",
-    website: "www.donyetaylor.com",
-    postImages: [
-      "https://your-image-url.com/post1.jpg",
-      "https://your-image-url.com/post2.jpg",
-      "https://your-image-url.com/post3.jpg",
-    ],
-  };
+  const [profileData, setProfileData] = useState({});
 
   useEffect(() => {
-    const getUser = async () => {
+    const fetchUserData = async () => {
       const User = await AsyncStorage.getItem("User");
-
-      setUser(JSON.parse(User));
-      console.log("userID = ", User);
+      const CACHE_USER = JSON.parse(User);
+      setUser(CACHE_USER);
+      setProfileData({
+        username: CACHE_USER ? CACHE_USER.userFirstName : "Loading...",
+        profileImage: CACHE_USER.profilePic
+          ? `${process.env.EXPO_PUBLIC_API_BASE_URL}${CACHE_USER.profilePic}`
+          : `set-default-${CACHE_USER.userGender}`, // Replace with actual image URL
+        posts: CACHE_USER.posts ? CACHE_USER.posts : 0,
+        followers: CACHE_USER.followers ? CACHE_USER.totalFollowers : 0,
+        following: CACHE_USER.followings ? CACHE_USER.followings : 0,
+        bio: `${CACHE_USER.bio ? CACHE_USER.bio : "✨ No bio available"}`,
+      });
+      try {
+        const response = await fetch(
+          `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/by-userID/${CACHE_USER.userID}`
+        );
+        const data = await response.json();
+        const userData_ = data.data.length ? data.data[0] : {};
+        setUser(userData_);
+        setProfileData({
+          username: userData_ ? userData_.userFirstName : "Loading...",
+          profileImage: userData_.profilePic
+            ? `${process.env.EXPO_PUBLIC_API_BASE_URL}${userData_.profilePic}`
+            : `set-default-${userData_.userGender}`, // Replace with actual image URL
+          posts: userData_.posts ? userData_.posts : 0,
+          followers: userData_.followers ? userData_.totalFollowers : 0,
+          following: userData_.followings ? userData_.followings : 0,
+          bio: `${userData_.bio ? userData_.bio : "✨ No bio available"}`,
+        });
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
     };
-    getUser();
+    fetchUserData();
   }, []);
 
   const openImagePicker = () => {
@@ -101,7 +104,6 @@ export default function ProfileScreen() {
         }
       );
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        console.log("Camera permission given");
         openImagePicker();
       } else {
         console.log("Camera permission denied");
@@ -128,8 +130,6 @@ export default function ProfileScreen() {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
       );
-      //if (granted !== PermissionsAndroid.RESULTS.GRANTED) return;
-      console.log("location = ", granted);
     }
     Geolocation.getCurrentPosition(
       (pos) => setLocation(pos.coords),
@@ -165,8 +165,6 @@ export default function ProfileScreen() {
       if (asset) {
         const { uri, fileName, type } = asset;
 
-        console.log("Selected file details:", { uri, fileName, type });
-
         setSelectedImage(uri);
 
         // Show modal to enter title and description
@@ -175,15 +173,11 @@ export default function ProfileScreen() {
       }
     }
   };
-  // const showLoadingBar = () => {
-  //     return (
 
-  //     )
-  //   }
   const handleUpload = async () => {
     hideOptions();
     setLoading(true);
-    if (title || description) {
+    if (description !== "" || description !== null) {
       setShowModal(false); // Close the modal
 
       await UploadReels(
@@ -193,43 +187,11 @@ export default function ProfileScreen() {
         description
       );
       setLoading(false);
-      //alert("Video uploaded successfully!");
+      router.replace("../pages/profile");
     } else {
-      Alert.alert("Error", "Please provide a title and description.");
+      Alert.alert("Error", "Please provide a description.");
     }
   };
-
-  // Screens for Tabs
-  const GridView = () => (
-    <FlatList
-      data={profileData.postImages}
-      keyExtractor={(item, index) => index.toString()}
-      numColumns={3}
-      renderItem={({ item }) => (
-        <Image source={{ uri: item }} style={styles.postImage} />
-      )}
-    />
-  );
-
-  const TaggedView = () => (
-    <View style={styles.centeredView}><Text>Tagged Posts</Text></View>
-  );
-
-  // const renderScene = SceneMap({
-  //   grid: GridView,
-  //   reels: ReelsView,
-  //   tagged: TaggedView,
-  // });
-
-  const renderScene = useMemo(
-    () =>
-      SceneMap({
-        grid: GridView, // memoized or static
-        reels: () => <VideoCards userID={user.userID} />,
-        tagged: TaggedView,
-      }),
-    [user.userID, loading] // only change if this value changes
-  );
 
   return (
     <View style={styles.container}>
@@ -237,69 +199,97 @@ export default function ProfileScreen() {
 
       {/* Profile Info */}
       <View style={styles.profileContainer}>
-        <Image source={{ uri: profileData.profileImage }} style={styles.profileImage} />
+        <Image
+          source={
+            profileData.profileImage &&
+            profileData.profileImage.startsWith("set-default")
+              ? profileData.profileImage == "set-default-2"
+                ? require("../../assets/images/profile-female.jpg")
+                : require("../../assets/images/profile.jpg")
+              : { uri: profileData.profileImage }
+          }
+          style={styles.profileImage}
+        />
         <View style={styles.statsContainer}>
-          <TouchableOpacity><Text style={styles.statsText}>{profileData.posts}{"\n"}Posts</Text></TouchableOpacity>
-          <TouchableOpacity><Text style={styles.statsText}>{profileData.followers}{"\n"}Followers</Text></TouchableOpacity>
-          <TouchableOpacity><Text style={styles.statsText}>{profileData.following}{"\n"}Following</Text></TouchableOpacity>
+          {/* <TouchableOpacity> */}
+          <Text style={styles.statsText}>
+            {profileData.posts}
+            {"\n"}Posts
+          </Text>
+          {/* </TouchableOpacity> */}
+          <TouchableOpacity onPress={() => router.push("../pages/followers")}>
+            <Text style={styles.statsText}>
+              {profileData.followers}
+              {"\n"}Followers
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push("../pages/UserFollowing")}
+          >
+            <Text style={styles.statsText}>
+              {profileData.following}
+              {"\n"}Following
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
       {/* Bio Section */}
-      <Text style={styles.username}>{profileData.username}</Text>
-      <Text style={styles.bio}>{profileData.bio}</Text>
-      <TouchableOpacity><Text style={styles.website}>{profileData.website}</Text></TouchableOpacity>
+      <View style={styles.bioContainer}>
+        <Text style={styles.username}>{profileData.username}</Text>
+        <Text style={styles.bio}>{profileData.bio}</Text>
+        {/* <Text style={styles.website}>{profileData.website}</Text> */}
+      </View>
 
-      {/* <View style={{ marginTop: 20 }}>
-        <Button title="Choose from Device" onPress={requestCameraPermission} />
-        </View> */}
-      {/* <View>
-        <Button style={styles.button} title="Open Camera" onPress={handleCameraLaunch} />
-        </View> */}
-      {/* ShowOptionsPopUp */}
-
-      <TouchableOpacity onPress={showOptions}><Text style={styles.uploadButton}>Add Post</Text></TouchableOpacity>
+      <View style={styles.profileButtonContainer}>
+        <TouchableOpacity onPress={() => router.push("../pages/editProfile")}>
+          <Text style={styles.uploadButton}>Edit Profile</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={showOptions}>
+          <Text style={styles.uploadButton}>Add Post</Text>
+        </TouchableOpacity>
+      </View>
 
       <Modal transparent visible={modalVisible} animationType="none">
-        <TouchableOpacity style={styles.overlay} onPress={hideOptions} activeOpacity={1}>
+        <TouchableOpacity
+          style={styles.overlay}
+          onPress={hideOptions}
+          activeOpacity={1}
+        >
           <Animated.View
             style={[
               styles.bottomSheet,
               { transform: [{ translateY: slideAnim }] },
             ]}
           >
-            <TouchableOpacity style={styles.option} onPress={() => handleCameraLaunch()}>
+            <TouchableOpacity
+              style={styles.option}
+              onPress={() => handleCameraLaunch()}
+            >
               <Text style={styles.optionText}>Open Camera</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.option} onPress={() => openImagePicker()}>
+            <TouchableOpacity
+              style={styles.option}
+              onPress={() => openImagePicker()}
+            >
               <Text style={styles.optionText}>Choose from Device</Text>
             </TouchableOpacity>
           </Animated.View>
         </TouchableOpacity>
       </Modal>
-      {/* Tab View */}
-      <TabView
-        navigationState={{ index, routes }}
-        renderScene={renderScene}
-        onIndexChange={setIndex}
-        initialLayout={{ width: Dimensions.get("window").width }}
-        renderTabBar={props => (
-          <TabBar
-            {...props}
-            indicatorStyle={{ backgroundColor: "black" }}
-            style={{ backgroundColor: "white" }}
-            activeColor="black"
-            inactiveColor="gray"
-          />
-        )}
-      />
 
-      {loading ?
+      <View style={styles.containerVideo}>
+        <VideoCards userID={user.userID} />
+      </View>
+
+      {loading ? (
         <View style={styles.loadingPanel}>
-          <ActivityIndicator size={60} color={"white"} />
-        </View>:<></>}
-      {/* Back Button */}
-      {/* <Button title="Go Back" onPress={() => router.back()} /> */}
+          <ActivityIndicator size={60} color={"#000"} />
+        </View>
+      ) : (
+        <></>
+      )}
+
       <Modal
         animationType="slide"
         transparent={true}
@@ -315,14 +305,23 @@ export default function ProfileScreen() {
               </TouchableOpacity>
               <Text style={styles.modalTitle}>Add Post</Text>
 
-              <TouchableOpacity onPress={() => handleUpload()}>
-
+              <TouchableOpacity
+                onPress={() =>
+                  description.length
+                    ? handleUpload()
+                    : Alert.alert("Please Fill the Caption")
+                }
+              >
                 <Text style={styles.shareText}>Share</Text>
               </TouchableOpacity>
             </View>
 
             {/* Image row */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageRow}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.imageRow}
+            >
               {[1].map((_, index) => (
                 <View key={index} style={styles.imagePreviewBox}>
                   <Image
@@ -331,42 +330,31 @@ export default function ProfileScreen() {
                   />
                 </View>
               ))}
-              {/* <TouchableOpacity style={styles.addMoreButton} onPress={() => openImagePicker()}>
-                <Ionicons name="add" size={24} color="gray" />
-              </TouchableOpacity> */}
             </ScrollView>
 
             {/* Caption input */}
             <TextInput
               style={styles.captionInput}
               placeholder="Write a caption..."
+              placeholderTextColor="#888"
               value={description}
               onChangeText={setDescription}
-              multiline
+              multiline={true}
             />
-
-            {/* Tag people */}
-            {/* <TouchableOpacity style={styles.optionRow}>
-              <Ionicons name="person-add" size={20} color="black" />
-              <Text style={styles.optionText}>Tag people</Text>
-            </TouchableOpacity> */}
-
-            {/* Add location */}
-            {/* <TouchableOpacity style={styles.optionRow} onPress={() => requestLocationPermission()}>
-              <Ionicons name="location-outline" size={20} color="black" />
-              <Text style={styles.optionText}>Add location</Text>
-            </TouchableOpacity> */}
           </View>
         </View>
       </Modal>
-
-
     </View>
   );
 }
 
 // Styles
 const styles = StyleSheet.create({
+  containerVideo: {
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
   container: {
     flex: 1,
     backgroundColor: "#fff",
@@ -398,11 +386,21 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "left",
   },
+  bioContainer: {
+    paddingHorizontal: 15,
+    paddingBottom: 20, // ensures space at bottom
+    marginTop: 10,
+    flexShrink: 1, // allows container to shrink if needed
+  },
+
   bio: {
     fontSize: 14,
     textAlign: "left",
-    marginVertical: 5,
+    lineHeight: 20, // improves readability and avoids clipping
+    flexWrap: "wrap",
+    marginTop: 4,
   },
+
   website: {
     fontSize: 14,
     color: "blue",
@@ -450,15 +448,21 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     width: "100%",
   },
+  profileButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+  },
+
   uploadButton: {
     marginTop: 10,
     fontSize: 20,
     borderColor: "black",
     padding: 10,
-    borderRadius: 20,
+    width: 150,
+    borderRadius: 10,
     textAlign: "center",
-    backgroundColor: "#f8768e",
-    color: "white",
+    backgroundColor: "#d8d9da",
+    color: "#000",
   },
   overlay: {
     flex: 1,
@@ -473,7 +477,7 @@ const styles = StyleSheet.create({
   },
   option: {
     padding: 15,
-    borderBottomColor: "#ccc",
+    borderBottomColor: "#999",
     borderBottomWidth: 1,
   },
   optionText: {
@@ -488,7 +492,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     textAlign: "center",
     backgroundColor: "#d91859",
-    color: "white",
+    color: "#000",
   },
   cancelText: {
     color: "white",
@@ -499,7 +503,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalView: {
-    backgroundColor: "white",
+    backgroundColor: "#fff",
     padding: 25,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
@@ -549,7 +553,7 @@ const styles = StyleSheet.create({
   },
   captionInput: {
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "#999",
     paddingVertical: 10,
     fontSize: 16,
     marginBottom: 15,
@@ -560,7 +564,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: "#999",
   },
   optionText: {
     fontSize: 16,

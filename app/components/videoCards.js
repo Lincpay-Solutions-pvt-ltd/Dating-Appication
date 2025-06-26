@@ -1,61 +1,35 @@
-import React from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, Pressable, Dimensions, ActivityIndicator } from "react-native";
-import { Video, ResizeMode } from "expo-av";
-import { useState, useEffect } from "react";
-import { Database } from "./Database";
-import { router, useRouter } from "expo-router";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  FlatList,
+  Dimensions,
+} from "react-native";
+import { ResizeMode } from "expo-av";
+import { useRouter } from "expo-router";
 import axios from "axios";
-const _db = Database
-
 
 const VideoCard = ({ item }) => {
   const router = useRouter();
-  const [status, setStatus] = useState(null);
-  const { height } = Dimensions.get('window');
-
-
 
   return (
-    
-      <View style={styles.card}>
-        {/* <TouchableOpacity onPress={() => router.push({ pathname: "../../pages/reels", query: { item: item } })}> */}
-        {/* <Video
-        source={{ uri: `http://192.168.0.108:5000/reels${item.filepath}?token` }}
-        style={styles.image}
-        isLooping={false}
-        resizeMode={ResizeMode.COVER}
-        useNativeControls={false}
-        onPlaybackStatusUpdate={(status) => setStatus(() => status)}
+    <View style={styles.card}>
+      <Image
         onTouchEndCapture={() => {
-          router.push(
-            {
-              pathname: "../../pages/reels",
-              params: { reel: JSON.stringify(item) }
-            })
-        }
-        }
-        onError={(error) => {
-          console.error('Video Playback Error:', error);
+          router.push({
+            pathname: "../../pages/reels",
+            params: { reel: JSON.stringify(item) },
+          });
         }}
-        posterStyle={{ resizeMode: 'cover' }}
-      /> */}
-
-        <Image
-          onTouchEndCapture={() => {
-            router.push(
-              {
-                pathname: "../../pages/reels",
-                params: { reel: JSON.stringify(item) }
-
-              })
-          }
-          }
-          resizeMode={ResizeMode.COVER}
-          source={{ uri: `http://192.168.0.108:5000${item.filepath}-thumbnail.png?token` }} style={styles.image} />
-        {/* </TouchableOpacity> */}
-        {/* <View style={styles.blackPanel} /> */}
-      </View>
-    
+        resizeMode={ResizeMode.COVER}
+        source={{
+          uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.filepath}-thumbnail.png?token`,
+        }}
+        style={styles.image}
+      />
+    </View>
   );
 };
 
@@ -63,91 +37,150 @@ const VideoList = (props) => {
   const [Database, setDatabase] = useState([]);
   const [pageNumber, setPageNumber] = useState(1);
   const [haveMoreReels, setHaveMoreReels] = useState(false);
+  const [isFirstLoaded, setIsFirstLoaded] = useState(false);
+  const router = useRouter();
 
+  // Fetch data once on mount
   useEffect(() => {
-    props.userID ?
-      fetchReel({ userID: props.userID }) :
-      fetchReel({ pageNumber: 1 });
-  }, [props]);
+    // only fetch if userID is non-null or explicitly undefined (never changing later)
+    if (props.userID === undefined) return;
 
-  useEffect(() => {
-    console.log("Page Number Updatd= ", pageNumber);
+    const initialFetch = async () => {
+      if (props.userID) {
+        await fetchReel({ userID: props.userID, pageNumber: 1 });
+      } else {
+        setIsFirstLoaded(true);
+        await fetchReel({ pageNumber: 1 });
+      }
+    };
 
-  }, [pageNumber]);
+    initialFetch();
+  }, [props.userID, fetchReel]);
 
-  const fetchReel = async ({ userID = null, pageNumber = 1 }) => {
-    console.log("New Page no = ", pageNumber);
+  const fetchReel = useCallback(
+    async ({ userID = null, pageNumber = 1 }) => {
+      const API = userID
+        ? `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/by-userID/${userID}?page=${pageNumber}&limit=10`
+        : `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/reels/get-latest?page=${pageNumber}&limit=10`;
 
-    var API = userID ? `http://192.168.0.108:5000/api/v1/reels/by-userID/${userID}?page=${pageNumber}&limit=10` : `http://192.168.0.108:5000/api/v1/reels/get-latest?page=${pageNumber}&limit=10`
-    axios.get(API)
-      .then((response) => {
-        setDatabase((prev) => [...prev, ...response.data.data]);
-        const lastJson = response.data.data[response.data.data.length - 1];
-        console.log("lastJson = ", lastJson.haveMore);
-        setHaveMoreReels(lastJson.haveMore);
-        return response.data
-      })
-      .catch((error) => {
-        console.log(error);
-      })
-  };
+      try {
+        const response = await axios.get(API);
+        const data = response.data.data;
 
-  const CheckLastReel = async () => {
-    console.log("Last Reel Reached");
+        if (data.length) {
+          if (isFirstLoaded) {
+            setDatabase([...data]);
+            setIsFirstLoaded(false);
+          } else {
+            setDatabase((prev) => {
+              const ids = new Set(prev.map((item) => item.id));
+              const newItems = data.filter((item) => !ids.has(item.id));
+              return [...prev, ...newItems];
+            });
+          }
+
+          const lastJson = data[data.length - 1];
+          setHaveMoreReels(lastJson?.haveMore ?? false);
+        } else {
+          setDatabase([]);
+          setHaveMoreReels(false);
+        }
+      } catch (error) {
+        console.log("Fetch error", error);
+      }
+    },
+    [isFirstLoaded] // include all external dependencies
+  );
+
+  const CheckLastReel = useCallback(() => {
     if (haveMoreReels) {
-      console.log("Fetching Reels . . . .   ");
-      console.log("pageNumber", pageNumber);
-      setPageNumber((prev) => prev + 1);
-      props.userID ?
-        fetchReel({ userID: props.userID, pageNumber: pageNumber + 1 }) :
-        fetchReel({ pageNumber: pageNumber + 1 });
+      const nextPage = pageNumber + 1;
+      setPageNumber(nextPage);
+
+      props.userID
+        ? fetchReel({ userID: props.userID, pageNumber: nextPage })
+        : fetchReel({ pageNumber: nextPage });
     }
+  }, [haveMoreReels, pageNumber, props.userID, fetchReel]);
 
-  }
+  // Memoize header to render only once per call
+  const staticHeader = useMemo(
+    () => (
+      <View
+        style={{
+          display: props.userID ? "unset" : "none",
+          flexDirection: "row",
+          alignItems: "center",
+        }}
+      >
+        <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
+        <View>
+          <Text
+            style={{ ...styles.text, ...{ width: 70, textAlign: "center" } }}
+          >
+            Posts
+          </Text>
+        </View>
+        <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
+      </View>
+    ),
+    [props.userID]
+  );
 
-
-
+  const screenWidth = Dimensions.get("screen").width;
 
   return (
-
-    <FlatList style={styles.container}
-      width={Dimensions.get("screen").width}
-      data={Database}
-      numColumns={2}
-      contentContainerStyle={{ padding : 0 }}
-      horizontal={false}
-      columnWrapperStyle={{ justifyContent: "space-between" }}
-      keyExtractor={(item, index) => item.id?.toString() ?? index.toString()}
-      renderItem={({ item }) => { return <VideoCard item={item} /> }}
-      onEndReached={CheckLastReel}
-      onEndReachedThreshold={0.5}
-    //onMomentumScrollBegin={() => { this.onEndReachedCalledDuringMomentum = false; }}
-
-    />
+    <>
+      {staticHeader}
+      {Database.length ? (
+        <FlatList
+          style={styles.container}
+          width={screenWidth}
+          data={Database}
+          numColumns={2}
+          contentContainerStyle={{ padding: 0 }}
+          horizontal={false}
+          columnWrapperStyle={{ justifyContent: "space-between" }}
+          keyExtractor={(item, index) => `${item.id ?? "no-id"}-${index}`}
+          renderItem={({ item }) => <VideoCard item={item} />}
+          onEndReached={CheckLastReel}
+          onEndReachedThreshold={0.5}
+        />
+      ) : (
+        <View>
+          <Text
+            style={{
+              ...styles.text,
+              textAlign: "center",
+            }}
+          >
+            No Posts available
+          </Text>
+        </View>
+      )}
+    </>
   );
 };
 
-let width = Dimensions.get("screen").width / 2;
+const width = Dimensions.get("screen").width / 2;
+
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#fff",
     padding: 10,
   },
-  
   card: {
-    //display: 'flex',
-    //justifyContent: 'space-between',
-    // alignItems: 'center',
-    width: width - 15,  // Adjust width to fit the screen better
+    width: width - 15,
     height: 300,
     padding: 0,
     margin: 2,
     borderRadius: 50,
+    backgroundColor: "#f0f",
   },
   text: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-    flexWrap: 'nowrap'
+    fontWeight: "bold",
+    textAlign: "center",
+    flexWrap: "nowrap",
   },
   image: {
     width: "100%",
@@ -155,11 +188,6 @@ const styles = StyleSheet.create({
     objectFit: "cover",
     borderRadius: 5,
   },
-  imageContainer: {
-    position: 'relative',
-  },
 });
 
-
 export default VideoList;
-

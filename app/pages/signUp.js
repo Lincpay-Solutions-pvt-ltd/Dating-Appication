@@ -26,7 +26,7 @@ export default function SignUpScreen() {
       "userPassword": password
     });
 
-    await axios.post('http://192.168.0.108:5000/api/v1/users/login', data, {
+    await axios.post(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/login`, data, {
       headers: {
         'Content-Type': 'application/json'
       }
@@ -98,7 +98,7 @@ export default function SignUpScreen() {
         userRoleID: 1,
         userAccountApproved: 1,
       });
-      await axios.post('http://192.168.0.108:5000/api/v1/users/signup', data, {
+      await axios.post(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/signup`, data, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -132,6 +132,7 @@ export default function SignUpScreen() {
         <TextInput
           style={styles.input}
           placeholder="First Name"
+          placeholderTextColor={"#000"}
           value={userFirstName}
           onChangeText={(text) => setFirstName(text)}
         />
@@ -139,12 +140,14 @@ export default function SignUpScreen() {
         <TextInput
           style={styles.input}
           placeholder="Surname"
+          placeholderTextColor={"#000"}
           value={userSurname}
           onChangeText={(text) => setSurname(text)}
         />
         <TextInput
           style={styles.input}
           placeholder="Email"
+          placeholderTextColor={"#000"}
           keyboardType="email-address"
           value={userEmail}
           onChangeText={(text) => setUserEmail(text)}
@@ -155,6 +158,7 @@ export default function SignUpScreen() {
         <TextInput
           style={styles.input}
           placeholder="Password"
+          placeholderTextColor={"#000"}
           secureTextEntry
           value={userPassword}
           onChangeText={(text) => setUserPassword(text)}
@@ -165,6 +169,7 @@ export default function SignUpScreen() {
         <TextInput
           style={styles.input}
           placeholder="Confirm Password"
+          placeholderTextColor={"#000"}
           secureTextEntry
           value={userConfirmPassword}
           onChangeText={(text) => setUserConfirmPassword(text)}
@@ -175,6 +180,7 @@ export default function SignUpScreen() {
         <TextInput
           style={styles.input}
           placeholder="Enter DD-MM-YYYY"
+          placeholderTextColor={"#000"}
           secureTextEntry
           value={userDateOfBirth}
           onChangeText={(text) => setUserDateOfBirth(text)}
@@ -255,6 +261,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     paddingHorizontal: 10,
     marginBottom: 10,
+    
   },
   err: {
     color: "red",
