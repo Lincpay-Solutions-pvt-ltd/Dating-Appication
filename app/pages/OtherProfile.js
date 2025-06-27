@@ -1,255 +1,232 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   Image,
-  Button,
-  StyleSheet,
   TouchableOpacity,
-  FlatList,
-  Dimensions,
-  PermissionsAndroid,
+  StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import Header from "../components/header";
-import VideoCards from "../components/videoCards";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-import { ActivityIndicator } from "react-native";
 import axios from "axios";
 
+import Header from "../components/header";
+import VideoCards from "../components/videoCards";
+
 export default function OtherProfileScreen() {
-  const UserItem = useLocalSearchParams();
   const router = useRouter();
+  const UserItem = useLocalSearchParams();
+
   const [isFollowing, setIsFollowing] = useState(false);
   const [profileUserName, setProfileUserName] = useState(null);
-  const [profileData, setProfileData] = useState({});
+  const [profileData, setProfileData] = useState(null);
   const [currentUserID, setCurrentUserID] = useState(null);
+  const [userGender, setUserGender] = useState(null);
 
-  const [followToUserID, setFollowToUserID] = useState(
-    UserItem?.userID
-      ? UserItem.userID
-      : UserItem?.userData
-      ? JSON.parse(UserItem?.userData).userID
-      : null
-  );
+  const followToUserID =
+    UserItem?.userID ||
+    (UserItem?.userData && JSON.parse(UserItem.userData)?.userID);
 
-  useMemo(() => {
-    if (UserItem.userData) {
-      console.log("First", UserItem.userData);
+  useEffect(() => {
+    if (!followToUserID) return;
 
-      const userData_ = JSON.parse(UserItem.userData);
-      setFollowToUserID(userData_.userID);
-
-      setProfileData({
-        userID: userData_.userID,
-        username: userData_
-          ? userData_.userFirstName + userData_.userSurname
-          : "Loading...",
-        profileImage: userData_.profilePic
-          ? `${process.env.EXPO_PUBLIC_API_BASE_URL}${userData_.profilePic}`
-          : `set-default-${userData_.userGender}`, // Replace with actual image URL
-        posts: userData_.posts ? userData_.posts : 0,
-        followers: userData_.totalFollowers ? userData_.totalFollowers : 0,
-        following: userData_.followings ? userData_.followings : 0,
-        bio: `${
-          userData_.userBio ? userData_.userBio : "✨ No bio available "
-        }`,
-        website: "www.donyetaylor.com",
-        postImages: [
-          "https://your-image-url.com/post1.jpg",
-          "https://your-image-url.com/post2.jpg",
-          "https://your-image-url.com/post3.jpg",
-        ],
-        userEmail: userData_.userEmail,
-      });
-    } else if (UserItem.userID) {
-      // hit api to get user data by userID
-      setFollowToUserID(UserItem.userID);
-
-      const fetchUserData = async () => {
-        try {
-          const response = await fetch(
-            `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/by-userID/${UserItem.userID}`
-          );
-          const data = await response.json();
-          const userData_ = data.data.length ? data.data[0] : {};
-          console.log("Second", userData_);
-
-          setProfileData({
-            userID: userData_.userID,
-            username:
-              userData_.userFirstName + " " + userData_.userSurname ||
-              "Undefined",
-            profileImage: userData_.profilePic
-              ? `${process.env.EXPO_PUBLIC_API_BASE_URL}${userData_.profilePic}`
-              : `set-default-${userData_.userGender}`,
-
-            posts: userData_.posts,
-            followers: `${userData_.totalFollowers}`,
-            following: `${userData_.followings}`,
-            bio: `${
-              userData_.userBio ? userData_.userBio : "✨ No bio available "
-            }`,
-            website: "www.donyetaylor.com",
-            postImages: [
-              "https://your-image-url.com/post1.jpg",
-              "https://your-image-url.com/post2.jpg",
-              "https://your-image-url.com/post3.jpg",
-            ],
-            userEmail: userData_.userEmail,
-          });
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
-      };
-      fetchUserData();
-    }
-
-    const getUser = async () => {
+    const loadProfile = async () => {
       try {
         const user = await AsyncStorage.getItem("User");
-
         if (user) {
-          const parsedUser = JSON.parse(user);
-          const userID = parsedUser.userID;
-          setCurrentUserID(userID);
-          const fullName =
-            parsedUser.userFirstName + " " + parsedUser.userSurname;
-          setProfileUserName(fullName);
+          const parsed = JSON.parse(user);
+          setCurrentUserID(parsed.userID);
+          setProfileUserName(`${parsed.userFirstName} ${parsed.userSurname}`);
+          setUserGender(UserItem.gender || parsed.userGender);
 
-          fetchFollowStatus(userID, followToUserID);
+          await fetchFollowStatus(parsed.userID, followToUserID);
+        }
+
+        const data =
+          UserItem?.userData &&
+          typeof UserItem.userData === "string" &&
+          JSON.parse(UserItem.userData).totalFollowers
+            ? JSON.parse(UserItem.userData)
+            : await fetchUserFromAPI(followToUserID);
+
+        if (data) {
+          setProfileData({
+            userID: data.userID,
+            username: `${data.userFirstName} ${data.userSurname}`,
+            profileImage: data.profilePic
+              ? `${process.env.EXPO_PUBLIC_API_BASE_URL}${data.profilePic}`
+              : `set-default-${data.userGender}`,
+            posts: data.posts || 0,
+            followers: data.totalFollowers || 0,
+            following: data.followings || 0,
+            bio: data.userBio || "✨ No bio available",
+            userEmail: data.userEmail,
+          });
         }
       } catch (err) {
-        console.error("Error parsing user from AsyncStorage", err);
+        console.error("Profile load error:", err);
       }
     };
 
-    getUser();
+    loadProfile();
   }, []);
 
-  const fetchFollowStatus = async (currentUserID, followToUserID) => {
+  const fetchUserFromAPI = async (userID) => {
     try {
-      const response = await axios.post(
-        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/follow/checkFollow`,
-        {
-          followBy: currentUserID,
-          followTo: followToUserID,
-        }
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/by-userID/${userID}`
       );
-      console.log("Check Follow Response =", response.data);
-      setIsFollowing(response.data.isFollowing);
-    } catch (error) {
-      console.error("Error in checking follow user", error.response.data);
+      const json = await res.json();
+      return json.data[0];
+    } catch (err) {
+      console.error("Fetch user API error:", err);
+      return null;
+    }
+  };
+
+  const fetchFollowStatus = async (fromID, toID) => {
+    try {
+      const { data } = await axios.post(
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/follow/checkFollow`,
+        { followBy: fromID, followTo: toID }
+      );
+      setIsFollowing(data.isFollowing);
+    } catch (err) {
+      console.error("Check follow error:", err?.response?.data || err.message);
     }
   };
 
   const followUser = async () => {
     try {
-      const response = await axios.post(
+      await axios.post(
         `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/follow/follow`,
-        {
-          followBy: currentUserID,
-          followTo: followToUserID,
-        }
+        { followBy: currentUserID, followTo: followToUserID }
       );
       setIsFollowing(true);
-    } catch (error) {
-      console.error("Error following user:", error.response);
+    } catch (err) {
+      console.error("Follow error:", err.response);
     }
   };
 
   const unfollowUser = async () => {
     try {
-      const response = axios.post(
+      await axios.post(
         `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/follow/unfollow`,
-        {
-          followBy: currentUserID,
-          followTo: followToUserID,
-        }
+        { followBy: currentUserID, followTo: followToUserID }
       );
       setIsFollowing(false);
-    } catch (error) {
-      console.error("Error unfollowing user:", error);
+    } catch (err) {
+      console.error("Unfollow error:", err.response);
     }
   };
+
+  if (!profileData) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#000" />
+        <Text>Loading Profile...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <Header />
-      {profileData == {} ? (
-        <></>
-      ) : (
-        <View style={styles.profileContainer}>
-          <Image
-            source={
-              profileData.profileImage &&
-              profileData.profileImage.startsWith("set-default")
-                ? profileData.profileImage == "set-default-2"
-                  ? require("../../assets/images/profile-female.jpg")
-                  : require("../../assets/images/profile.jpg")
-                : { uri: profileData.profileImage }
+
+      <View style={styles.profileContainer}>
+        <Image
+          source={
+            profileData.profileImage.startsWith("set-default")
+              ? profileData.profileImage === "set-default-2"
+                ? require("../../assets/images/profile-female.jpg")
+                : require("../../assets/images/profile.jpg")
+              : { uri: profileData.profileImage }
+          }
+          style={styles.profileImage}
+        />
+
+        <View style={styles.statsContainer}>
+          <TouchableOpacity>
+            <Text style={styles.statsText}>
+              {profileData.posts}
+              {"\n"}Posts
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() =>
+              router.push({
+                pathname: "../pages/followers",
+                params: { userID: profileData.userID },
+              })
             }
-            style={styles.profileImage}
-          />
-
-          <View style={styles.statsContainer}>
-            <TouchableOpacity>
-              <Text style={styles.statsText}>
-                {profileData.posts}
-                {"\n"}Posts
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() =>
-                router.push({
-                  pathname: "../pages/followers",
-                  params: { userID: profileData.userID },
-                })
-              }
-            >
-              <Text style={styles.statsText}>
-                {profileData.followers}
-                {"\n"}Followers
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() =>
-                router.push({
-                  pathname: "../pages/UserFollowing",
-                  params: { userID: profileData.userID },
-                })
-              }
-            >
-              <Text style={styles.statsText}>
-                {profileData.following}
-                {"\n"}Following
-              </Text>
-            </TouchableOpacity>
-          </View>
+          >
+            <Text style={styles.statsText}>
+              {profileData.followers}
+              {"\n"}Followers
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() =>
+              router.push({
+                pathname: "../pages/UserFollowing",
+                params: { userID: profileData.userID },
+              })
+            }
+          >
+            <Text style={styles.statsText}>
+              {profileData.following}
+              {"\n"}Following
+            </Text>
+          </TouchableOpacity>
         </View>
-      )}
+      </View>
 
-      {/* Bio Section */}
       <View style={styles.bioContainer}>
         <Text style={styles.username}>{profileData.username}</Text>
         <Text style={styles.bio}>{profileData.bio}</Text>
-        {/* <Text style={styles.website}>{profileData.website}</Text> */}
       </View>
 
-      <View style={styles.buttonContainer}>
-        {isFollowing ? (
-          <TouchableOpacity onPress={unfollowUser}>
-            <Text style={styles.uploadButton}>Unfollow</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity onPress={followUser}>
-            <Text style={styles.uploadButton}>Follow</Text>
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity>
+      <View style={styles.profileButtonContainer}>
+        <TouchableOpacity onPress={isFollowing ? unfollowUser : followUser}>
+          <Text style={styles.uploadButton}>
+            {isFollowing ? "Unfollow" : "Follow"}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() =>
+            router.push({
+              pathname: "../pages/chats",
+              params: {
+                id: currentUserID,
+                name: profileUserName,
+                profilePic: profileData.profileImage,
+                gender: userGender,
+              },
+            })
+          }
+        >
           <Text style={styles.uploadButton}>Message</Text>
         </TouchableOpacity>
+      </View>
+
+      <View
+        style={{
+          //display: props.userID ? "flex" : "none",
+          flexDirection: "row",
+          alignItems: "center",
+          marginTop: 10,
+        }}
+      >
+        <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
+        <View>
+          <Text
+            style={{ ...styles.text, ...{ width: 70, textAlign: "center" } }}
+          >
+            Posts
+          </Text>
+        </View>
+        <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
       </View>
 
       <View style={styles.containerVideo}>
@@ -264,7 +241,7 @@ const styles = StyleSheet.create({
   containerVideo: {
     justifyContent: "center",
     alignItems: "center",
-    height: 510, // or any appropriate fixed height
+    height: "60%", // or any appropriate fixed height
   },
 
   container: {
@@ -302,7 +279,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingBottom: 20, // ensures space at bottom
     marginTop: 10,
-    flex: 1, // allows container to shrink if needed
+    flexShrink: 1, // allows container to shrink if needed
   },
   bio: {
     fontSize: 14,
@@ -361,7 +338,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     backgroundColor: "#fff",
     borderRadius: 12,
-    marginBottom: 12,
   },
 
   uploadButton: {
@@ -491,5 +467,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: "center",
     alignItems: "center",
+  },
+  profileButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
   },
 });

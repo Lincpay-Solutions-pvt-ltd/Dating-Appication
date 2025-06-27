@@ -302,14 +302,20 @@ export default function HeaderForm({ isTransparent = false }) {
   );
 }
 
+
 const stylesHeader = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    backgroundColor: "#f3f3f3",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#ffffff",
+    elevation: 4, // Shadow on Android
+    shadowColor: "#000", // Shadow on iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   headerTransparent: {
     flexDirection: "row",

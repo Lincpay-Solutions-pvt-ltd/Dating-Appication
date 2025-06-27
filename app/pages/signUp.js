@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Button } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
-import { Alert } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LinearGradient } from 'expo-linear-gradient';
+import FontistoIcons from 'react-native-vector-icons/Fontisto';
 
 export default function SignUpScreen() {
-  const router = useRouter(); // Expo Router hook for navigation
+  const router = useRouter();
   const [userFirstName, setFirstName] = useState(null);
   const [userSurname, setSurname] = useState(null);
   const [userEmail, setUserEmail] = useState(null);
@@ -17,7 +18,6 @@ export default function SignUpScreen() {
   const [err, setError] = useState(null);
   const [userAccountApproved, setUserAccountApproved] = useState(null);
   const [isValidating, setIsValidating] = useState(false);
-
   const [userDateOfBirth, setUserDateOfBirth] = useState('');
 
   const login_ = async (email, password) => {
@@ -52,7 +52,6 @@ export default function SignUpScreen() {
       setIsValidating(false);
     })
   };
-
 
   const handleSignUp = async () => {
     console.log(userFirstName, userSurname, userEmail, userPassword, userConfirmPassword);
@@ -126,237 +125,327 @@ export default function SignUpScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.formBox}>
-        <Text style={styles.title}>Sign Up</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="First Name"
-          placeholderTextColor={"#000"}
-          value={userFirstName}
-          onChangeText={(text) => setFirstName(text)}
-        />
+    <LinearGradient
+      colors={['#fdf2f8', '#ffffff', '#fef7ed']}
+      style={styles.container}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.formBox}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.iconContainer}>
+              <FontistoIcons name="person" size={40} color="#fff" />
+            </View>
+            <Text style={styles.title}>Create Account</Text>
+            {/* <Text style={styles.subtitle}>Join us and start your journey</Text> */}
+          </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Surname"
-          placeholderTextColor={"#000"}
-          value={userSurname}
-          onChangeText={(text) => setSurname(text)}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor={"#000"}
-          keyboardType="email-address"
-          value={userEmail}
-          onChangeText={(text) => setUserEmail(text)}
-        />
+          {/* Form Fields */}
+          <View style={styles.formContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="First Name"
+              placeholderTextColor="#9ca3af"
+              value={userFirstName}
+              onChangeText={(text) => setFirstName(text)}
+            />
 
-        {/* Password Input */}
+            <TextInput
+              style={styles.input}
+              placeholder="Surname"
+              placeholderTextColor="#9ca3af"
+              value={userSurname}
+              onChangeText={(text) => setSurname(text)}
+            />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor={"#000"}
-          secureTextEntry
-          value={userPassword}
-          onChangeText={(text) => setUserPassword(text)}
-        />
+            <TextInput
+              style={styles.input}
+              placeholder="Email Address"
+              placeholderTextColor="#9ca3af"
+              keyboardType="email-address"
+              value={userEmail}
+              onChangeText={(text) => setUserEmail(text)}
+            />
 
-        {/* Confirm Password Input */}
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#9ca3af"
+              secureTextEntry
+              value={userPassword}
+              onChangeText={(text) => setUserPassword(text)}
+            />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm Password"
-          placeholderTextColor={"#000"}
-          secureTextEntry
-          value={userConfirmPassword}
-          onChangeText={(text) => setUserConfirmPassword(text)}
-        />
+            <TextInput
+              style={styles.input}
+              placeholder="Confirm Password"
+              placeholderTextColor="#9ca3af"
+              secureTextEntry
+              value={userConfirmPassword}
+              onChangeText={(text) => setUserConfirmPassword(text)}
+            />
 
+            <TextInput
+              style={styles.input}
+              placeholder="Date of Birth (DD-MM-YYYY)"
+              placeholderTextColor="#9ca3af"
+              value={userDateOfBirth}
+              onChangeText={(text) => setUserDateOfBirth(text)}
+            />
 
-        {/* date of birth with DD-MM-YYYY input in a text*/}
-        <TextInput
-          style={styles.input}
-          placeholder="Enter DD-MM-YYYY"
-          placeholderTextColor={"#000"}
-          secureTextEntry
-          value={userDateOfBirth}
-          onChangeText={(text) => setUserDateOfBirth(text)}
-        />
+            {/* Gender Selection */}
+            <View style={styles.genderContainer}>
+              <Text style={styles.genderLabel}>Gender</Text>
+              <View style={styles.genderButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.genderButton,
+                    userGenderID === 1 && styles.genderButtonSelected
+                  ]}
+                  onPress={() => setUserGenderID(1)}
+                >
+                  <Text style={[
+                    styles.genderButtonText,
+                    userGenderID === 1 && styles.genderButtonTextSelected
+                  ]}>
+                    Male
+                  </Text>
+                </TouchableOpacity>
 
-        {/* gender choose by radio button*/}
+                <TouchableOpacity
+                  style={[
+                    styles.genderButton,
+                    userGenderID === 2 && styles.genderButtonSelected
+                  ]}
+                  onPress={() => setUserGenderID(2)}
+                >
+                  <Text style={[
+                    styles.genderButtonText,
+                    userGenderID === 2 && styles.genderButtonTextSelected
+                  ]}>
+                    Female
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
 
-        <View style={styles.radioContainer}>
-          <Text style={styles.radioLabel}>Gender:</Text>
-          <View style={styles.radioGroup}>
-            <TouchableOpacity
-              style={userGenderID == 1 ? styles.radioItemChecked : styles.radioItem}
-              onPress={() => setUserGenderID(1)}
+            {/* Error Message */}
+            {err && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{err}</Text>
+              </View>
+            )}
+
+            {/* Sign Up Button */}
+            <TouchableOpacity 
+              style={[styles.signUpButton, (loading || isValidating) && styles.signUpButtonDisabled]} 
+              onPress={handleSignUp} 
+              disabled={loading || isValidating}
             >
-              <Text style={userGenderID == 1 ? styles.radioTextChecked : styles.radioText}>Male</Text>
+              <LinearGradient
+                colors={['#f472b6', '#ec4899']}
+                style={styles.buttonGradient}
+              >
+                <Text style={styles.signUpButtonText}>
+                  {loading || isValidating ? "Signing Up..." : "Sign Up"}
+                </Text>
+              </LinearGradient>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={userGenderID == 2 ? styles.radioItemChecked : styles.radioItem}
-              onPress={() => setUserGenderID(2)}
-            >
-              <Text style={userGenderID == 2 ? styles.radioTextChecked : styles.radioText}>Female</Text>
-            </TouchableOpacity>
+            {/* Login Link */}
+            <View style={styles.loginContainer}>
+              <Text style={styles.loginText}>Already have an account? </Text>
+              <TouchableOpacity onPress={() => router.push("../pages/login")}>
+                <Text style={styles.loginLink}>Log in</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-
-
-
-        {/* Err Text */}
-
-        {err && <Text style={styles.errorText}>{err}</Text>}
-
-        <TouchableOpacity style={styles.button} onPress={handleSignUp} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? "Signing Up..." : "Sign Up"}</Text>
-        </TouchableOpacity>
-
-        {/* Navigate to Login */}
-        <Text style={styles.loginText} onPress={() => router.push("../pages/login")}>
-          Already have an account?
-
-          <Text style={styles.loginLink}> Log in</Text>
-        </Text>
-      </View>
-    </View>
-  )
+      </ScrollView>
+    </LinearGradient>
+  );
 }
-// Styles
+
 const styles = StyleSheet.create({
   container: {
-    display: "flex",
-    alignItems: "center",
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    // backgroundColor: "black",
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 40,
   },
   formBox: {
-    width: "80%",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 0,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 24,
+    padding: 32,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 10,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  iconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#f472b6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#fff',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  iconText: {
+    fontSize: 32,
+    color: 'white',
   },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 20,
-    color: "gray",
-    alignSelf: "flex-start",
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  formContainer: {
+    gap: 20,
   },
   input: {
-    height: 50,
-    width: "100%",
-    borderWidth: 1,
-    borderColor: "#f8768e",
-    borderRadius: 30,
-    paddingHorizontal: 10,
-    marginBottom: 10,
-    
-  },
-  err: {
-    color: "red",
-    fontSize: 12,
-    marginBottom: 10,
-  },
-  button: {
-    backgroundColor: "#f8768e",
-    borderColor: "black",
-    padding: 15,
-    borderRadius: 30,
-    alignItems: "center",
-    width: "100%",
-  },
-  buttonText: {
-    color: "#fff",
+    height: 56,
+    borderWidth: 2,
+    borderColor: '#fce7f3',
+    borderRadius: 28,
+    paddingHorizontal: 20,
     fontSize: 16,
-    fontWeight: "bold",
+    backgroundColor: '#ffffff',
+    color: '#374151',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  loginText: {
-    textAlign: "center",
-    marginTop: 20,
-    fontSize: 20,
+  genderContainer: {
+    marginVertical: 8,
   },
-  loginLink: {
-    color: "#007BFF",
-    fontWeight: "bold",
-    right: 10,
-    fontSize: 22,
+  genderLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 12,
+  },
+  genderButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  genderButton: {
+    flex: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: '#fce7f3',
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  genderButtonSelected: {
+    backgroundColor: '#f472b6',
+    borderColor: '#f472b6',
+    shadowColor: '#f472b6',
+    shadowOpacity: 0.3,
+  },
+  genderButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  genderButtonTextSelected: {
+    color: '#ffffff',
+  },
+  errorContainer: {
+    backgroundColor: '#fef2f2',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: '#fecaca',
   },
   errorText: {
-    color: "red",
-    fontSize: 12,
-    marginBottom: 10,
-  },
-  radioContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 20,
-    right: 50
-  },
-  radioLabel: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginRight: 10,
-    color: "#333",
-  },
-  radioGroup: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  radioItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderWidth: 1,
-    borderColor: "#f8768e",
-    borderRadius: 20,
-    marginHorizontal: 5,
-    backgroundColor: "#FFF",
-  },
-  radioItemChecked: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderWidth: 1,
-    borderColor: "#fff",
-    borderRadius: 20,
-    marginHorizontal: 5,
-    backgroundColor: "#f8768e",
-  },
-  radioText: {
+    color: '#dc2626',
     fontSize: 14,
-    color: "#000",
-    fontWeight: "bold",
+    textAlign: 'center',
+    fontWeight: '500',
   },
-  radioTextChecked: {
-    color: "white", // selected text color
+  signUpButton: {
+    borderRadius: 28,
+    overflow: 'hidden',
+    shadowColor: '#f472b6',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  signUpButtonDisabled: {
+    opacity: 0.6,
+  },
+  buttonGradient: {
+    paddingVertical: 18,
+    alignItems: 'center',
+  },
+  signUpButtonText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  loginContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  loginText: {
     fontSize: 16,
-    textAlign: "center",
+    color: '#6b7280',
   },
-  dateContainer: {
-    margin: 20
-  },
-  dateInput: {
-    borderWidth: 1,
-    borderColor: 'lightgray',
+  loginLink: {
     fontSize: 16,
-    marginBottom: 10,
-    borderRadius: 10
+    color: '#f472b6',
+    fontWeight: '600',
   },
-  dateText: {
-    fontSize: 15,
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 0,
-    right: 50
-  },
-
 });

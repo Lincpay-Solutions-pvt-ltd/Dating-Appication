@@ -11,7 +11,7 @@ import {
 } from "react-native";
 
 import { useRouter } from "expo-router";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import axios from "axios";
@@ -26,31 +26,32 @@ export default function ExploreScreen() {
   const [accessToken, setAccessToken] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [loading, setLoading] = useState(false);
-  const debounceTimeout = useRef(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestedUsers, setSuggestedUsers] = useState([]);
+  const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
 
+  const debounceTimeout = useRef(null);
   const router = useRouter();
 
-  // Fetch user info on mount
-  useEffect(() => {
+  useMemo(() => {
     const getUser = async () => {
-      try {
-        const userData = await AsyncStorage.getItem("User");
-        const token = await AsyncStorage.getItem("accessToken");
-        if (userData) {
-          const parsedUser = JSON.parse(userData);
-          setCurrentUserID(parsedUser.userID);
-        }
-        if (token) {
-          setAccessToken(token);
-        }
-      } catch (err) {
-        console.error("Error reading AsyncStorage:", err);
+      const User = await AsyncStorage.getItem("User");
+      const Token = await AsyncStorage.getItem("accessToken");
+
+      const parsedUser = JSON.parse(User);
+      setCurrentUserID(parsedUser.userID);
+      setAccessToken(Token);
+
+      // Simulate followers check; you may replace this with actual logic
+      const followingData = []; // Assume no followers
+      if (followingData.length === 0) {
+        fetchSuggestedUsers(Token, parsedUser.userID);
       }
     };
+
     getUser();
   }, []);
 
-  // Fetch users matching search query
   const fetchUsers = async (searchTerm) => {
     if (!searchTerm) {
       setShowSearch(false);
@@ -61,7 +62,6 @@ export default function ExploreScreen() {
     setLoading(true);
     try {
       const response = await axios.get(
-
         `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/allUsers?search=${searchTerm}`,
         {
           headers: {
@@ -95,7 +95,7 @@ export default function ExploreScreen() {
         setShowSearch(false);
         setDatabase([]);
       }
-    }, 500); // 500ms delay, adjust as needed
+    }, 500);
   };
 
   const openUserProfile = (item) => {
@@ -103,6 +103,31 @@ export default function ExploreScreen() {
       pathname: "../pages/OtherProfile",
       params: { userData: JSON.stringify(item) },
     });
+  };
+
+  const fetchSuggestedUsers = async (token, currentUserID) => {
+    setIsSuggestionsLoading(true);
+    try {
+      const response = await axios.get(
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/allUsers`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const allUsers = response.data.data;
+      const filtered = allUsers.filter((item) => item.userID !== currentUserID);
+
+      setSuggestedUsers(filtered);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.log("Suggested user fetch error:", error);
+    } finally {
+      setIsSuggestionsLoading(false);
+    }
   };
 
   return (
@@ -118,7 +143,13 @@ export default function ExploreScreen() {
             onChangeText={handleSearchChange}
             placeholderTextColor="#888"
           />
-          {loading && <ActivityIndicator size="small" color="#000" style={styles.loading} />}
+          {loading && (
+            <ActivityIndicator
+              size="small"
+              color="#000"
+              style={styles.loading}
+            />
+          )}
         </View>
 
         {/* Search Results */}
@@ -133,10 +164,12 @@ export default function ExploreScreen() {
                     <Image
                       source={
                         item.profilePic
-                          ? { uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}` }
+                          ? {
+                              uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
+                            }
                           : item.userGender == 2
-                            ? require("../../assets/images/profile-female.jpg")
-                            : require("../../assets/images/profile.jpg")
+                          ? require("../../assets/images/profile-female.jpg")
+                          : require("../../assets/images/profile.jpg")
                       }
                       style={styles.messageAvatar}
                     />
@@ -153,6 +186,47 @@ export default function ExploreScreen() {
             <Text style={styles.noResultsText}>No users found.</Text>
           )
         ) : null}
+
+        {/* Suggested Users Section */}
+        {showSuggestions &&
+          (isSuggestionsLoading ? (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color="#000" />
+              <Text>Loading Suggestions...</Text>
+            </View>
+          ) : suggestedUsers.length > 0 ? (
+            <>
+              <Text style={styles.textMsg}>Suggested Users</Text>
+              <View style={styles.cardContainer}>
+                <FlatList
+                  data={suggestedUsers}
+                  keyExtractor={(item) => item.id?.toString()}
+                  numColumns={2}
+                  renderItem={({ item }) => (
+                    <View>
+                      <TouchableOpacity onPress={() => openUserProfile(item)}>
+                        <Image
+                          source={
+                            item.profilePic
+                              ? {
+                                  uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
+                                }
+                              : item.userGender == 2
+                              ? require("../../assets/images/profile-female.jpg")
+                              : require("../../assets/images/profile.jpg")
+                          }
+                          style={styles.cardImage}
+                        />
+                        <Text style={styles.messageName} numberOfLines={1}>
+                          {/* {item.userFirstName} {item.userSurname} */}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                />
+              </View>
+            </>
+          ) : null)}
       </View>
       <Footer />
     </>
@@ -211,5 +285,37 @@ const styles = StyleSheet.create({
     marginTop: 20,
     color: "#555",
     fontSize: 16,
+  },
+  textMsg: {
+    fontSize: 18,
+    fontWeight: "bold",
+    
+    marginLeft: 30,
+    color: "#000",
+  },
+  cardContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    paddingHorizontal: 5,
+  },
+  card: {
+    width: width / 2 - 10,
+    marginBottom: 15,
+    alignItems: "center",
+    borderRadius: 30,
+  },
+  cardImage: {
+    width: 150,
+    height: 150,
+    borderRadius: 100, // Half of width/height for perfect circle
+    overflow: "hidden",
+    backgroundColor: "#f0f0f0",
+    margin: 15, // Optional for fallback
+  },
+  loaderContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 20,
   },
 });

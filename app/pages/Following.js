@@ -115,15 +115,21 @@ export default function FollowingScreen() {
               <FlatList
                 data={followingData}
                 keyExtractor={(item) => item.id?.toString()}
-                numColumns={2}
+                numColumns={3}
                 renderItem={({ item }) => (
                   <View style={styles.card}>
                     <TouchableOpacity onPress={() => OpenUserProfile(item)}>
                       <Image
-                        source={{
-                          uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
-                        }}
-                        style={styles.card}
+                        source={
+                          item.profilePic
+                            ? {
+                                uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
+                              }
+                            : item.userGender == 2
+                            ? require("../../assets/images/profile-female.jpg")
+                            : require("../../assets/images/profile.jpg")
+                        }
+                        style={styles.profileImage} // ✅ use proper circular style
                       />
                     </TouchableOpacity>
                   </View>
@@ -147,7 +153,7 @@ export default function FollowingScreen() {
                 <FlatList
                   data={suggestedUsers}
                   keyExtractor={(item) => item.id?.toString()}
-                  numColumns={2}
+                  numColumns={3}
                   renderItem={({ item }) => (
                     <View style={styles.card}>
                       <TouchableOpacity onPress={() => OpenUserProfile(item)}>
@@ -161,7 +167,7 @@ export default function FollowingScreen() {
                               ? require("../../assets/images/profile-female.jpg")
                               : require("../../assets/images/profile.jpg")
                           }
-                          style={styles.card}
+                          style={styles.profileImage}
                         />
                       </TouchableOpacity>
                     </View>
@@ -222,14 +228,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    paddingHorizontal: 26,
-    paddingBottom: 30,
+    paddingHorizontal: 6,
+    paddingBottom: 3,
     backgroundColor: "#f3f3f3",
   },
   card: {
-    width: 160,
-    height: 200,
-    padding: 15,
+    width: 120,
+    height: 120,
+    padding: 5,
     borderRadius: 10,
     overflow: "hidden",
   },
@@ -242,8 +248,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "500",
     color: "#333",
-    marginVertical: 20,
-    marginLeft: 20,
+    marginVertical: 30,
+    marginLeft: 30,
   },
   loaderContainer: {
     paddingVertical: 40,
@@ -251,4 +257,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     color: "#000",
   },
+  profileImage: {
+  width: 100,
+  height: 100,
+  borderRadius: 50, // half of width/height
+  resizeMode: "cover",
+  alignSelf: "center",
+  borderWidth: 2,
+  borderColor: "#ddd",
+
+},
+
 });
