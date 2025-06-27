@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   verifyButton: {
-    backgroundColor: '#000',
+    backgroundColor: '#f472b6',
     paddingVertical: 16,
     borderRadius: 50,
     alignItems: 'center',
