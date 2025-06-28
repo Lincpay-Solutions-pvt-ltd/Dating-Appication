@@ -69,7 +69,7 @@ export default function ProfileScreen() {
             ? `${process.env.EXPO_PUBLIC_API_BASE_URL}${userData_.profilePic}`
             : `set-default-${userData_.userGender}`, // Replace with actual image URL
           posts: userData_.posts ? userData_.posts : 0,
-          followers: userData_.followers ? userData_.totalFollowers : 0,
+          followers: userData_.totalFollowers ? userData_.totalFollowers : 0,
           following: userData_.followings ? userData_.followings : 0,
           bio: `${userData_.bio ? userData_.bio : "✨ No bio available"}`,
         });
@@ -78,6 +78,7 @@ export default function ProfileScreen() {
       }
     };
     fetchUserData();
+    console.log("Total posts = ", profileData.posts);
   }, []);
 
   const openImagePicker = () => {
@@ -248,6 +249,24 @@ export default function ProfileScreen() {
         <TouchableOpacity onPress={showOptions}>
           <Text style={styles.uploadButton}>Add Post</Text>
         </TouchableOpacity>
+      </View>
+
+      <View
+        style={{
+          //display: props.userID ? "flex" : "none",
+          flexDirection: "row",
+          alignItems: "center",
+        }}
+      >
+        <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
+        <View>
+          <Text
+            style={{ ...styles.text, ...{ width: 70, textAlign: "center" } }}
+          >
+            Posts
+          </Text>
+        </View>
+        <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
       </View>
 
       <Modal transparent visible={modalVisible} animationType="none">

@@ -119,7 +119,7 @@ export default function followers() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f2f2f7",
     paddingTop: 50,
     paddingHorizontal: 15,
   },
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   username: {
-    color: "white",
+    color: "black",
     fontSize: 15,
     fontWeight: "500",
   },

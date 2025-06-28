@@ -104,58 +104,52 @@ const VideoList = (props) => {
   }, [haveMoreReels, pageNumber, props.userID, fetchReel]);
 
   // Memoize header to render only once per call
-  const staticHeader = useMemo(
-    () => (
-      <View
-        style={{
-          display: props.userID ? "unset" : "none",
-          flexDirection: "row",
-          alignItems: "center",
-        }}
-      >
-        <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
-        <View>
-          <Text
-            style={{ ...styles.text, ...{ width: 70, textAlign: "center" } }}
-          >
-            Posts
-          </Text>
-        </View>
-        <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
-      </View>
-    ),
-    [props.userID]
-  );
+  // const staticHeader = useMemo(
+  //   () => (
+  //     <View
+  //       style={{
+  //         //display: props.userID ? "flex" : "none",
+  //         flexDirection: "row",
+  //         alignItems: "center",
+  //       }}
+  //     >
+  //       <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
+  //       <View>
+  //         <Text
+  //           style={{ ...styles.text, ...{ width: 70, textAlign: "center" } }}
+  //         >
+  //           Posts
+  //         </Text>
+  //       </View>
+  //       <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
+  //     </View>
+  //   ),
+  //   [props.userID]
+  // );
 
   const screenWidth = Dimensions.get("screen").width;
 
   return (
     <>
-      {staticHeader}
-      {Database.length ? (
-        <FlatList
-          style={styles.container}
-          width={screenWidth}
-          data={Database}
-          numColumns={2}
-          contentContainerStyle={{ padding: 0 }}
-          horizontal={false}
-          columnWrapperStyle={{ justifyContent: "space-between" }}
-          keyExtractor={(item, index) => `${item.id ?? "no-id"}-${index}`}
-          renderItem={({ item }) => <VideoCard item={item} />}
-          onEndReached={CheckLastReel}
-          onEndReachedThreshold={0.5}
-        />
+      {Database.length > 0 ? (
+        <>
+          <FlatList
+            style={styles.container}
+            width={screenWidth}
+            data={Database}
+            numColumns={2}
+            contentContainerStyle={{ padding: 0 }}
+            horizontal={false}
+            columnWrapperStyle={{ justifyContent: "space-between" }}
+            keyExtractor={(item, index) => `${item.id ?? "no-id"}-${index}`}
+            renderItem={({ item }) => <VideoCard item={item} />}
+            onEndReached={CheckLastReel}
+            onEndReachedThreshold={0.5}
+          />
+        </>
       ) : (
-        <View>
-          <Text
-            style={{
-              ...styles.text,
-              textAlign: "center",
-            }}
-          >
-            No Posts available
-          </Text>
+        <View style={styles.centeredContainer}>
+          <Text style={styles.postText}>No Posts available</Text>
         </View>
       )}
     </>
@@ -180,7 +174,21 @@ const styles = StyleSheet.create({
   text: {
     fontWeight: "bold",
     textAlign: "center",
-    flexWrap: "nowrap",
+    numberOfLines: 1, // Use in JSX, not style
+    ellipsizeMode: "tail", // Optional: adds ... if text overflows
+  },
+  centeredContainer: {
+    position: "absolute",
+    top: "20%",
+    justifyContent: "center", // Vertical center
+    alignItems: "center", // Horizontal center
+  },
+
+  postText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000",
+    textAlign: "center",
   },
   image: {
     width: "100%",
