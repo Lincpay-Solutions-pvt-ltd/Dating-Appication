@@ -70,9 +70,7 @@ export default function UserFollowing() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        onPress={() => router.back()}
-      >
+      <TouchableOpacity onPress={() => router.back()}>
         <IoniconsIcons name="arrow-back" size={24} color="black" />
       </TouchableOpacity>
       <Text style={styles.header}>Following</Text>
@@ -87,16 +85,18 @@ export default function UserFollowing() {
             return (
               <TouchableOpacity onPress={() => OpenUserProfile(item)}>
                 <View style={styles.userRow}>
-                  {item.profilePic ? (
-                    <Image
-                      source={{
-                        uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
-                      }}
-                      style={styles.avatar}
-                    />
-                  ) : (
-                    <View style={styles.avatarPlaceholder} />
-                  )}
+                  <Image
+                    source={
+                      item.profilePic
+                        ? {
+                            uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
+                          }
+                        : item.userGender == 2
+                        ? require("../../assets/images/profile-female.jpg")
+                        : require("../../assets/images/profile.jpg")
+                    }
+                    style={styles.avatar}
+                  />
                   <View style={styles.userInfo}>
                     <Text style={styles.username}>
                       {item.userFirstName + " " + item.userSurname}
@@ -229,5 +229,3 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-
-

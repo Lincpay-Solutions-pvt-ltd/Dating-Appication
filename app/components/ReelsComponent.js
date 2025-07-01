@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 import {
   View,
   Dimensions,
@@ -15,6 +21,7 @@ import {
   TouchableWithoutFeedback,
   TouchableOpacity,
   Keyboard,
+  Animated,
   Alert,
 } from "react-native";
 import { Video, ResizeMode } from "expo-av";
@@ -25,17 +32,11 @@ import FontAwesomeIcons from "@expo/vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { usePathname, useRouter } from "expo-router";
 import axios from "axios";
-import { set } from "react-hook-form";
-// import moment from 'moment';
-import { use } from "react";
-import LinearGradient from "react-native-linear-gradient";
-import { current } from "@reduxjs/toolkit";
-import { useToast } from 'react-native-toast-notifications';
-import GiftCoinPopup from "./GiftCoinPopup";
+
 
 const { width, height } = Dimensions.get("window");
 export default function ReelsComponent(props) {
-  // const [currentUserID, setCurrentUserID] = useState("");
+  const [currentUserID, setCurrentUserID] = useState("");
   const pathname = usePathname();
   const [currentViewableItemIndex, setCurrentViewableItemIndex] = useState(0);
   const [Database, setDatabase] = useState([]);
@@ -46,28 +47,30 @@ export default function ReelsComponent(props) {
   const video = useRef(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [haveMoreReels, setHaveMoreReels] = useState(false);
+  const [userPic, setUserPic] = useState(null);
 
 
-  // useEffect(() => {
-  //   const getUser = async () => {
-  //     try {
-  //       const user = await AsyncStorage.getItem("User");
-  //       console.log("getUser called = ", user);
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const user = await AsyncStorage.getItem("User");
+        console.log("getUser called = ", user);
 
-  //       if (user) {
-  //         const parsedUser = JSON.parse(user);
-  //         const userID = parsedUser.userID;
-  //         setCurrentUserID(userID);
-  //         console.log("Current User ID = ", userID);
-  //       }
-  //     } catch (err) {
-  //       console.error("Error parsing user from AsyncStorage", err);
-  //     }
-  //   };
+        if (user) {
+          const parsedUser = JSON.parse(user);
+          const userID = parsedUser.userID;
+          setCurrentUserID(userID);
+          setUserPic(parsedUser.profilePic);
+          console.log("Current User ID = ", userID);
+        }
+      } catch (err) {
+        console.error("Error parsing user from AsyncStorage", err);
+      }
+    };
 
-  //   getUser();
-  //   setIsSaved(false);
-  // }, []);
+    getUser();
+    setIsSaved(false);
+  }, []);
 
   useEffect(() => {
     if (props.reel) {
@@ -105,8 +108,13 @@ export default function ReelsComponent(props) {
 
   const ReelItem = ({ item, shouldPlay, openShareOptions }) => {
     const toast = useToast(); 
+
+    const fadeAnim = useRef(new Animated.Value(1)).current;
+
     const router = useRouter();
     const [currentUserID, setCurrentUserID] = useState("");
+    const [currentUser, setCurrentUser] = useState({});
+    const [reelUserProfilePic, setReelUserProfilePic] = useState(null);
     const [status, setStatus] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [showCommentModal, setShowCommentModal] = useState(false);
@@ -235,6 +243,8 @@ export default function ReelsComponent(props) {
   //   };
 
 
+    const [expanded, setExpanded] = useState(false);
+
     useMemo(() => {
       const getUser = async () => {
         try {
@@ -244,15 +254,17 @@ export default function ReelsComponent(props) {
             const parsedUser = JSON.parse(user);
             const userID = parsedUser.userID;
             setCurrentUserID(userID);
+            setCurrentUser(parsedUser);
           }
         } catch (err) {
           console.error("Error parsing user from AsyncStorage", err);
         }
       };
       getUser();
-      // setIsSaved(false);
       setTotalLikes(item.likes || 0);
       setTotalComments(item.comments || 0);
+      setReelUserProfilePic(item.profilePic || null);
+      console.log("item = >>>>>>", item.profilePic);
     }, []);
 
     useEffect(() => {
@@ -292,6 +304,14 @@ export default function ReelsComponent(props) {
         }
       };
     }, [pathname]);
+
+    useEffect(() => {
+      Animated.timing(fadeAnim, {
+        toValue: status?.isPlaying ? 0 : 1, // fade out if playing
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }, [status?.isPlaying]);
 
     const showMoreOptions = () => {
       setShowMoreOptionsModal(true);
@@ -516,21 +536,21 @@ export default function ReelsComponent(props) {
       setShowDeleteCommentModal(true);
     };
 
+    const togglePlayback = async () => {
+      try {
+        if (status?.isPlaying) {
+          await video.current?.pauseAsync();
+        } else {
+          await video.current?.playAsync();
+        }
+      } catch (error) {
+        console.log("Error toggling video", error);
+      }
+    };
+
     return (
       <View style={styles.videoContainer}>
-        <Pressable
-          onPress={() => {
-            try {
-              if (status?.isPlaying) {
-                video.current?.pauseAsync();
-              } else {
-                video.current?.playAsync();
-              }
-            } catch (error) {
-              console.log("Error toggling video", error);
-            }
-          }}
-        >
+        <Pressable onPress={togglePlayback}>
           {shouldPlay && (
             <Video
               ref={video}
@@ -540,6 +560,7 @@ export default function ReelsComponent(props) {
               style={styles.video}
               resizeMode={ResizeMode.COVER}
               useNativeControls={false}
+              isLooping={true}
               onPlaybackStatusUpdate={(status) => setStatus(() => status)}
               onLoadStart={() => setIsLoading(true)}
               onLoad={() => setIsLoading(false)}
@@ -551,6 +572,17 @@ export default function ReelsComponent(props) {
             <View style={styles.loaderContainer}>
               <ActivityIndicator size="large" color="#fff" />
             </View>
+          )}
+          {!isLoading && (
+            <Pressable onPress={togglePlayback} style={styles.playPauseButton}>
+              <Animated.View style={{ opacity: fadeAnim }}>
+                <Ionicons
+                  name={status?.isPlaying ? "pause" : "play"}
+                  size={50}
+                  color="#fff"
+                />
+              </Animated.View>
+            </Pressable>
           )}
         </Pressable>
 
@@ -618,7 +650,9 @@ export default function ReelsComponent(props) {
               style={styles.iconWrapper}
               onPress={() => showMoreOptions()}
             >
-              <Entypo name="dots-three-vertical" size={23} color="white" />
+              {currentUserID !== "" && currentUserID === itemUserID && (
+                <Entypo name="dots-three-vertical" size={23} color="white" />
+              )}
             </TouchableOpacity>
           </View>
 
@@ -629,19 +663,31 @@ export default function ReelsComponent(props) {
               }}
               style={styles.profileImage}
             />
-            <TouchableOpacity
-              onPress={() => {
-                router.push({
-                  pathname: "../pages/OtherProfile",
-                  params: { userID: item.userID },
-                });
-              }}
-            >
-              <View style={styles.profileTextContainer}>
-                <Text style={styles.username}>{item.description}</Text>
-              </View>
-            </TouchableOpacity>
-            <FollowButton />
+            <View style={styles.profileInfo}>
+              <Text style={styles.username}>{item.userName}</Text>
+
+              <TouchableOpacity onPress={() => setExpanded(!expanded)}>
+                <Text
+                  style={styles.truncatedDescription}
+                  numberOfLines={expanded ? 0 : 2}
+                  ellipsizeMode="tail"
+                >
+                  <Text>
+                    {!expanded && item.description.length > 30 ? (
+                      <>
+                        {item.description.slice(0, 40)}
+                        <Text style={{ color: "#f3f3f3" , fontWeight: "bold" }}> Read more...</Text>
+                      </>
+                    ) : (
+                      item.description
+                    )}
+                  </Text>
+
+                  {/* Optional hint */}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {/* <FollowButton /> */}
           </View>
         </View>
 
@@ -662,12 +708,12 @@ export default function ReelsComponent(props) {
                       <FlatList
                         data={videoComments}
                         renderItem={({ item }) => {
-                          console.log(
-                            "Comment User Id s  = ",
-                            item.userID,
-                            currentUserID,
-                            item.commentText
-                          );
+                          // console.log(
+                          //   "Comment User Id s  = ",
+                          //   item.userID,
+                          //   currentUserID,
+                          //   item.commentText
+                          // );
 
                           return (
                             <TouchableOpacity
@@ -684,7 +730,15 @@ export default function ReelsComponent(props) {
                             >
                               <View style={styles.commentItem}>
                                 <Image
-                                  source={require("../../assets/images/profile.jpg")}
+                                  source={
+                                    item.profilePic
+                                      ? {
+                                          uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
+                                        }
+                                      : item.userGender == 2
+                                      ? require("../../assets/images/profile-female.jpg")
+                                      : require("../../assets/images/profile.jpg")
+                                  }
                                   style={styles.profilePic}
                                 />
                                 <View style={{ flex: 1 }}>
@@ -742,7 +796,15 @@ export default function ReelsComponent(props) {
 
                   <View style={styles.commentInputContainer}>
                     <Image
-                      source={require("../../assets/images/profile.jpg")}
+                      source={
+                        currentUser.profilePic
+                          ? {
+                              uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${userPic}`,
+                            }
+                          : item.userGender == 2
+                          ? require("../../assets/images/profile-female.jpg")
+                          : require("../../assets/images/profile.jpg")
+                      }
                       style={styles.profilePic}
                     />
                     <TextInput
@@ -877,7 +939,7 @@ export default function ReelsComponent(props) {
           <Pressable style={styles.modalOverlay} onPress={closeMoreOptions}>
             <View style={styles.modalContainer}>
               <View style={styles.modalOptionRow}>
-                <TouchableOpacity style={styles.optionButton}>
+                {/* <TouchableOpacity style={styles.optionButton}>
                   <MaterialIcons name="report" size={24} color="red" />
                   <Text style={styles.modalText}>Report</Text>
                 </TouchableOpacity>
@@ -897,24 +959,24 @@ export default function ReelsComponent(props) {
                   />
                   <Text style={styles.modalText}>Save</Text>
                 </TouchableOpacity>
+                
+                <View style={styles.divider} /> */}
               </View>
 
-              <View style={styles.divider} />
-
               <View style={styles.modalOptionRow}>
-                {currentUserID !== "" && currentUserID === itemUserID && (
-                  <TouchableOpacity
-                    style={styles.optionButton}
-                    onPress={deleteReel}
-                  >
-                    <MaterialCommunityIcons
-                      name="delete-outline"
-                      size={24}
-                      color="red"
-                    />
-                    <Text style={styles.modalText}>Delete</Text>
-                  </TouchableOpacity>
-                )}
+                {/* {currentUserID !== "" && currentUserID === itemUserID && ( */}
+                <TouchableOpacity
+                  style={styles.optionButton}
+                  onPress={deleteReel}
+                >
+                  <MaterialCommunityIcons
+                    name="delete-outline"
+                    size={24}
+                    color="red"
+                  />
+                  <Text style={styles.modalText}>Delete</Text>
+                </TouchableOpacity>
+                {/* )} */}
               </View>
             </View>
           </Pressable>
@@ -978,7 +1040,7 @@ export default function ReelsComponent(props) {
           )
         }
         pagingEnabled
-        showsVerticalScrollIndicator={false}
+        //showsVerticalScrollIndicator={false}
         viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
         snapToAlignment="start"
         decelerationRate="fast"
@@ -987,8 +1049,7 @@ export default function ReelsComponent(props) {
         initialNumToRender={1}
         maxToRenderPerBatch={1}
         removeClippedSubviews={true}
-        // onEndReached={CheckLastReel}
-        onEndReached={CheckLastReel}
+        //onEndReached={CheckLastReel}
         onEndReachedThreshold={0.5}
       />
     </View>
@@ -1021,7 +1082,12 @@ const styles = StyleSheet.create({
     borderWidth: 2.5,
     borderColor: "#fff",
   },
-  username: { color: "#fff", fontWeight: "600", fontSize: 15 },
+  username: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 15,
+    marginLeft: 20,
+  },
   description: { color: "#eaeaea", fontSize: 13, marginTop: 6 },
   iconContainer: {
     position: "absolute",
@@ -1071,7 +1137,6 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
     justifyContent: "flex-end",
   },
   modalContainer: {
@@ -1212,7 +1277,7 @@ const styles = StyleSheet.create({
   profilePic: {
     width: 40,
     height: 40,
-    borderRadius: 16,
+    borderRadius: 30,
     marginRight: 8,
   },
   profilePicShimer: {
@@ -1314,5 +1379,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+  playPauseButton: {
+    position: "absolute",
+    top: "40%",
+    left: "45%",
+    zIndex: 10,
+    borderRadius: 40,
+    padding: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  truncatedDescription: {
+    color: "#eaeaea",
+    fontSize: 13,
+    marginTop: 4,
+    marginLeft: 20,
+    width: 200, // Adjust width as needed
   },
 });

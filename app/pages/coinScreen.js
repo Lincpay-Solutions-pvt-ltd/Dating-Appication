@@ -16,6 +16,13 @@ import axios from "axios";
 import { useToast } from "react-native-toast-notifications";
 import { useRouter } from "expo-router";
 import { WebView } from "react-native-webview";
+=======
+import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, ActivityIndicator, Alert, Modal } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import axios from "axios";
+import { useToast } from 'react-native-toast-notifications';
+import { useRouter } from "expo-router";
 
 const CoinScreen = () => {
   const router = useRouter();
@@ -36,8 +43,13 @@ const CoinScreen = () => {
         setLoading(true);
         const userData = await AsyncStorage.getItem("User");
         const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
+       setUser(parsedUser);
+
         await Promise.all([fetchOffers(), fetchUserCoins(parsedUser?.userID)]);
+        await Promise.all([
+          fetchOffers(),
+          fetchUserCoins(parsedUser?.userID)
+        ]);
       } catch (error) {
         console.error("Error in fetchData:", error);
         Alert.alert("Error", "Failed to load data.");
@@ -64,9 +76,7 @@ const CoinScreen = () => {
 
   const fetchUserCoins = async (userID) => {
     try {
-      const response = await axios.get(
-        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/user-total-coin/${userID}`
-      );
+      const response = await axios.get(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/user-total-coin/${userID}`);
       if (response.data?.status) {
         const coins = response.data.data || [];
         const totalCount =
@@ -143,6 +153,52 @@ const CoinScreen = () => {
       setSelectedOffer(null);
     }
   };
+const handlePurchase = async (offer) => {
+  try {
+    setProcessing(true);
+    setSelectedOffer(offer.offerId);
+
+    const accessToken = await AsyncStorage.getItem("accessToken");
+    if (!accessToken) {
+      Alert.alert("Login Required", "Please login first.");
+      router.push("../login");
+      return;
+    }
+
+    const response = await axios.post(
+      `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/purchase-coin`,
+      { userID: user.userID, count: offer.coinAmount },
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+
+    if (response.data?.status) {
+      toast.show(`✅ Purchased ${offer.coinAmount} coins!`, { type: "success" });
+      await fetchUserCoins(user.userID);
+      setShowSuccessModal(true);
+    } else {
+      toast.show(`❌ ${response.data?.msg || "Purchase failed"}`, { type: "danger" });
+    }
+  } catch (error) {
+    console.error("Purchase error:", error);
+    if (error.response?.data?.msg) {
+      toast.show(`❌ ${error.response.data.msg}`, { type: "danger" });
+    } else {
+      toast.show("❌ Something went wrong. Please try again.", { type: "danger" });
+    }
+  } finally {
+    setProcessing(false);
+    setSelectedOffer(null);
+  }
+};
+
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#e91e63" />
+      </View>
+    );
+  }
 
   if (loading) {
     return (
@@ -170,8 +226,48 @@ const CoinScreen = () => {
             source={require("../../assets/images/coin.png")}
           />
           <Text style={styles.coinBalance}>{userCoins}</Text>
-        </View>
 
+          <Image style={styles.coinIcon} source={require("../../assets/images/coin.png")} />
+          <Text style={styles.coinBalance}>{userCoins}</Text>
+        </View>
+      </View>
+      <Text style={styles.sectionTitle}>Available Packages</Text>
+
+      {offers.length === 0 ? (
+        <View style={styles.noOffersContainer}>
+          <Text style={styles.noOffersText}>No coin packages available at the moment. Please check back later.</Text>
+        </View>
+      ) : (
+        <View style={styles.offerGrid}>
+          {offers.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[styles.offerCard, selectedOffer === item.offerId && styles.selectedOffer]}
+              onPress={() => handlePurchase(item)}
+              disabled={processing}
+            >
+              <Text style={styles.offerCoins}>{item.coinAmount} Coins</Text>
+              <Text style={styles.offerPrice}>₹ {item.offerPrice}</Text>
+              <Text style={styles.oldPrice}>₹ {item.actualPrice}</Text>
+              {processing && selectedOffer === item.offerId && (
+                <ActivityIndicator size="small" color="#e91e63" style={{ marginTop: 10 }} />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+
+      <Modal visible={showSuccessModal} transparent animationType="fade">
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>🎉 Purchase Successful!</Text>
+            <TouchableOpacity onPress={() => setShowSuccessModal(false)} style={styles.modalButton}>
+              <Text style={styles.modalButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
         {/* ➔ ADD THIS BUTTON */}
         <TouchableOpacity
           style={styles.historyButton}
@@ -304,6 +400,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 20,
     padding: 20,
+    padding: 20,  
     justifyContent: "space-around",
   },
   offerCard: {
@@ -355,6 +452,24 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     backgroundColor: "#e91e63",
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '75%',
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  modalButton: {
+    backgroundColor: '#e91e63',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 5,
@@ -389,6 +504,27 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+});
+
+export default CoinScreen;
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noOffersContainer: {
+  padding: 20,
+  alignItems: 'center',
+  justifyContent: 'center',
+  },
+  noOffersText: {
+    fontSize: 16,
+    color: '#777',
+    textAlign: 'center',
   },
 });
 
