@@ -32,11 +32,7 @@ import FontAwesomeIcons from "@expo/vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { usePathname, useRouter } from "expo-router";
 import axios from "axios";
-// import { set } from "react-hook-form";
-// // import moment from 'moment';
-// import { use } from "react";
-// import LinearGradient from "react-native-linear-gradient";
-// import { current } from "@reduxjs/toolkit";
+
 
 const { width, height } = Dimensions.get("window");
 export default function ReelsComponent(props) {
@@ -52,6 +48,7 @@ export default function ReelsComponent(props) {
   const [pageNumber, setPageNumber] = useState(1);
   const [haveMoreReels, setHaveMoreReels] = useState(false);
   const [userPic, setUserPic] = useState(null);
+
 
   useEffect(() => {
     const getUser = async () => {
@@ -110,7 +107,10 @@ export default function ReelsComponent(props) {
   };
 
   const ReelItem = ({ item, shouldPlay, openShareOptions }) => {
+    const toast = useToast(); 
+
     const fadeAnim = useRef(new Animated.Value(1)).current;
+
     const router = useRouter();
     const [currentUserID, setCurrentUserID] = useState("");
     const [currentUser, setCurrentUser] = useState({});
@@ -135,6 +135,114 @@ export default function ReelsComponent(props) {
     const [isReport, setIsReport] = useState(false);
     const [totalLikes, setTotalLikes] = useState(0);
     const [totalComments, setTotalComments] = useState(0);
+    //const [isSaved, setIsSaved] = useState(false);
+    const [receiverId, setReceiverId] = useState('');
+    const [showGiftPopup, setShowGiftPopup] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+  // const sendCoins = async (amount) => {
+  //     try {
+  //       setLoading(true);
+        
+  //       // Validate amount
+  //       if (!amount || amount <= 0) {
+  //         toast.show('Please select a valid coin amount', {
+  //           type: 'danger',
+  //           placement: 'top',
+  //           duration: 3000,
+  //         });
+  //         return;
+  //       }
+        
+
+  //       const user = await AsyncStorage.getItem("User");
+  //       if (!user) {
+  //         toast.show('User session expired', {
+  //           type: 'danger',
+  //           placement: 'top',
+  //           duration: 3000,
+  //         });
+  //         return;
+  //       }
+
+  //       const senderId = JSON.parse(user).userID;
+        
+  //       // Validate not sending to self
+  //       if (senderId === item.userID) {
+  //         toast.show('Cannot send coins to yourself', {
+  //           type: 'danger',
+  //           placement: 'top',
+  //           duration: 3000,
+  //         });
+  //         return;
+  //       }
+        
+  //       const response = await axios.post(
+  //         `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/send-coin`,
+  //         {
+  //           senderId,
+  //           receiverId:item.userID,
+  //           count: amount
+  //         },
+  //         {
+  //           timeout: 10000,
+  //           headers: {
+  //             'Content-Type': 'application/json',
+  //           }
+  //         }
+  //       );
+
+  //       if (response.data.status) {
+  //         toast.show(`${amount} coins sent successfully!`, {
+  //           type: 'success',
+  //           placement: 'top',
+  //           duration: 3000,
+  //         });
+  //       } else {
+  //         throw new Error(response.data.msg || "Failed to send coins");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error sending coins:", error);
+        
+  //       let errorMessage = "Failed to send coins";
+        
+  //       if (error.response) {
+  //         switch (error.response.status) {
+  //           case 400:
+  //             errorMessage = error.response.data?.message || "Invalid request";
+  //             break;
+  //           case 401:
+  //             errorMessage = "Session expired - please login again";
+  //             break;
+  //           case 403:
+  //             errorMessage = "Not enough coins to send";
+  //             break;
+  //           case 404:
+  //             errorMessage = "Recipient not found";
+  //             break;
+  //           case 500:
+  //             errorMessage = "Server error - please try again later";
+  //             break;
+  //           default:
+  //             errorMessage = error.response.data?.message || "Request failed";
+  //         }
+  //       } else if (error.request) {
+  //         errorMessage = "Network error - please check your connection";
+  //       } else if (error.message.includes('timeout')) {
+  //         errorMessage = "Request timed out - please try again";
+  //       }
+        
+  //       toast.show(errorMessage, {
+  //         type: 'danger',
+  //         placement: 'top',
+  //         duration: 4000,
+  //       });
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+
     const [expanded, setExpanded] = useState(false);
 
     useMemo(() => {
@@ -517,10 +625,26 @@ export default function ReelsComponent(props) {
               <Text style={styles.iconText}>Comments</Text>
             </Pressable>
 
-            <Pressable style={styles.iconWrapper}>
-              <Ionicons name="gift-outline" size={25} color="white" />
-              <Text style={styles.iconText}>Gift</Text>
-            </Pressable>
+              {currentUserID && currentUserID !== item.userID && (
+                <>
+                  <TouchableOpacity 
+                    style={styles.giftButton}
+                    onPress={() => {
+                      setReceiverId(item.userID); 
+                      setShowGiftPopup(true);
+                    }}
+                  >
+                    <Text style={styles.giftButtonText}>🎁 Send Gift</Text>
+                  </TouchableOpacity>
+
+                  <GiftCoinPopup 
+                    visible={showGiftPopup}
+                    onClose={() => setShowGiftPopup(false)}
+                    // onSend={sendCoins}
+                    receiverId={item.userID}
+                  />
+                </>
+              )} 
 
             <TouchableOpacity
               style={styles.iconWrapper}
@@ -1238,6 +1362,23 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 16,
   },
+  giftButton: {
+    backgroundColor: '#fe2146',
+    padding: 10,
+    borderRadius: 20,
+    alignSelf: 'center',
+    marginVertical: 10,
+  },
+  giftButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   playPauseButton: {
     position: "absolute",
     top: "40%",
@@ -1253,6 +1394,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 4,
     marginLeft: 20,
-    width: 200, // Adjust width as needed
+    width: 200
   },
-});
+}});

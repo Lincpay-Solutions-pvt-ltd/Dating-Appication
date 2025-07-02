@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-
 import {
   View,
   Text,
@@ -13,10 +12,11 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import EntypoIcons from "react-native-vector-icons/Entypo";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useRouter, usePathname } from "expo-router";
 import { useDispatch } from "react-redux";
 import axios from "axios";
 import { logout } from "../Redux/authSlice";
+import { setTotal } from "../Redux/coinSlice";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -25,12 +25,14 @@ export default function HeaderForm({ isTransparent = false }) {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [user, setUser] = useState({});
   const [userCoins, setUserCoins] = useState(0);
+  const [error, setError] = useState(null);
   const translateX = useState(new Animated.Value(-screenWidth))[0];
   const translateZ = useState(new Animated.Value(screenWidth))[0];
+
   const router = useRouter();
+  const pathname = usePathname();
   const dispatch = useDispatch();
 
-  // Helper to determine if a route is active
   const isActive = (route) => pathname === route;
 
   const toggleMenu = () => {
@@ -53,17 +55,29 @@ export default function HeaderForm({ isTransparent = false }) {
 
   const fetchUserCoins = async (userID) => {
     try {
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!token) throw new Error("No access token found");
+
       const response = await axios.get(
-        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/user-total-coin/${userID}`
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/user-total-coin/${userID}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+
       if (response.data?.status) {
         const coins = response.data.data || [];
         const totalCount =
           coins.length > 0 ? coins[coins.length - 1].totalCount : 0;
+
         setUserCoins(totalCount);
+        dispatch(setTotal(totalCount));
       }
     } catch (error) {
       console.error("Error fetching user coins:", error.message);
+      setError(error.message);
     }
   };
 
@@ -84,7 +98,6 @@ export default function HeaderForm({ isTransparent = false }) {
     };
     getUser();
   }, []);
-
   return (
     <>
       {/* Header */}
