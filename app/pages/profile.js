@@ -26,6 +26,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import { ScrollView } from "react-native";
 import { Platform } from "react-native";
 import { ActivityIndicator } from "react-native";
+import Footer from "../components/footer";
 
 export default function ProfileScreen() {
   const [selectedImage, setSelectedImage] = useState([""]);
@@ -195,9 +196,9 @@ export default function ProfileScreen() {
   };
 
   return (
+    <>
+    <Header />
     <View style={styles.container}>
-      <Header />
-
       {/* Profile Info */}
       <View style={styles.profileContainer}>
         <Image
@@ -364,6 +365,8 @@ export default function ProfileScreen() {
         </View>
       </Modal>
     </View>
+    <Footer />
+    </>
   );
 }
 

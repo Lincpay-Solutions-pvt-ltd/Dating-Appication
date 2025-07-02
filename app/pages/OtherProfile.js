@@ -10,6 +10,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import Footer from "../components/footer";
 
 import Header from "../components/header";
 import VideoCards from "../components/videoCards";
@@ -131,9 +132,9 @@ export default function OtherProfileScreen() {
   }
 
   return (
+  <>
+    <Header />
     <View style={styles.container}>
-      <Header />
-
       <View style={styles.profileContainer}>
         <Image
           source={
@@ -233,6 +234,8 @@ export default function OtherProfileScreen() {
         <VideoCards userID={profileData.userID} />
       </View>
     </View>
+    <Footer />
+    </>
   );
 }
 
