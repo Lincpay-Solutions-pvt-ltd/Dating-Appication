@@ -1394,6 +1394,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 4,
     marginLeft: 20,
-    width: 200, // Adjust width as needed
+    width: 200
   },
-});
+}});

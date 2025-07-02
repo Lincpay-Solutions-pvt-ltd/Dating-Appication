@@ -16,36 +16,26 @@ import axios from "axios";
 import { useToast } from "react-native-toast-notifications";
 import { useRouter } from "expo-router";
 import { WebView } from "react-native-webview";
-=======
-import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, ActivityIndicator, Alert, Modal } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import Icon from "react-native-vector-icons/MaterialIcons";
-import axios from "axios";
-import { useToast } from 'react-native-toast-notifications';
-import { useRouter } from "expo-router";
 
 const CoinScreen = () => {
   const router = useRouter();
+  const toast = useToast();
+
   const [offers, setOffers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [userCoins, setUserCoins] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [paymentURL, setPaymentURL] = useState(null);
   const [user, setUser] = useState({});
   const [processing, setProcessing] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  const toast = useToast();
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
         const userData = await AsyncStorage.getItem("User");
         const parsedUser = JSON.parse(userData);
-       setUser(parsedUser);
-
-        await Promise.all([fetchOffers(), fetchUserCoins(parsedUser?.userID)]);
+        setUser(parsedUser);
         await Promise.all([
           fetchOffers(),
           fetchUserCoins(parsedUser?.userID)
@@ -65,27 +55,26 @@ const CoinScreen = () => {
       const response = await axios.get(
         `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/all-offers`
       );
-      if (response.data?.status && response.data?.data) {
+      if (response.data?.status) {
         setOffers(response.data.data);
       }
     } catch (error) {
       console.error("Error fetching offers:", error);
-      throw error;
     }
   };
 
   const fetchUserCoins = async (userID) => {
     try {
-      const response = await axios.get(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/user-total-coin/${userID}`);
+      const response = await axios.get(
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/user-total-coin/${userID}`
+      );
       if (response.data?.status) {
         const coins = response.data.data || [];
-        const totalCount =
-          coins.length > 0 ? coins[coins.length - 1].totalCount : 0;
+        const totalCount = coins.length > 0 ? coins[coins.length - 1].totalCount : 0;
         setUserCoins(totalCount);
       }
     } catch (error) {
       console.error("Error fetching user coins:", error);
-      throw error;
     }
   };
 
@@ -101,36 +90,18 @@ const CoinScreen = () => {
         return;
       }
 
-      // axios
-      //   .get(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/payment/initiate`)
-      //   .then((response) => {
-      //     if (response.data.url) {
-      //       // toast.show(`❌ You have already purchased this package!`, { type: "danger" });
-      //       // setProcessing(false);
-      //       // setSelectedOffer(null);
-            
-      //       setPaymentURL(response.data.url);
-      //       // Open the payment URL in inApp browser
-      //     } else {
-      //       // toast.show(`❌ Failed to initiate payment.`, { type: "danger" });
-      //       // setProcessing(false);
-      //       // setSelectedOffer(null);
-      //       // return;
-      //     }
-      //   });
-
-    const response = await axios.post(
-      `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/purchase-coin`,
-      {
-        userID: user.userID,
-        count: offer.coinAmount
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
+      const response = await axios.post(
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/purchase-coin`,
+        {
+          userID: user.userID,
+          count: offer.coinAmount,
         },
-      }
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
       if (response.data?.status) {
         toast.show(`✅ Purchased ${offer.coinAmount} coins!`, { type: "success" });
@@ -141,64 +112,14 @@ const CoinScreen = () => {
       }
     } catch (error) {
       console.error("Purchase error:", error);
-      if (error.response?.data?.msg) {
-        toast.show(`❌ ${error.response.data.msg}`, { type: "danger" });
-      } else {
-        toast.show("❌ Something went wrong. Please try again.", {
-          type: "danger",
-        });
-      }
+      toast.show(`❌ ${error.response?.data?.msg || "Something went wrong"}`, {
+        type: "danger",
+      });
     } finally {
       setProcessing(false);
       setSelectedOffer(null);
     }
   };
-const handlePurchase = async (offer) => {
-  try {
-    setProcessing(true);
-    setSelectedOffer(offer.offerId);
-
-    const accessToken = await AsyncStorage.getItem("accessToken");
-    if (!accessToken) {
-      Alert.alert("Login Required", "Please login first.");
-      router.push("../login");
-      return;
-    }
-
-    const response = await axios.post(
-      `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/purchase-coin`,
-      { userID: user.userID, count: offer.coinAmount },
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
-
-    if (response.data?.status) {
-      toast.show(`✅ Purchased ${offer.coinAmount} coins!`, { type: "success" });
-      await fetchUserCoins(user.userID);
-      setShowSuccessModal(true);
-    } else {
-      toast.show(`❌ ${response.data?.msg || "Purchase failed"}`, { type: "danger" });
-    }
-  } catch (error) {
-    console.error("Purchase error:", error);
-    if (error.response?.data?.msg) {
-      toast.show(`❌ ${error.response.data.msg}`, { type: "danger" });
-    } else {
-      toast.show("❌ Something went wrong. Please try again.", { type: "danger" });
-    }
-  } finally {
-    setProcessing(false);
-    setSelectedOffer(null);
-  }
-};
-
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#e91e63" />
-      </View>
-    );
-  }
 
   if (loading) {
     return (
@@ -221,79 +142,18 @@ const handlePurchase = async (offer) => {
       <View style={styles.balanceContainer}>
         <Text style={styles.balanceLabel}>Your Balance</Text>
         <View style={styles.balanceRow}>
-          <Image
-            style={styles.coinIcon}
-            source={require("../../assets/images/coin.png")}
-          />
-          <Text style={styles.coinBalance}>{userCoins}</Text>
-
           <Image style={styles.coinIcon} source={require("../../assets/images/coin.png")} />
           <Text style={styles.coinBalance}>{userCoins}</Text>
         </View>
       </View>
-      <Text style={styles.sectionTitle}>Available Packages</Text>
-
-      {offers.length === 0 ? (
-        <View style={styles.noOffersContainer}>
-          <Text style={styles.noOffersText}>No coin packages available at the moment. Please check back later.</Text>
-        </View>
-      ) : (
-        <View style={styles.offerGrid}>
-          {offers.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[styles.offerCard, selectedOffer === item.offerId && styles.selectedOffer]}
-              onPress={() => handlePurchase(item)}
-              disabled={processing}
-            >
-              <Text style={styles.offerCoins}>{item.coinAmount} Coins</Text>
-              <Text style={styles.offerPrice}>₹ {item.offerPrice}</Text>
-              <Text style={styles.oldPrice}>₹ {item.actualPrice}</Text>
-              {processing && selectedOffer === item.offerId && (
-                <ActivityIndicator size="small" color="#e91e63" style={{ marginTop: 10 }} />
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-
-
-      <Modal visible={showSuccessModal} transparent animationType="fade">
-        <View style={styles.modalBackground}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>🎉 Purchase Successful!</Text>
-            <TouchableOpacity onPress={() => setShowSuccessModal(false)} style={styles.modalButton}>
-              <Text style={styles.modalButtonText}>OK</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-        {/* ➔ ADD THIS BUTTON */}
-        <TouchableOpacity
-          style={styles.historyButton}
-          onPress={() => router.push("../components/TransactionHistoryScreen")}
-        >
-          <Text style={styles.historyButtonText}>View Transaction History</Text>
-        </TouchableOpacity>
+      <View style={styles.balanceContainer}>
+      <TouchableOpacity
+        style={styles.historyButton}
+        onPress={() => router.push("../components/TransactionHistoryScreen")}
+      >
+        <Text style={styles.historyButtonText}>View Transaction History</Text>
+      </TouchableOpacity>
       </View>
-      {paymentURL ? (
-        <>
-          <WebView
-            source={{ uri: paymentURL }}
-            style={{ height: 400, width: "100%" }}
-            startInLoadingState={true}
-            mediaPlaybackRequiresUserAction={false}
-          />
-          <Text style={{ textAlign: "center", marginTop: 10 }}>
-            paymentURL: {paymentURL}
-          </Text>
-        </>
-      ) : (
-        <Text style={{ textAlign: "center", marginTop: 20 }}>
-          No payment in progress
-        </Text>
-      )}
-
       <Text style={styles.sectionTitle}>Available Packages</Text>
 
       {offers.length === 0 ? (
@@ -318,15 +178,25 @@ const handlePurchase = async (offer) => {
               <Text style={styles.offerPrice}>₹ {item.offerPrice}</Text>
               <Text style={styles.oldPrice}>₹ {item.actualPrice}</Text>
               {processing && selectedOffer === item.offerId && (
-                <ActivityIndicator
-                  size="small"
-                  color="#e91e63"
-                  style={{ marginTop: 10 }}
-                />
+                <ActivityIndicator size="small" color="#e91e63" style={{ marginTop: 10 }} />
               )}
             </TouchableOpacity>
           ))}
         </View>
+      )}
+
+      {paymentURL && (
+        <>
+          <WebView
+            source={{ uri: paymentURL }}
+            style={{ height: 400, width: "100%" }}
+            startInLoadingState={true}
+            mediaPlaybackRequiresUserAction={false}
+          />
+          <Text style={{ textAlign: "center", marginTop: 10 }}>
+            Payment URL: {paymentURL}
+          </Text>
+        </>
       )}
 
       <Modal visible={showSuccessModal} transparent animationType="fade">
@@ -345,6 +215,8 @@ const handlePurchase = async (offer) => {
     </ScrollView>
   );
 };
+
+
 
 const styles = StyleSheet.create({
   container: {
@@ -493,39 +365,28 @@ const styles = StyleSheet.create({
     color: "#777",
     textAlign: "center",
   },
-  historyButton: {
-    marginTop: 20,
-    backgroundColor: "#e91e63",
-    paddingVertical: 10,
-    paddingHorizontal: 30,
-    borderRadius: 8,
-  },
-  historyButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
+historyButton: {
+  backgroundColor: '#e91e63',
+  paddingVertical: 14,
+  paddingHorizontal: 20,
+  borderRadius: 10,
+  width: '70%',
+  alignItems: 'center',
+  marginTop: 20, 
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.2,
+  shadowRadius: 4,
+  elevation: 3, // for Android shadow
+},
+
+historyButtonText: {
+  color: '#fff',
+  fontSize: 16,
+  fontWeight: 'bold',
+},
+
 });
 
-export default CoinScreen;
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  noOffersContainer: {
-  padding: 20,
-  alignItems: 'center',
-  justifyContent: 'center',
-  },
-  noOffersText: {
-    fontSize: 16,
-    color: '#777',
-    textAlign: 'center',
-  },
-});
 
 export default CoinScreen;
