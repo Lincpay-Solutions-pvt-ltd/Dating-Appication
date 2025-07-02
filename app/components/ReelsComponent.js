@@ -32,6 +32,8 @@ import FontAwesomeIcons from "@expo/vector-icons/FontAwesome";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { usePathname, useRouter } from "expo-router";
 import axios from "axios";
+import { useToast } from 'react-native-toast-notifications'; 
+import GiftCoinPopup from "./GiftCoinPopup";
 
 
 const { width, height } = Dimensions.get("window");
@@ -1088,7 +1090,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginLeft: 20,
   },
-  description: { color: "#eaeaea", fontSize: 13, marginTop: 6 },
+  description: { color: "#eaeaea", fontSize: 13, marginTop: 6},
   iconContainer: {
     position: "absolute",
     bottom: 160,
@@ -1396,4 +1398,5 @@ const styles = StyleSheet.create({
     marginLeft: 20,
     width: 200
   },
+  
 }});
