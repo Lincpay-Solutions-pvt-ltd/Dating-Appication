@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
   textMsg: {
     fontSize: 18,
     fontWeight: "bold",
-    
+    marginTop: 20,
     marginLeft: 30,
     color: "#000",
   },
@@ -306,8 +306,8 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
   cardImage: {
-    width: 150,
-    height: 150,
+    width: 100,
+    height: 100,
     borderRadius: 100, // Half of width/height for perfect circle
     overflow: "hidden",
     backgroundColor: "#f0f0f0",

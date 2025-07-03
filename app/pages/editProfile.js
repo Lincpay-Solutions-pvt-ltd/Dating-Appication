@@ -38,7 +38,6 @@ export default function EditProfileScreen() {
   const router = useRouter();
   const { height } = Dimensions.get("window");
   const slideAnim = useRef(new Animated.Value(height)).current;
-  //const [showThreadsBadge, setShowThreadsBadge] = useState(false);
 
   useEffect(() => {
     const getUser = async () => {
@@ -189,7 +188,7 @@ export default function EditProfileScreen() {
       const data = JSON.stringify({
         userID: currentUserID,
         userFirstName: currentUserFirstName,
-        bio: userBio,
+        userBio: userBio,
         gender: gender,
         profilePic: selectedImage,
       });
@@ -207,10 +206,12 @@ export default function EditProfileScreen() {
 
       if (response.status === 200) {
         console.log("Data saved successfully:", response.data);
+      
+        
         const profileData = {
           userID: currentUserID,
           userFirstName: currentUserFirstName,
-          bio: userBio,
+          userBio: userBio,
           gender,
           profilePic: selectedImage,
         };
@@ -430,3 +431,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// 

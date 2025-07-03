@@ -178,10 +178,10 @@ const styles = StyleSheet.create({
     ellipsizeMode: "tail", // Optional: adds ... if text overflows
   },
   centeredContainer: {
-    position: "absolute",
-    top: "20%",
+    position: "fixed",
     justifyContent: "center", // Vertical center
     alignItems: "center", // Horizontal center
+    height: "50%", // Full height
   },
 
   postText: {
