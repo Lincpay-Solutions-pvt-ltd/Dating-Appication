@@ -47,14 +47,14 @@ export default function ProfileScreen() {
       const CACHE_USER = JSON.parse(User);
       setUser(CACHE_USER);
       setProfileData({
-        username: CACHE_USER ? CACHE_USER.userFirstName : "Loading...",
+        username: CACHE_USER ? CACHE_USER.userFirstName + " " + CACHE_USER.userSurname : "Loading...",
         profileImage: CACHE_USER.profilePic
           ? `${process.env.EXPO_PUBLIC_API_BASE_URL}${CACHE_USER.profilePic}`
           : `set-default-${CACHE_USER.userGender}`, // Replace with actual image URL
         posts: CACHE_USER.posts ? CACHE_USER.posts : 0,
         followers: CACHE_USER.followers ? CACHE_USER.totalFollowers : 0,
         following: CACHE_USER.followings ? CACHE_USER.followings : 0,
-        bio: `${CACHE_USER.bio ? CACHE_USER.bio : "✨ No bio available"}`,
+        bio: `${CACHE_USER.userBio ? CACHE_USER.userBio : "✨ No bio available"}`,
       });
       try {
         const response = await fetch(
@@ -64,14 +64,14 @@ export default function ProfileScreen() {
         const userData_ = data.data.length ? data.data[0] : {};
         setUser(userData_);
         setProfileData({
-          username: userData_ ? userData_.userFirstName : "Loading...",
+          username: userData_ ? userData_.userFirstName + " " + userData_.userSurname : "Loading...",
           profileImage: userData_.profilePic
             ? `${process.env.EXPO_PUBLIC_API_BASE_URL}${userData_.profilePic}`
             : `set-default-${userData_.userGender}`, // Replace with actual image URL
           posts: userData_.posts ? userData_.posts : 0,
           followers: userData_.totalFollowers ? userData_.totalFollowers : 0,
           following: userData_.followings ? userData_.followings : 0,
-          bio: `${userData_.bio ? userData_.bio : "✨ No bio available"}`,
+          bio: `${userData_.userBio ? userData_.userBio : "✨ No bio available"}`,
         });
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -256,6 +256,7 @@ export default function ProfileScreen() {
           //display: props.userID ? "flex" : "none",
           flexDirection: "row",
           alignItems: "center",
+          marginTop: 10,
         }}
       >
         <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
