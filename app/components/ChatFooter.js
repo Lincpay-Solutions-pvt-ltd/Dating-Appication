@@ -20,6 +20,9 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import GiftCoinPopup from "./GiftCoinPopup";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import { launchCamera, launchImageLibrary } from "react-native-image-picker";
 
 // API key for Giphy (in a real app, you'd store this in an environment variable)
@@ -36,7 +39,11 @@ const ChatFooter = () => {
   const [giphyResults, setGiphyResults] = useState([]);
   const [giphySearchTerm, setGiphySearchTerm] = useState("");
   const [isLoadingGifs, setIsLoadingGifs] = useState(false);
+  const [receiverId, setReceiverId] = useState('');
+  const [showGiftPopup, setShowGiftPopup] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  // const user = AsyncStorage.getItem("User");
 
   const emojiData = [
     // { id: "1", icon: "🧑‍🎤", coins: 1099 },
@@ -338,11 +345,21 @@ const ChatFooter = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.iconButton}
-                  onPress={() => setGiftModalVisible(true)}
-                >
-                  <Ionicons name="gift-outline" size={24} color="#888" />
-                </TouchableOpacity>
+                    style={styles.iconButton}
+                    onPress={() => {
+                      setReceiverId("opopopo");
+                      setShowGiftPopup(true);     
+                    }}
+                  >
+                    <Ionicons name="gift-outline" size={24} color="#888" />
+                  </TouchableOpacity>
+
+                  <GiftCoinPopup
+                    visible={showGiftPopup}
+                    onClose={() => setShowGiftPopup(false)}
+                    receiverId={receiverId}
+                  />
+
               </>
             ) : (
               // Show send button when there's text

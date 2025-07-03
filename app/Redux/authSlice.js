@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-
+import coinReducer from './coinSlice';
 const initialState = {
   isAuthenticated: false,
   user: null,
@@ -18,6 +18,7 @@ const authSlice = createSlice({
       state.user = null;
     },
   },
+  coin: coinReducer,
 });
 
 export const { login, logout } = authSlice.actions;
