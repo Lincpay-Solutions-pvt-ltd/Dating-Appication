@@ -17,6 +17,7 @@ import { useRouter } from "expo-router";
 import { useDispatch } from "react-redux";
 import axios from "axios";
 import { logout } from "../Redux/authSlice";
+import { Linking } from "react-native";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -29,6 +30,7 @@ export default function HeaderForm({ isTransparent = false }) {
   const translateZ = useState(new Animated.Value(screenWidth))[0];
   const router = useRouter();
   const dispatch = useDispatch();
+  const appURL = "https://play.google.com/store/search?q=tango&c=apps&hl=en_US"
 
   // Helper to determine if a route is active
   const isActive = (route) => pathname === route;
@@ -199,7 +201,7 @@ export default function HeaderForm({ isTransparent = false }) {
 
         <View style={stylesHeader.divider} />
 
-        <TouchableOpacity style={stylesHeader.menuItem}>
+        <TouchableOpacity style={stylesHeader.menuItem} onPress={() => Linking.openURL(appURL)}>
           <Ionicons name="phone-portrait-outline" size={24} color="#000" />
           <View>
             <Text style={stylesHeader.menuText}>Get Tango App</Text>
@@ -231,7 +233,9 @@ export default function HeaderForm({ isTransparent = false }) {
           <Text style={stylesHeader.menuText}>My Fans</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={stylesHeader.menuItem}>
+        <TouchableOpacity style={stylesHeader.menuItem} onPress={() => {
+          router.push("../pages/auction");
+        }}>
           <Ionicons name="card-outline" size={24} color="#000" />
           <Text style={stylesHeader.menuText}>Tango Cards Auction</Text>
         </TouchableOpacity>

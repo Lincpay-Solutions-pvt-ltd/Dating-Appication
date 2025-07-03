@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import VideoCards from "../components/videoCards";
 import Footer from "../components/footer";
 import Header from "../components/header";
@@ -18,6 +17,7 @@ import Header from "../components/header";
 export default function HomeScreen() {
   const router = useRouter();
   const dispatch = useDispatch();
+
 
   return (
     <>

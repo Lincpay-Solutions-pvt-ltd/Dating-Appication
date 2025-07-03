@@ -44,8 +44,8 @@ export default function LoginScreen() {
     try {
       await login_(email, password);
     } catch (err) {
-      // console.error("Something is wrong = ", err);
-      // Alert.alert("Error", "Something went wrong. Please try again.");
+      //  console.error("Something is wrong = ", err);
+       Alert.alert("Error", "Something went wrong. Please try again.");
     }
   };
 
@@ -79,6 +79,7 @@ export default function LoginScreen() {
             JSON.stringify(response.data.data.UserData)
           );
           router.replace("./home");
+          
         }
         setIsValidating(false);
       })
