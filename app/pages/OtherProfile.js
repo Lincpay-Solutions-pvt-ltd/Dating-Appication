@@ -197,7 +197,7 @@ export default function OtherProfileScreen() {
         <TouchableOpacity
           onPress={() =>
             router.push({
-              pathname: "../pages/chats",
+              pathname: "../pages/ChatsScreen",
               params: {
                 id: currentUserID,
                 name: profileUserName,
