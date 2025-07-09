@@ -68,6 +68,7 @@ const CoinScreen = () => {
       const response = await axios.get(
         `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/user-total-coin/${userID}`
       );
+      
       if (response.data?.status) {
         const coins = response.data.data || [];
         const totalCount = coins.length > 0 ? coins[coins.length - 1].totalCount : 0;

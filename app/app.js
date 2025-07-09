@@ -4,6 +4,25 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useDispatch } from "react-redux";
 import { login } from "./Redux/authSlice";
+// import * as SQLite from "expo-sqlite";
+
+// const db = SQLite.openDatabase("chat.db");
+
+// const initializeDatabase = () => {
+//   db.transaction((tx) => {
+//     tx.executeSql(
+//       `CREATE TABLE IF NOT EXISTS messages (
+//         id INTEGER PRIMARY KEY AUTOINCREMENT,
+//         chatID TEXT,
+//         senderID TEXT,
+//         receiverID TEXT,
+//         message TEXT,
+//         timestamp TEXT,
+//         isRead INTEGER DEFAULT 0
+//       );`
+//     );
+//   });
+// };
 
 export default function App() {
   const dispatch = useDispatch();
@@ -16,19 +35,17 @@ export default function App() {
         const User = await AsyncStorage.getItem("User");
 
         if (IsAuthenticated !== null && User !== null) {
-          // Dispatch user data if needed
-          // dispatch(login(JSON.parse(User)));
-
+          dispatch(login(JSON.parse(User))); // Enable this if you're using Redux state
           router.replace("./pages/home");
         } else {
           router.replace("./pages/login");
         }
-        console.log("IsAuthenticated", IsAuthenticated);
       } catch (error) {
-        console.log(error);
+        console.log("Auth check failed:", error);
       }
     };
 
+    // initializeDatabase();
     _retrieveAuth();
   }, []);
 
