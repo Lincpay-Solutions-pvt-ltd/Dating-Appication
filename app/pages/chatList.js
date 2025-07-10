@@ -41,7 +41,6 @@ const ChatList = () => {
     try {
       const storedUser = await AsyncStorage.getItem("User");
       const parsedUser = JSON.parse(storedUser);
-      console.log("User:", parsedUser);
       setUser(parsedUser);
     } catch (error) {
       console.log("Error loading user:", error);
@@ -118,8 +117,6 @@ const ChatList = () => {
   };
 
   const renderChatItem = ({ item }) => {
-    console.log("item = ",  );
-
     return (
       <TouchableOpacity
         style={styles.chatItem}

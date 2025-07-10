@@ -19,7 +19,8 @@ import {
 import { Ionicons, Feather, MaterialIcons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import ChatFooter from "../components/ChatFooter";
-import socket from "../services/socket";
+// import socket from "../services/socket";
+import { useSocket } from '../services/SocketContext';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 // import * as ImagePicker from 'expo-image-picker';
@@ -31,7 +32,7 @@ export default function ChatsScreen() {
   const [showCallOptions, setShowCallOptions] = useState(false);
   const [showProfileOptions, setShowProfileOptions] = useState(false);
   const [messages, setMessages] = useState([]);
-  const [profileData, setProfileData] = useState({ username: params.receiverName || 'Unknown User', profileImage: params.receiverProfilePic || "https://via.placeholder.com/150", status: "Online",  userId: params.receiverID });
+  const [profileData, setProfileData] = useState({ username: params.receiverName || 'Unknown User', profileImage: params.receiverProfilePic || "https://via.placeholder.com/150", status: "Online", userId: params.receiverID });
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
@@ -40,6 +41,8 @@ export default function ChatsScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const flatListRef = useRef(null);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  const { socket, isConnected } = useSocket();
 
   // Keyboard visibility handler
   useEffect(() => {
@@ -55,29 +58,29 @@ export default function ChatsScreen() {
     };
   }, []);
 
-useEffect(() => {
-  setProfileData({
-    username: params.receiverName || 'Unknown User',
-    profileImage: params.receiverProfilePic || "https://via.placeholder.com/150",
-    status: "Online", // Default status
-    userId: params.receiverID
-  });
+  useEffect(() => {
+    setProfileData({
+      username: params.receiverName || 'Unknown User',
+      profileImage: params.receiverProfilePic || "https://via.placeholder.com/150",
+      status: "Online", // Default status
+      userId: params.receiverID
+    });
 
-  const handleStatusUpdate = ({ userId, isOnline }) => {
-    if (userId === params.receiverID) {
-      setProfileData(prev => ({
-        ...prev,
-        status: isOnline ? "Online" : "Offline"
-      }));
-    }
-  };
+    const handleStatusUpdate = ({ userId, isOnline }) => {
+      if (userId === params.receiverID) {
+        setProfileData(prev => ({
+          ...prev,
+          status: isOnline ? "Online" : "Offline"
+        }));
+      }
+    };
 
-  socket.on('userStatusUpdate', handleStatusUpdate);
+    socket.on('userStatusUpdate', handleStatusUpdate);
 
-  return () => {
-    socket.off('userStatusUpdate', handleStatusUpdate);
-  };
-}, [params.receiverID]);
+    return () => {
+      socket.off('userStatusUpdate', handleStatusUpdate);
+    };
+  }, [params.receiverID]);
 
 
 
@@ -129,7 +132,7 @@ useEffect(() => {
       if (message.chatID === params.chatID) {
         setMessages(prev => [...prev, message]);
         scrollToBottom();
-        
+
         // Mark as read if it's from the other user
         if (message.senderID !== currentUser.userID) {
           markMessageAsRead(message.messageID);
@@ -156,14 +159,14 @@ useEffect(() => {
     });
 
     socket.on("messageSeen", ({ messageID }) => {
-      setMessages(prev => prev.map(msg => 
+      setMessages(prev => prev.map(msg =>
         msg.messageID === messageID ? { ...msg, isRead: 1 } : msg
       ));
     });
 
     socket.on("messageReadAll", ({ chatID }) => {
       if (chatID === params.chatID) {
-        setMessages(prev => prev.map(msg => 
+        setMessages(prev => prev.map(msg =>
           msg.senderID === currentUser.userID ? { ...msg, isRead: 1 } : msg
         ));
       }
@@ -177,14 +180,14 @@ useEffect(() => {
       socket.off("stopTyping");
       socket.off("messageSeen");
       socket.off("messageReadAll");
-      socket.disconnect();
+      // socket.disconnect();
     };
   }, [params.chatID, currentUser]);
 
   // Load more messages when scrolling up
   const loadMoreMessages = async () => {
     if (loadingMore || !hasMoreMessages) return;
-    
+
     try {
       setLoadingMore(true);
       const res = await axios.get(
@@ -210,9 +213,9 @@ useEffect(() => {
         receiverID: currentUser.userID,
         chatID: params.chatID,
       });
-      socket.emit("readMessage", { 
-        chatID: params.chatID, 
-        userID: currentUser.userID 
+      socket.emit("readMessage", {
+        chatID: params.chatID,
+        userID: currentUser.userID
       });
     } catch (err) {
       console.error("Error marking messages as read:", err);
@@ -225,10 +228,10 @@ useEffect(() => {
       await axios.post(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/chats/mark-seen`, {
         messageID,
       });
-      socket.emit("seenThisMessage", { 
-        messageID, 
-        chatID: params.chatID, 
-        userID: currentUser.userID 
+      socket.emit("seenThisMessage", {
+        messageID,
+        chatID: params.chatID,
+        userID: currentUser.userID
       });
     } catch (err) {
       console.error("Error marking message as seen", err);
@@ -296,14 +299,14 @@ useEffect(() => {
   // Typing indicators
   const handleTyping = (isTyping) => {
     if (isTyping) {
-      socket.emit("typing", { 
-        chatID: params.chatID, 
-        userID: currentUser.userID 
+      socket.emit("typing", {
+        chatID: params.chatID,
+        userID: currentUser.userID
       });
     } else {
-      socket.emit("stopTyping", { 
-        chatID: params.chatID, 
-        userID: currentUser.userID 
+      socket.emit("stopTyping", {
+        chatID: params.chatID,
+        userID: currentUser.userID
       });
     }
   };
@@ -318,81 +321,81 @@ useEffect(() => {
   };
 
   // Render message item
-const renderMessage = ({ item }) => {
-  const isCurrentUser = item.senderID === currentUser?.userID;
-  
-  return (
-    <View style={[
-      styles.messageRow,
-      isCurrentUser ? styles.currentUserRow : styles.otherUserRow
-    ]}>
-      {!isCurrentUser && (
-        <Image
-          source={{ uri: profileData.profileImage }}
-          style={styles.userAvatar}
-        />
-      )}
-      
+  const renderMessage = ({ item }) => {
+    const isCurrentUser = item.senderID === currentUser?.userID;
+
+    return (
       <View style={[
-        styles.messageContainer,
-        isCurrentUser ? styles.currentUserContainer : styles.otherUserContainer
+        styles.messageRow,
+        isCurrentUser ? styles.currentUserRow : styles.otherUserRow
       ]}>
-        {item.messageType === 'image' ? (
-          <>
-            <Image 
-              source={{ uri: item.message }} 
-              style={styles.messageImage} 
-              resizeMode="cover"
-            />
-            <View style={styles.messageFooter}>
-              <Text style={[
-                styles.messageTime,
-                isCurrentUser ? styles.currentUserTime : styles.otherUserTime
-              ]}>
-                {new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-              </Text>
-              {isCurrentUser && (
-                <MaterialIcons 
-                  name={item.isRead ? "done-all" : "done"} 
-                  size={14} 
-                  color={item.isRead ? "#4CAF50" : "#A9A9A9"} 
-                  style={styles.tickIcon}
-                />
-              )}
-            </View>
-          </>
-        ) : (
-          <View style={styles.messageContent}>
-            <Text
-              style={[
-                styles.messageText,
-                isCurrentUser ? styles.currentUserText : styles.otherUserText,
-              ]}
-            >
-              {item.message}
-            </Text>
-            <View style={styles.messageFooter}>
-              <Text style={[
-                styles.messageTime,
-                isCurrentUser ? styles.currentUserTime : styles.otherUserTime
-              ]}>
-                {new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-              </Text>
-              {isCurrentUser && (
-                <MaterialIcons 
-                  name={item.isRead ? "done-all" : "done"} 
-                  size={14} 
-                  color={item.isRead ? "#4CAF50" : "#A9A9A9"} 
-                  style={styles.tickIcon}
-                />
-              )}
-            </View>
-          </View>
+        {!isCurrentUser && (
+          <Image
+            source={{ uri: profileData.profileImage }}
+            style={styles.userAvatar}
+          />
         )}
+
+        <View style={[
+          styles.messageContainer,
+          isCurrentUser ? styles.currentUserContainer : styles.otherUserContainer
+        ]}>
+          {item.messageType === 'image' ? (
+            <>
+              <Image
+                source={{ uri: item.message }}
+                style={styles.messageImage}
+                resizeMode="cover"
+              />
+              <View style={styles.messageFooter}>
+                <Text style={[
+                  styles.messageTime,
+                  isCurrentUser ? styles.currentUserTime : styles.otherUserTime
+                ]}>
+                  {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </Text>
+                {isCurrentUser && (
+                  <MaterialIcons
+                    name={item.isRead ? "done-all" : "done"}
+                    size={14}
+                    color={item.isRead ? "#4CAF50" : "#A9A9A9"}
+                    style={styles.tickIcon}
+                  />
+                )}
+              </View>
+            </>
+          ) : (
+            <View style={styles.messageContent}>
+              <Text
+                style={[
+                  styles.messageText,
+                  isCurrentUser ? styles.currentUserText : styles.otherUserText,
+                ]}
+              >
+                {item.message}
+              </Text>
+              <View style={styles.messageFooter}>
+                <Text style={[
+                  styles.messageTime,
+                  isCurrentUser ? styles.currentUserTime : styles.otherUserTime
+                ]}>
+                  {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </Text>
+                {isCurrentUser && (
+                  <MaterialIcons
+                    name={item.isRead ? "done-all" : "done"}
+                    size={14}
+                    color={item.isRead ? "#4CAF50" : "#A9A9A9"}
+                    style={styles.tickIcon}
+                  />
+                )}
+              </View>
+            </View>
+          )}
+        </View>
       </View>
-    </View>
-  );
-};
+    );
+  };
 
 
   const handleBackdropPress = () => {
@@ -411,131 +414,150 @@ const renderMessage = ({ item }) => {
     );
   }
 
+  const handleVideoCall = () => {
+    console.log("Video call clicked", params);
+    
+    socket.emit('start-call', {
+      to: params.receiverID,
+      from: currentUser.userID,
+      chatID: params.chatID
+    });
+
+    router.push({
+      pathname: "../pages/VideoCallScreen",
+      params: {
+        caller: currentUser.userID,
+        receiver: params.receiverID,
+        chatID: params.chatID,
+        isCaller: true
+      },
+    });
+  };
+
+
   return (
     <>
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.container}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-      >
-        <TouchableWithoutFeedback onPress={handleBackdropPress}>
-          <View style={styles.innerContainer}>
-            <View style={styles.header}>
-              <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
-                <Ionicons name="arrow-back" size={24} color="#333" />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.profileInfo}
-                onPress={() => setShowProfileOptions(!showProfileOptions)}
-              >
-                <Image
-                  source={{ uri: profileData.profileImage }}
-                  style={styles.profileImage}
-                />
-                <View>
-                  <Text style={styles.profileName} numberOfLines={1}>
-                    {profileData.username || "User"}
-                  </Text>
-                  <Text style={styles.profileStatus}>
-                    {isTyping ? "Typing..." : profileData.status || "Offline"}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-
-              <View style={styles.callIcons}>
-                <TouchableOpacity onPress={() => setShowCallOptions(!showCallOptions)}>
-                  <Ionicons name="call-outline" size={22} color="#333" />
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.container}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        >
+          <TouchableWithoutFeedback onPress={handleBackdropPress}>
+            <View style={styles.innerContainer}>
+              <View style={styles.header}>
+                <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
+                  <Ionicons name="arrow-back" size={24} color="#333" />
                 </TouchableOpacity>
-                <TouchableOpacity 
-                  style={{ marginLeft: 16 }}
-                  onPress={() => setShowCallOptions(!showCallOptions)}
+
+                <TouchableOpacity
+                  style={styles.profileInfo}
+                  onPress={() => setShowProfileOptions(!showProfileOptions)}
                 >
-                  <Ionicons name="videocam-outline" size={22} color="#333" />
+                  <Image
+                    source={{ uri: profileData.profileImage }}
+                    style={styles.profileImage}
+                  />
+                  <View>
+                    <Text style={styles.profileName} numberOfLines={1}>
+                      {profileData.username || "User"}
+                    </Text>
+                    <Text style={styles.profileStatus}>
+                      {isTyping ? "Typing..." : profileData.status || "Offline"} {isConnected ? "🟢" : "🔴"}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
-              </View>
-            </View>
 
-            <FlatList
-              ref={flatListRef}
-              data={messages}
-              keyExtractor={(item, index) =>
-                item.messageID?.toString() || index.toString()
-              }
-              renderItem={renderMessage}
-              contentContainerStyle={styles.chatArea}
-              onContentSizeChange={scrollToBottom}
-              onLayout={scrollToBottom}
-              onEndReached={loadMoreMessages}
-              onEndReachedThreshold={0.5}
-              showsVerticalScrollIndicator={false}
-              ListHeaderComponent={
-                loadingMore ? (
-                  <ActivityIndicator size="small" color="#FF7F50" style={styles.loadMoreIndicator} />
-                ) : null
-              }
-              ListEmptyComponent={
-                <View style={styles.emptyChatContainer}>
-                  <Text style={styles.emptyChatText}>No messages yet</Text>
-                  <Text style={styles.emptyChatSubtext}>Start the conversation!</Text>
+                <View style={styles.callIcons}>
+                  <TouchableOpacity onPress={() => setShowCallOptions(!showCallOptions)}>
+                    <Ionicons name="call-outline" size={22} color="#333" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{ marginLeft: 16 }}
+                    onPress={() => setShowCallOptions(!showCallOptions)}
+                  >
+                    <Ionicons name="videocam-outline" size={22} color="#333" />
+                  </TouchableOpacity>
                 </View>
-              }
-            />
-          </View>
-        </TouchableWithoutFeedback>
+              </View>
 
-        {/* Profile Options */}
-        {showProfileOptions && (
-          <View style={styles.optionsContainer}>
-            <OptionItem icon="image" text="Media" />
-            <OptionItem icon="user" text="View Profile" />
-            <OptionItem icon="share-2" text="Share profile" />
-            <OptionItem icon="bell-off" text="Mute Chat" />
-            <OptionItem icon="trash-2" text="Delete Chat" />
-            <OptionItem icon="flag" text="Report User" />
-            <OptionItem icon="x" text="Block" color="#FF3B30" />
-          </View>
-        )}
-
-        {/* Call Options */}
-        {showCallOptions && (
-          <View style={styles.optionsContainer}>
-            <OptionItem 
-              icon="video" 
-              text="Premium Match Call" 
-              subtext="3,000/min" 
-              coinIcon
-            />
-            <OptionItem icon="videocam" text="Video Call" />
-            <OptionItem icon="tv" text="1:1 Stream" />
-            <OptionItem icon="phone" text="Audio Call" />
-          </View>
-        )}
-
-        <ChatFooter 
-          onSendMessage={sendMessage}
-          onTyping={handleTyping}
-          onAttachPress={() => {
-            Alert.alert(
-              "Send Attachment",
-              "Choose an option",
-              [
-                {
-                  text: "Photo",
-                  onPress: sendImage
-                },
-                {
-                  text: "Cancel",
-                  style: "cancel"
+              <FlatList
+                ref={flatListRef}
+                data={messages}
+                keyExtractor={(item, index) =>
+                  item.messageID?.toString() || index.toString()
                 }
-              ]
-            );
-          }}
-        />
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+                renderItem={renderMessage}
+                contentContainerStyle={styles.chatArea}
+                onContentSizeChange={scrollToBottom}
+                onLayout={scrollToBottom}
+                onEndReached={loadMoreMessages}
+                onEndReachedThreshold={0.5}
+                showsVerticalScrollIndicator={false}
+                ListHeaderComponent={
+                  loadingMore ? (
+                    <ActivityIndicator size="small" color="#FF7F50" style={styles.loadMoreIndicator} />
+                  ) : null
+                }
+                ListEmptyComponent={
+                  <View style={styles.emptyChatContainer}>
+                    <Text style={styles.emptyChatText}>No messages yet</Text>
+                    <Text style={styles.emptyChatSubtext}>Start the conversation!</Text>
+                  </View>
+                }
+              />
+            </View>
+          </TouchableWithoutFeedback>
+
+          {/* Profile Options */}
+          {showProfileOptions && (
+            <View style={styles.optionsContainer}>
+              <OptionItem icon="image" text="Media" />
+              <OptionItem icon="user" text="View Profile" />
+              <OptionItem icon="share-2" text="Share profile" />
+              <OptionItem icon="bell-off" text="Mute Chat" />
+              <OptionItem icon="trash-2" text="Delete Chat" />
+              <OptionItem icon="flag" text="Report User" />
+              <OptionItem icon="x" text="Block" color="#FF3B30" />
+            </View>
+          )}
+
+          {/* Call Options */}
+          {showCallOptions && (
+            <View style={styles.optionsContainer}>
+              <OptionItem
+                onPress={handleVideoCall}
+                icon="video"
+                text="Premium Match Call"
+                subtext="3,000/min"
+                coinIcon
+              />
+            </View>
+          )}
+
+          <ChatFooter
+            onSendMessage={sendMessage}
+            onTyping={handleTyping}
+            onAttachPress={() => {
+              Alert.alert(
+                "Send Attachment",
+                "Choose an option",
+                [
+                  {
+                    text: "Photo",
+                    onPress: sendImage
+                  },
+                  {
+                    text: "Cancel",
+                    style: "cancel"
+                  }
+                ]
+              );
+            }}
+          />
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </>
   );
 }
@@ -740,23 +762,23 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 4,
   },
-  
+
   messageContent: {
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
-  
+
   messageFooter: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
     marginTop: 4,
   },
-  
+
   tickIcon: {
     marginLeft: 4,
   },
-  
+
   messageText: {
     fontSize: 14,
     marginEnd: 10,
@@ -764,27 +786,27 @@ const styles = StyleSheet.create({
     // lineHeight: 20,
     // flexShrink: 1,
   },
-  
+
   messageTime: {
     fontSize: 11,
     includeFontPadding: false,
     textAlignVertical: 'center',
   },
-  
+
   currentUserContainer: {
     backgroundColor: '#FF7F50',
     borderTopRightRadius: 0,
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
   },
-  
+
   otherUserContainer: {
     backgroundColor: '#f0f0f0',
     borderTopLeftRadius: 0,
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
   },
-  
+
   messageImage: {
     width: 200,
     height: 200,
