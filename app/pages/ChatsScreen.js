@@ -414,22 +414,57 @@ export default function ChatsScreen() {
     );
   }
 
+  const handleVideoCallTest = () => {
+    console.log("Video call Test clicked", params);
+
+    console.log("💀💀Calling to ", {
+      currentUser_: JSON.stringify(currentUser),
+      from: currentUser.userID,
+      to: params.receiverID,
+      chatID: params.chatID,
+      isCaller: true,
+      status_: 'calling'
+    });
+
+    router.push({
+      pathname: "../pages/WebRTCComponent",
+      params: {
+        currentUser_: JSON.stringify(currentUser),
+        from_: currentUser.userID,
+        to_: params.receiverID,
+        chatID: params.chatID,
+        isCaller: true,
+        status_: 'calling'
+      },
+    });
+  }
   const handleVideoCall = () => {
     console.log("Video call clicked", params);
-    
-    socket.emit('start-call', {
-      to: params.receiverID,
+
+    // socket.emit('start-call', {
+    //   to: params.receiverID,
+    //   from: currentUser.userID,
+    //   chatID: params.chatID
+    // });
+
+    console.log("💀💀Calling to ", {
+      currentUser: currentUser,
       from: currentUser.userID,
-      chatID: params.chatID
+      to: params.receiverID,
+      chatID: params.chatID,
+      isCaller: true,
+      status_: 'calling'
     });
 
     router.push({
       pathname: "../pages/VideoCallScreen",
       params: {
-        caller: currentUser.userID,
-        receiver: params.receiverID,
+        currentUser: currentUser,
+        from: currentUser.userID,
+        to: params.receiverID,
         chatID: params.chatID,
-        isCaller: true
+        isCaller: true,
+        status_: 'calling'
       },
     });
   };
@@ -531,6 +566,13 @@ export default function ChatsScreen() {
                 icon="video"
                 text="Premium Match Call"
                 subtext="3,000/min"
+                coinIcon
+              />
+              <OptionItem
+                onPress={handleVideoCallTest}
+                icon="video"
+                text="Test Call"
+                subtext="Debugging"
                 coinIcon
               />
             </View>
