@@ -27,6 +27,7 @@ import { ScrollView } from "react-native";
 import { Platform } from "react-native";
 import { ActivityIndicator } from "react-native";
 import Footer from "../components/footer";
+import { useToast } from 'react-native-toast-notifications';
 
 export default function ProfileScreen() {
   const [selectedImage, setSelectedImage] = useState([""]);
@@ -41,6 +42,7 @@ export default function ProfileScreen() {
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState({});
+  const toast = useToast();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -197,176 +199,179 @@ export default function ProfileScreen() {
 
   return (
     <>
-    <Header />
-    <View style={styles.container}>
-      {/* Profile Info */}
-      <View style={styles.profileContainer}>
-        <Image
-          source={
-            profileData.profileImage &&
-            profileData.profileImage.startsWith("set-default")
-              ? profileData.profileImage == "set-default-2"
-                ? require("../../assets/images/profile-female.jpg")
-                : require("../../assets/images/profile.jpg")
-              : { uri: profileData.profileImage }
-          }
-          style={styles.profileImage}
-        />
-        <View style={styles.statsContainer}>
-          {/* <TouchableOpacity> */}
-          <Text style={styles.statsText}>
-            {profileData.posts}
-            {"\n"}Posts
-          </Text>
-          {/* </TouchableOpacity> */}
-          <TouchableOpacity onPress={() => router.push("../pages/followers")}>
+      <Header />
+      <View style={styles.container}>
+        {/* Profile Info */}
+        <View style={styles.profileContainer}>
+          <Image
+            source={
+              profileData.profileImage &&
+                profileData.profileImage.startsWith("set-default")
+                ? profileData.profileImage == "set-default-2"
+                  ? require("../../assets/images/profile-female.jpg")
+                  : require("../../assets/images/profile.jpg")
+                : { uri: profileData.profileImage }
+            }
+            style={styles.profileImage}
+          />
+          <View style={styles.statsContainer}>
+            {/* <TouchableOpacity> */}
             <Text style={styles.statsText}>
-              {profileData.followers}
-              {"\n"}Followers
+              {profileData.posts}
+              {"\n"}Posts
             </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => router.push("../pages/UserFollowing")}
-          >
-            <Text style={styles.statsText}>
-              {profileData.following}
-              {"\n"}Following
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Bio Section */}
-      <View style={styles.bioContainer}>
-        <Text style={styles.username}>{profileData.username}</Text>
-        <Text style={styles.bio}>{profileData.bio}</Text>
-        {/* <Text style={styles.website}>{profileData.website}</Text> */}
-      </View>
-
-      <View style={styles.profileButtonContainer}>
-        <TouchableOpacity onPress={() => router.push("../pages/editProfile")}>
-          <Text style={styles.uploadButton}>Edit Profile</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={showOptions}>
-          <Text style={styles.addBtn}>Add Post</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View
-        style={{
-          //display: props.userID ? "flex" : "none",
-          flexDirection: "row",
-          alignItems: "center",
-          marginTop: 10,
-        }}
-      >
-        <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
-        <View>
-          <Text
-            style={{ ...styles.text, ...{ width: 70, textAlign: "center" } }}
-          >
-            Posts
-          </Text>
-        </View>
-        <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
-      </View>
-
-      <Modal transparent visible={modalVisible} animationType="none">
-        <TouchableOpacity
-          style={styles.overlay}
-          onPress={hideOptions}
-          activeOpacity={1}
-        >
-          <Animated.View
-            style={[
-              styles.bottomSheet,
-              { transform: [{ translateY: slideAnim }] },
-            ]}
-          >
-            <TouchableOpacity
-              style={styles.option}
-              onPress={() => handleCameraLaunch()}
-            >
-              <Text style={styles.optionText}>Open Camera</Text>
+            {/* </TouchableOpacity> */}
+            <TouchableOpacity onPress={() => router.push("../pages/followers")}>
+              <Text style={styles.statsText}>
+                {profileData.followers}
+                {"\n"}Followers
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.option}
-              onPress={() => openImagePicker()}
+              onPress={() => router.push("../pages/UserFollowing")}
             >
-              <Text style={styles.optionText}>Choose from Device</Text>
+              <Text style={styles.statsText}>
+                {profileData.following}
+                {"\n"}Following
+              </Text>
             </TouchableOpacity>
-          </Animated.View>
-        </TouchableOpacity>
-      </Modal>
-
-      <View style={styles.containerVideo}>
-        <VideoCards userID={user.userID} />
-      </View>
-
-      {loading ? (
-        <View style={styles.loadingPanel}>
-          <ActivityIndicator size={60} color={"#000"} />
-        </View>
-      ) : (
-        <></>
-      )}
-
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={showModal}
-        onRequestClose={() => setShowModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalView}>
-            {/* Header */}
-            <View style={styles.modalHeader}>
-              <TouchableOpacity onPress={() => setShowModal(false)}>
-                <Ionicons name="close" size={24} color="black" />
-              </TouchableOpacity>
-              <Text style={styles.modalTitle}>Add Post</Text>
-
-              <TouchableOpacity
-                onPress={() =>
-                  description.length
-                    ? handleUpload()
-                    : Alert.alert("Please Fill the Caption")
-                }
-              >
-                <Text style={styles.shareText}>Share</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Image row */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.imageRow}
-            >
-              {[1].map((_, index) => (
-                <View key={index} style={styles.imagePreviewBox}>
-                  <Image
-                    source={{ uri: selectedImage }}
-                    style={styles.imagePreview}
-                  />
-                </View>
-              ))}
-            </ScrollView>
-
-            {/* Caption input */}
-            <TextInput
-              style={styles.captionInput}
-              placeholder="Write a caption..."
-              placeholderTextColor="#888"
-              value={description}
-              onChangeText={setDescription}
-              multiline={true}
-            />
           </View>
         </View>
-      </Modal>
-    </View>
-    <Footer />
+
+        {/* Bio Section */}
+        <View style={styles.bioContainer}>
+          <Text style={styles.username}>{profileData.username}</Text>
+          <Text style={styles.bio}>{profileData.bio}</Text>
+          {/* <Text style={styles.website}>{profileData.website}</Text> */}
+        </View>
+
+        <View style={styles.profileButtonContainer}>
+          <TouchableOpacity onPress={() => router.push("../pages/editProfile")}>
+            <Text style={styles.uploadButton}>Edit Profile</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={showOptions}>
+            <Text style={styles.addBtn}>Add Post</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View
+          style={{
+            //display: props.userID ? "flex" : "none",
+            flexDirection: "row",
+            alignItems: "center",
+            marginTop: 10,
+          }}
+        >
+          <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
+          <View>
+            <Text
+              style={{ ...styles.text, ...{ width: 70, textAlign: "center" } }}
+            >
+              Posts
+            </Text>
+          </View>
+          <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
+        </View>
+
+        <Modal transparent visible={modalVisible} animationType="none">
+          <TouchableOpacity
+            style={styles.overlay}
+            onPress={hideOptions}
+            activeOpacity={1}
+          >
+            <Animated.View
+              style={[
+                styles.bottomSheet,
+                { transform: [{ translateY: slideAnim }] },
+              ]}
+            >
+              <TouchableOpacity
+                style={styles.option}
+                onPress={() => handleCameraLaunch()}
+              >
+                <Text style={styles.optionText}>Open Camera</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.option}
+                onPress={() => openImagePicker()}
+              >
+                <Text style={styles.optionText}>Choose from Device</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </TouchableOpacity>
+        </Modal>
+
+        <View style={styles.containerVideo}>
+          <VideoCards userID={user.userID} />
+        </View>
+
+        {loading ? (
+          <View style={styles.loadingPanel}>
+            <ActivityIndicator size={60} color={"#000"} />
+          </View>
+        ) : (
+          <></>
+        )}
+
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={showModal}
+          onRequestClose={() => setShowModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalView}>
+              {/* Header */}
+              <View style={styles.modalHeader}>
+                <TouchableOpacity onPress={() => setShowModal(false)}>
+                  <Ionicons name="close" size={24} color="black" />
+                </TouchableOpacity>
+                <Text style={styles.modalTitle}>Add Post</Text>
+
+                <TouchableOpacity
+                  onPress={() =>
+                    description.length
+                      ? handleUpload()
+                      : toast.show('Please write a caption', {
+                        type: 'danger',
+                        placement: 'top',
+                      })
+                  }
+                >
+                  <Text style={styles.shareText}>Share</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Image row */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.imageRow}
+              >
+                {[1].map((_, index) => (
+                  <View key={index} style={styles.imagePreviewBox}>
+                    <Image
+                      source={{ uri: selectedImage }}
+                      style={styles.imagePreview}
+                    />
+                  </View>
+                ))}
+              </ScrollView>
+
+              {/* Caption input */}
+              <TextInput
+                style={styles.captionInput}
+                placeholder="Write a caption..."
+                placeholderTextColor="#888"
+                value={description}
+                onChangeText={setDescription}
+                multiline={true}
+              />
+            </View>
+          </View>
+        </Modal>
+      </View>
+      <Footer />
     </>
   );
 }
@@ -480,6 +485,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     padding: 10,
     width: 150,
+    borderWidth: 2,
+    borderColor: "#e91e63",
     borderRadius: 25,
     textAlign: "center",
     backgroundColor: "#e91e63",

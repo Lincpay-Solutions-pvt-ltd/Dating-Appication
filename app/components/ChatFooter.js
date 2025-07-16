@@ -20,7 +20,7 @@ const { width } = Dimensions.get('window');
 const mediaOptions = [
   { id: '1', icon: 'image', name: 'Photo', component: Ionicons },
   { id: '2', icon: 'camera', name: 'Camera', component: Ionicons },
-  { id: '3', icon: 'gif', name: 'GIF', component: MaterialCommunityIcons },
+  // { id: '3', icon: 'gif', name: 'GIF', component: MaterialCommunityIcons },
 ];
 
 const ChatFooter = ({ onSendMessage }) => {

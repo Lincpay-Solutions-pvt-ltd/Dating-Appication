@@ -45,7 +45,7 @@ export default function LoginScreen() {
       await login_(email, password);
     } catch (err) {
       //  console.error("Something is wrong = ", err);
-       Alert.alert("Error", "Something went wrong. Please try again.");
+      Alert.alert("Error", "Something went wrong. Please try again.");
     }
   };
 
@@ -78,8 +78,11 @@ export default function LoginScreen() {
             "User",
             JSON.stringify(response.data.data.UserData)
           );
+          console.log("REDIXUSer = ", { user: response.data.data.UserData, isAuthenticated: true });
+
+          dispatch(login(response.data.data.UserData)); // Enable this if you're using Redux state
           router.replace("./home");
-          
+
         }
         setIsValidating(false);
       })
@@ -93,16 +96,16 @@ export default function LoginScreen() {
   };
 
   /*Forgot password implementation via api*/
-   const forgotPassword = async () => {
+  const forgotPassword = async () => {
     //console.log("OTP sent to your number");
-   }
+  }
 
   return (
     <LinearGradient
       colors={['#fdf2f8', '#ffffff', '#fef7ed']}
       style={styles.container}
     >
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
@@ -150,7 +153,7 @@ export default function LoginScreen() {
                   setError("");
                 }}
               />
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
                 style={styles.eyeIcon}
               >
@@ -170,9 +173,9 @@ export default function LoginScreen() {
             ) : null}
 
             {/* Login Button */}
-            <TouchableOpacity 
-              style={[styles.loginButton, isValidating && styles.loginButtonDisabled]} 
-              onPress={validateLogin} 
+            <TouchableOpacity
+              style={[styles.loginButton, isValidating && styles.loginButtonDisabled]}
+              onPress={validateLogin}
               disabled={isValidating}
             >
               <LinearGradient

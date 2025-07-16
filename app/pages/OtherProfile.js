@@ -330,6 +330,8 @@ const styles = StyleSheet.create({
   },
   followButton: {
     backgroundColor: "#e91e63",
+    borderColor: "#e91e63",
+    borderWidth: 2,
     padding: 10,
     borderRadius: 25,
     width: 150,

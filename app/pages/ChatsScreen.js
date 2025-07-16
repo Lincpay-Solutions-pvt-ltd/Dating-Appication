@@ -466,9 +466,9 @@ export default function ChatsScreen() {
                 </TouchableOpacity>
 
                 <View style={styles.callIcons}>
-                  <TouchableOpacity onPress={() => setShowCallOptions(!showCallOptions)}>
+                  {/* <TouchableOpacity onPress={() => setShowCallOptions(!showCallOptions)}>
                     <Ionicons name="call-outline" size={22} color="#333" />
-                  </TouchableOpacity>
+                  </TouchableOpacity> */}
                   <TouchableOpacity
                     style={{ marginLeft: 16 }}
                     onPress={() => setShowCallOptions(!showCallOptions)}
@@ -509,13 +509,10 @@ export default function ChatsScreen() {
           {/* Profile Options */}
           {showProfileOptions && (
             <View style={styles.optionsContainer}>
-              <OptionItem icon="image" text="Media" />
               <OptionItem icon="user" text="View Profile" />
-              <OptionItem icon="share-2" text="Share profile" />
-              <OptionItem icon="bell-off" text="Mute Chat" />
               <OptionItem icon="trash-2" text="Delete Chat" />
               <OptionItem icon="flag" text="Report User" />
-              <OptionItem icon="x" text="Block" color="#FF3B30" />
+              {/* <OptionItem icon="x" text="Block" color="#FF3B30" /> */}
             </View>
           )}
 
