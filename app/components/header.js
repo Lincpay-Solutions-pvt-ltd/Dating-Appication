@@ -42,7 +42,6 @@ export default function HeaderForm({ isTransparent = false }) {
   // Router
   const router = useRouter();
   const pathname = usePathname();
-  const appURL = "https://play.google.com/store/search?q=tango&c=apps&hl=en_US";
 
   const isActive = (route) => pathname === route;
 
@@ -252,15 +251,7 @@ export default function HeaderForm({ isTransparent = false }) {
 
         <View style={stylesHeader.divider} />
 
-        <TouchableOpacity style={stylesHeader.menuItem} onPress={() => Linking.openURL(appURL)}>
-          <Ionicons name="phone-portrait-outline" size={24} color="#000" />
-          <View>
-            <Text style={stylesHeader.menuText}>Get Tango App</Text>
-            <Text style={stylesHeader.subText}>
-              Stay connected with your friends anywhere!
-            </Text>
-          </View>
-        </TouchableOpacity>
+
 
         <TouchableOpacity
           style={stylesHeader.menuItem}
@@ -415,7 +406,7 @@ const stylesHeader = StyleSheet.create({
   profileImage: {
     width: "100%",
     height: "100%",
-    objectFit: "cover",
+    resizeMode: "cover",
   },
   menu: {
     position: "absolute",

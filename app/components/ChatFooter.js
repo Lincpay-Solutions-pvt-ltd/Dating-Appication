@@ -10,35 +10,52 @@ import {
   Animated,
   Easing,
   Text,
-  FlatList
+  FlatList,
 } from "react-native";
 import { Ionicons, Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import GiftCoinPopup from "./GiftCoinPopup";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const mediaOptions = [
-  { id: '1', icon: 'image', name: 'Photo', component: Ionicons },
-  { id: '2', icon: 'camera', name: 'Camera', component: Ionicons },
+  { id: "1", icon: "image", name: "Photo", component: Ionicons },
+  { id: "2", icon: "camera", name: "Camera", component: Ionicons },
   // { id: '3', icon: 'gif', name: 'GIF', component: MaterialCommunityIcons },
 ];
 
-const ChatFooter = ({ onSendMessage }) => {
+const ChatFooter = ({ onSendMessage, receiverID }) => {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [showGiftPopup, setShowGiftPopup] = useState(false);
-  const [receiverId] = useState('user123');
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [showMediaOptions, setShowMediaOptions] = useState(false);
   const scaleAnim = new Animated.Value(1);
+  const [senderId, setSenderId] = useState("");
+
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const user = await AsyncStorage.getItem("User");
+        if (user) {
+          const parsedUser = JSON.parse(user);
+          setSenderId(parsedUser.userID);
+        }
+      } catch (error) {
+        console.error("Error fetching user from AsyncStorage:", error);
+      }
+    };
+
+    getUser();
+  }, []);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
+      "keyboardDidShow",
       () => setIsKeyboardVisible(true)
     );
     const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
+      "keyboardDidHide",
       () => setIsKeyboardVisible(false)
     );
 
@@ -65,21 +82,21 @@ const ChatFooter = ({ onSendMessage }) => {
         toValue: 1.2,
         duration: 100,
         easing: Easing.ease,
-        useNativeDriver: true
+        useNativeDriver: true,
       }),
       Animated.timing(scaleAnim, {
         toValue: 1,
         duration: 100,
         easing: Easing.ease,
-        useNativeDriver: true
-      })
+        useNativeDriver: true,
+      }),
     ]).start();
   };
 
   const renderMediaOption = ({ item }) => {
     const IconComponent = item.component;
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.mediaOption}
         onPress={() => {
           // Handle the option
@@ -112,14 +129,14 @@ const ChatFooter = ({ onSendMessage }) => {
       {/* Main Input Bar */}
       <View style={styles.inputContainer}>
         {/* Media Button */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.mediaButton}
           onPress={toggleMediaOptions}
         >
-          <Ionicons 
-            name={showMediaOptions ? "close" : "add"} 
-            size={24} 
-            color="#FF7F50" 
+          <Ionicons
+            name={showMediaOptions ? "close" : "add"}
+            size={24}
+            color="#FF7F50"
           />
         </TouchableOpacity>
 
@@ -136,7 +153,7 @@ const ChatFooter = ({ onSendMessage }) => {
 
         {/* Right Action Buttons */}
         {hasText ? (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.sendButton}
             onPress={handleSendMessage}
             activeOpacity={0.7}
@@ -156,16 +173,16 @@ const ChatFooter = ({ onSendMessage }) => {
                 <Ionicons name="gift" size={24} color="#FF7F50" />
               </Animated.View>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => setIsRecording(!isRecording)}
             >
-              <Ionicons
+              {/* <Ionicons
                 name={isRecording ? "mic" : "mic-outline"}
                 size={24}
                 color={isRecording ? "#FF3B30" : "#FF7F50"}
-              />
+              /> */}
             </TouchableOpacity>
           </View>
         )}
@@ -175,7 +192,7 @@ const ChatFooter = ({ onSendMessage }) => {
       <GiftCoinPopup
         visible={showGiftPopup}
         onClose={() => setShowGiftPopup(false)}
-        receiverId={receiverId}
+        receiverId={receiverID}
       />
     </View>
   );
@@ -183,23 +200,23 @@ const ChatFooter = ({ onSendMessage }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
-    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+    backgroundColor: "#FFFFFF",
+    paddingBottom: Platform.OS === "ios" ? 20 : 10,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0'
+    borderTopColor: "#F0F0F0",
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
+    flexDirection: "row",
+    alignItems: "flex-end",
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: '#FFFFFF'
+    backgroundColor: "#FFFFFF",
   },
   mediaButton: {
     padding: 8,
     marginRight: 8,
-    justifyContent: 'center',
-    alignItems: 'center'
+    justifyContent: "center",
+    alignItems: "center",
   },
   textInput: {
     flex: 1,
@@ -207,48 +224,46 @@ const styles = StyleSheet.create({
     maxHeight: 100,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
     borderRadius: 20,
     fontSize: 16,
-    color: '#333',
-    textAlignVertical: 'center',
-    includeFontPadding: false
+    color: "#333",
+    textAlignVertical: "center",
+    includeFontPadding: false,
   },
   sendButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FF7F50',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8
+    backgroundColor: "#FF7F50",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 8,
   },
   rightButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 8
-  },
-  actionButton: {
-    padding: 8,
-    marginLeft: 4
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 8,
   },
   mediaOptionsContainer: {
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    backgroundColor: '#FFFFFF'
+    borderTopColor: "#F0F0F0",
+    backgroundColor: "#FFFFFF",
   },
   mediaOption: {
-    alignItems: 'center',
+    alignItems: "center",
     width: width / 4,
-    paddingHorizontal: 8
+    paddingHorizontal: 8,
   },
   mediaOptionText: {
     marginTop: 6,
     fontSize: 12,
-    color: '#666'
-  }
+    color: "#666",
+  },
 });
 
 export default ChatFooter;

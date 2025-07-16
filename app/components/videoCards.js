@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     padding: 0,
     margin: 2,
     borderRadius: 50,
-    backgroundColor: "#f0f",
+    backgroundColor: "#f5f5f5",
   },
   text: {
     fontWeight: "bold",

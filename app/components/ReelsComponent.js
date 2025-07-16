@@ -142,109 +142,6 @@ export default function ReelsComponent(props) {
     const [showGiftPopup, setShowGiftPopup] = useState(false);
     const [loading, setLoading] = useState(false);
 
-  // const sendCoins = async (amount) => {
-  //     try {
-  //       setLoading(true);
-        
-  //       // Validate amount
-  //       if (!amount || amount <= 0) {
-  //         toast.show('Please select a valid coin amount', {
-  //           type: 'danger',
-  //           placement: 'top',
-  //           duration: 3000,
-  //         });
-  //         return;
-  //       }
-        
-
-  //       const user = await AsyncStorage.getItem("User");
-  //       if (!user) {
-  //         toast.show('User session expired', {
-  //           type: 'danger',
-  //           placement: 'top',
-  //           duration: 3000,
-  //         });
-  //         return;
-  //       }
-
-  //       const senderId = JSON.parse(user).userID;
-        
-  //       // Validate not sending to self
-  //       if (senderId === item.userID) {
-  //         toast.show('Cannot send coins to yourself', {
-  //           type: 'danger',
-  //           placement: 'top',
-  //           duration: 3000,
-  //         });
-  //         return;
-  //       }
-        
-  //       const response = await axios.post(
-  //         `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/send-coin`,
-  //         {
-  //           senderId,
-  //           receiverId:item.userID,
-  //           count: amount
-  //         },
-  //         {
-  //           timeout: 10000,
-  //           headers: {
-  //             'Content-Type': 'application/json',
-  //           }
-  //         }
-  //       );
-
-  //       if (response.data.status) {
-  //         toast.show(`${amount} coins sent successfully!`, {
-  //           type: 'success',
-  //           placement: 'top',
-  //           duration: 3000,
-  //         });
-  //       } else {
-  //         throw new Error(response.data.msg || "Failed to send coins");
-  //       }
-  //     } catch (error) {
-  //       console.error("Error sending coins:", error);
-        
-  //       let errorMessage = "Failed to send coins";
-        
-  //       if (error.response) {
-  //         switch (error.response.status) {
-  //           case 400:
-  //             errorMessage = error.response.data?.message || "Invalid request";
-  //             break;
-  //           case 401:
-  //             errorMessage = "Session expired - please login again";
-  //             break;
-  //           case 403:
-  //             errorMessage = "Not enough coins to send";
-  //             break;
-  //           case 404:
-  //             errorMessage = "Recipient not found";
-  //             break;
-  //           case 500:
-  //             errorMessage = "Server error - please try again later";
-  //             break;
-  //           default:
-  //             errorMessage = error.response.data?.message || "Request failed";
-  //         }
-  //       } else if (error.request) {
-  //         errorMessage = "Network error - please check your connection";
-  //       } else if (error.message.includes('timeout')) {
-  //         errorMessage = "Request timed out - please try again";
-  //       }
-        
-  //       toast.show(errorMessage, {
-  //         type: 'danger',
-  //         placement: 'top',
-  //         duration: 4000,
-  //       });
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-
     const [expanded, setExpanded] = useState(false);
 
     useMemo(() => {
@@ -674,11 +571,11 @@ export default function ReelsComponent(props) {
                   numberOfLines={expanded ? 0 : 2}
                   ellipsizeMode="tail"
                 >
-                  <Text>
+                  <Text style={styles.momentDsc}>
                     {!expanded && item.description.length > 30 ? (
                       <>
                         {item.description.slice(0, 40)}
-                        <Text style={{ color: "#f3f3f3" , fontWeight: "bold" }}> Read more...</Text>
+                        <Text style={styles.desc}> Read more...</Text>
                       </>
                     ) : (
                       item.description
@@ -1088,7 +985,10 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
     fontSize: 15,
-    marginLeft: 20,
+    marginBottom: 6,
+  },
+  profileInfo: {
+    paddingLeft: 20,
   },
   description: { color: "#eaeaea", fontSize: 13, marginTop: 6},
   iconContainer: {
@@ -1168,6 +1068,10 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "#ddd",
     marginVertical: 12,
+  },
+  momentDsc: {
+    color: "#fff",
+    fontSize: 14,
   },
   commentModal: {
     backgroundColor: "#fff",

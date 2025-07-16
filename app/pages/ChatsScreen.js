@@ -509,11 +509,34 @@ export default function ChatsScreen() {
           {/* Profile Options */}
           {showProfileOptions && (
             <View style={styles.optionsContainer}>
-              <OptionItem icon="user" text="View Profile" />
-              <OptionItem icon="trash-2" text="Delete Chat" />
-              <OptionItem icon="flag" text="Report User" />
-              {/* <OptionItem icon="x" text="Block" color="#FF3B30" /> */}
-            </View>
+                {showProfileOptions && (
+                  <>
+                    <OptionItem 
+                      icon="user" 
+                      text="View Profile" 
+                      onPress={() => {
+                        setShowProfileOptions(false);
+                        router.push({
+                          pathname: "../pages/profile",
+                          params: {
+                            userId: profileData.userId,
+                            username: profileData.username,
+                            profileImage: profileData.profileImage
+                          }
+                        });
+                      }}
+                    />
+                    <OptionItem 
+                      icon="trash-2" 
+                      text="Delete Chat" 
+                      onPress={() => {
+                        setShowProfileOptions(false);
+                      }}
+                    />
+                    {/* <OptionItem icon="x" text="Block" color="#FF3B30" /> */}
+                  </>
+                )}
+              </View>
           )}
 
           {/* Call Options */}
@@ -531,6 +554,7 @@ export default function ChatsScreen() {
 
           <ChatFooter
             onSendMessage={sendMessage}
+            receiverID={params.receiverID}
             onTyping={handleTyping}
             onAttachPress={() => {
               Alert.alert(
@@ -569,6 +593,7 @@ const OptionItem = ({ icon, text, subtext, coinIcon, color = "#000", onPress }) 
     </View>
   </TouchableOpacity>
 );
+
 
 const styles = StyleSheet.create({
   safeArea: {
