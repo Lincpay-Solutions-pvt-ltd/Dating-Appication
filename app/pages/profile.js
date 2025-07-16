@@ -489,10 +489,11 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     padding: 10,
     borderColor: "#e91e63",
-    borderWidth: 1,
+    borderWidth: 2,
     fontSize: 16,
     borderRadius: 25,
     textAlign: "center",
+    color: "#e91e63",
     width: 150,
   },
   overlay: {

@@ -13,7 +13,6 @@ import {
   RefreshControl,
 } from "react-native";
 import Header from "../components/header";
-import Footer from "../components/footer";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
@@ -258,8 +257,6 @@ const ChatList = () => {
       <View style={styles.floatingButtonContainer}>
         <FloatingNewChatButton />
       </View>
-
-      <Footer />
     </SafeAreaView>
   );
 };
@@ -382,7 +379,7 @@ const styles = StyleSheet.create({
   floatingButtonContainer: {
     position: "absolute",
     right: 20,
-    bottom: 80,
+    bottom: 20,
     zIndex: 1,
   },
   floatingButton: {

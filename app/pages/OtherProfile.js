@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     padding: 10,
     borderColor: "#e91e63",
-    borderWidth: 1,
+    borderWidth: 2,
     borderRadius: 25,
     width: 150,
     alignItems: "center",
@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   buttonTextt: {
-    color: "#333",
+    color: "#e91e63",
     fontWeight: "bold",
   },
   divider: {

@@ -26,10 +26,14 @@ export default function Footer() {
           size={28}
           color={isActive("/pages/home") ? "#e91e63" : "#fff"}
         />
-        <Text style={[
-          styles.footerText,
-          isActive("/pages/home") && styles.activeText
-        ]}>Home</Text>
+        <Text
+          style={[
+            styles.footerText,
+            isActive("/pages/home") && styles.activeText,
+          ]}
+        >
+          Home
+        </Text>
       </TouchableOpacity>
 
       {/* Following */}
@@ -43,7 +47,14 @@ export default function Footer() {
           size={28}
           color={isActive("/pages/Following") ? "#e91e63" : "#fff"}
         />
-        <Text style={[styles.footerText, isActive("/pages/Following") && styles.activeText]}>Following</Text>
+        <Text
+          style={[
+            styles.footerText,
+            isActive("/pages/Following") && styles.activeText,
+          ]}
+        >
+          Following
+        </Text>
       </TouchableOpacity>
 
       {/* Explore */}
@@ -57,14 +68,33 @@ export default function Footer() {
           size={28}
           color={isActive("/pages/explore") ? "#e91e63" : "#fff"}
         />
-        <Text style={[styles.footerText, isActive("/pages/explore") && styles.activeText]}>Explore</Text>
+        <Text
+          style={[
+            styles.footerText,
+            isActive("/pages/explore") && styles.activeText,
+          ]}
+        >
+          Explore
+        </Text>
       </TouchableOpacity>
 
       {/* Reels / Moments */}
       {pathname === "/pages/reels" ? (
         <View style={styles.item}>
-          <EntypoIcons style={styles.icon} name="folder-video" size={28} color="#e91e63" />
-          <Text style={[styles.footerText, isActive("/pages/reels") && styles.activeText]}>Moments</Text>
+          <EntypoIcons
+            style={styles.icon}
+            name="folder-video"
+            size={28}
+            color="#e91e63"
+          />
+          <Text
+            style={[
+              styles.footerText,
+              isActive("/pages/reels") && styles.activeText,
+            ]}
+          >
+            Moments
+          </Text>
         </View>
       ) : (
         <TouchableOpacity
@@ -77,7 +107,14 @@ export default function Footer() {
             size={28}
             color="#fff"
           />
-          <Text style={[styles.footerText, isActive("/pages/profile") && styles.activeText]}>Moments</Text>
+          <Text
+            style={[
+              styles.footerText,
+              isActive("/pages/reels") && styles.activeText,
+            ]}
+          >
+            Moments
+          </Text>
         </TouchableOpacity>
       )}
 
@@ -88,11 +125,15 @@ export default function Footer() {
       >
         <IoniconsIcons
           style={styles.icon}
-          name={isActive("/pages/profile") ? "person-circle-sharp" : "person-circle-outline"}
+          name={
+            isActive("/pages/profile")
+              ? "person-circle-sharp"
+              : "person-circle-outline"
+          }
           size={28}
           color={isActive("/pages/profile") ? "#e91e63" : "#fff"}
         />
-        <Text style={styles.footerText}>Profile</Text>
+        <Text style={[styles.footerText, isActive("/pages/profile") && styles.activeText]}>Profile</Text>
       </TouchableOpacity>
     </View>
   );
@@ -117,12 +158,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   footerText: {
-    color: '#fff', // Default text color
+    color: "#fff", // Default text color
     fontSize: 12,
     fontWeight: "bold",
     textAlign: "center",
   },
   activeText: {
-    color: '#e91e63',
+    color: "#e91e63",
   },
 });
