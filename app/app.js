@@ -4,26 +4,6 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useDispatch } from "react-redux";
 import { login } from "./Redux/authSlice";
-// import * as SQLite from "expo-sqlite";
-
-// const db = SQLite.openDatabase("chat.db");
-
-// const initializeDatabase = () => {
-//   db.transaction((tx) => {
-//     tx.executeSql(
-//       `CREATE TABLE IF NOT EXISTS messages (
-//         id INTEGER PRIMARY KEY AUTOINCREMENT,
-//         chatID TEXT,
-//         senderID TEXT,
-//         receiverID TEXT,
-//         message TEXT,
-//         timestamp TEXT,
-//         isRead INTEGER DEFAULT 0
-//       );`
-//     );
-//   });
-// };
-
 export default function App() {
   const dispatch = useDispatch();
   const router = useRouter();

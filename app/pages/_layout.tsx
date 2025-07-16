@@ -3,12 +3,16 @@ import { Provider } from "react-redux";
 import store from "../Redux/store";
 import { BackHandler, Alert } from "react-native";
 import React, { useEffect } from "react";
-import { useNavigationContainerRef, usePathname, useRouter } from 'expo-router';
+import { usePathname } from 'expo-router';
 import { ToastProvider } from 'react-native-toast-notifications';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import CallManager from '../components/CallManager';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 export default function Layout() {
   const pathName = usePathname();
+  const [user, setUser] = React.useState(null);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -32,8 +36,26 @@ export default function Layout() {
     }, [pathName])
   );
 
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const storedUser = await AsyncStorage.getItem("User");
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+      } catch (error) {
+        console.log("Error loading user:", error);
+      }
+    };
+    getUser();
+  }, []);
+
+
+
+
+
   return (
     <SafeAreaProvider>
+      <CallManager currentUser={user} />
       <ToastProvider
         placement="bottom"
         duration={3000}
