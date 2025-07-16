@@ -24,7 +24,7 @@ export const SocketProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    socketRef.current = io(`${process.env.EXPO_PUBLIC_SOCKET_URL}`, {
+    socketRef.current = io(process.env.EXPO_PUBLIC_API_SOCKET_URL, {
       autoConnect: true,
       reconnection: true,
       transports: ["websocket"],

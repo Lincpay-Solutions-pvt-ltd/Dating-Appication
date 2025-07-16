@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "test-app",
+    "name": "dating-app",
     "slug": "test-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -33,23 +33,6 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
-        }
-      ],
-      [
-        "expo-sqlite",
-        {
-          "enableFTS": true,
-          "useSQLCipher": true,
-          "android": {
-            "enableFTS": false,
-            "useSQLCipher": false
-          },
-          "ios": {
-            "customBuildFlags": [
-              "-DSQLITE_ENABLE_DBSTAT_VTAB=1",
-              "-DSQLITE_ENABLE_SNAPSHOT=1"
-            ]
-          }
         }
       ]
     ],

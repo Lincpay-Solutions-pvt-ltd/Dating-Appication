@@ -414,54 +414,14 @@ export default function ChatsScreen() {
     );
   }
 
-  const handleVideoCallTest = () => {
-    console.log("Video call Test clicked", params);
 
-    console.log("💀💀Calling to ", {
-      currentUser_: JSON.stringify(currentUser),
-      from: currentUser.userID,
-      to: params.receiverID,
-      chatID: params.chatID,
-      isCaller: true,
-      status_: 'calling'
-    });
-
+  const handleVideoCall = () => {
     router.push({
       pathname: "../pages/WebRTCComponent",
       params: {
         currentUser_: JSON.stringify(currentUser),
         from_: currentUser.userID,
         to_: params.receiverID,
-        chatID: params.chatID,
-        isCaller: true,
-        status_: 'calling'
-      },
-    });
-  }
-  const handleVideoCall = () => {
-    console.log("Video call clicked", params);
-
-    // socket.emit('start-call', {
-    //   to: params.receiverID,
-    //   from: currentUser.userID,
-    //   chatID: params.chatID
-    // });
-
-    console.log("💀💀Calling to ", {
-      currentUser: currentUser,
-      from: currentUser.userID,
-      to: params.receiverID,
-      chatID: params.chatID,
-      isCaller: true,
-      status_: 'calling'
-    });
-
-    router.push({
-      pathname: "../pages/VideoCallScreen",
-      params: {
-        currentUser: currentUser,
-        from: currentUser.userID,
-        to: params.receiverID,
         chatID: params.chatID,
         isCaller: true,
         status_: 'calling'
@@ -499,7 +459,7 @@ export default function ChatsScreen() {
                       {profileData.username || "User"}
                     </Text>
                     <Text style={styles.profileStatus}>
-                      {isTyping ? "Typing..." : profileData.status || "Offline"} {isConnected ? "🟢" : "🔴"}
+                      {isTyping ? "Typing..." : profileData.status || "Offline"}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -564,15 +524,8 @@ export default function ChatsScreen() {
               <OptionItem
                 onPress={handleVideoCall}
                 icon="video"
-                text="Premium Match Call"
-                subtext="3,000/min"
-                coinIcon
-              />
-              <OptionItem
-                onPress={handleVideoCallTest}
-                icon="video"
-                text="Test Call"
-                subtext="Debugging"
+                text="Premium video Call"
+                subtext={isConnected ? "" : "You are currently not connected"}
                 coinIcon
               />
             </View>
@@ -771,7 +724,7 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#FFD700',
+    backgroundColor: '#ff5555',
     marginRight: 5,
   },
   subtext: {

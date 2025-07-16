@@ -3,11 +3,10 @@ import { Provider } from "react-redux";
 import store from "../Redux/store";
 import { BackHandler, Alert } from "react-native";
 import React, { useEffect } from "react";
-import {  usePathname } from 'expo-router';
+import { usePathname } from 'expo-router';
 import { ToastProvider } from 'react-native-toast-notifications';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { SocketProvider } from '../services/SocketContext';
 import CallManager from '../components/CallManager';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -56,22 +55,20 @@ export default function Layout() {
 
   return (
     <SafeAreaProvider>
-      <SocketProvider>
-        <CallManager currentUser={user} />
-        <ToastProvider
-          placement="bottom"
-          duration={3000}
-          animationType="slide-in"
-          successColor="#4BB543"
-          dangerColor="#FF3B30"
-          warningColor="#FFA500"
-          textStyle={{ fontSize: 16 }}
-        >
-          <Provider store={store}>
-            <Stack screenOptions={{ headerShown: false }} />
-          </Provider>
-        </ToastProvider>
-      </SocketProvider>
+      <CallManager currentUser={user} />
+      <ToastProvider
+        placement="bottom"
+        duration={3000}
+        animationType="slide-in"
+        successColor="#4BB543"
+        dangerColor="#FF3B30"
+        warningColor="#FFA500"
+        textStyle={{ fontSize: 16 }}
+      >
+        <Provider store={store}>
+          <Stack screenOptions={{ headerShown: false }} />
+        </Provider>
+      </ToastProvider>
     </SafeAreaProvider>
   );
 }

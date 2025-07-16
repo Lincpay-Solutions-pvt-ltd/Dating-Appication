@@ -3,13 +3,16 @@ import { Provider } from "react-redux";
 import { StyleSheet, Platform, StatusBar } from "react-native";
 import store from "./Redux/store";
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SocketProvider } from './services/SocketContext';
 
 export default function Layout() {
     return (
         <SafeAreaView style={styles.AndroidSafeArea}>
-            <Provider store={store}>
-                <Stack screenOptions={{ headerShown: false }} />
-            </Provider>
+            <SocketProvider>
+                <Provider store={store}>
+                    <Stack screenOptions={{ headerShown: false }} />
+                </Provider>
+            </SocketProvider>
         </SafeAreaView>
     );
 }
