@@ -248,7 +248,7 @@ export default function ProfileScreen() {
           <Text style={styles.uploadButton}>Edit Profile</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={showOptions}>
-          <Text style={styles.uploadButton}>Add Post</Text>
+          <Text style={styles.addBtn}>Add Post</Text>
         </TouchableOpacity>
       </View>
 
@@ -477,15 +477,23 @@ const styles = StyleSheet.create({
   },
 
   uploadButton: {
-    marginTop: 10,
-    fontSize: 20,
-    borderColor: "black",
+    fontSize: 16,
     padding: 10,
     width: 150,
-    borderRadius: 10,
+    borderRadius: 25,
     textAlign: "center",
-    backgroundColor: "#d8d9da",
-    color: "#000",
+    backgroundColor: "#e91e63",
+    color: "#fff",
+  },
+  addBtn: {
+    backgroundColor: "transparent",
+    padding: 10,
+    borderColor: "#e91e63",
+    borderWidth: 1,
+    fontSize: 16,
+    borderRadius: 25,
+    textAlign: "center",
+    width: 150,
   },
   overlay: {
     flex: 1,

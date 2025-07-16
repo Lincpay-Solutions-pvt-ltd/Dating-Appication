@@ -11,7 +11,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import Footer from "../components/footer";
-
 import Header from "../components/header";
 import VideoCards from "../components/videoCards";
 
@@ -24,6 +23,7 @@ export default function OtherProfileScreen() {
   const [profileData, setProfileData] = useState(null);
   const [currentUserID, setCurrentUserID] = useState(null);
   const [userGender, setUserGender] = useState(null);
+  const [creatingChat, setCreatingChat] = useState(false);
 
   const followToUserID =
     UserItem?.userID ||
@@ -122,6 +122,51 @@ export default function OtherProfileScreen() {
     }
   };
 
+  const createNewChat = async () => {
+    try {
+      setCreatingChat(true);
+      const response = await axios.post(
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/chats/new-chat`,
+        {
+          chatType: "private",
+          createdBy: currentUserID,
+          chatWith: profileData.userID
+        }
+      );
+
+      const chatData = response.data.success 
+        ? response.data.data[0] 
+        : response.data.data?.[0];
+
+      router.push({
+        pathname: "../pages/ChatsScreen",
+        params: {
+          chatID: chatData.chatID,
+          receiverID: profileData.userID,
+          receiverName: profileData.username,
+          receiverProfilePic: profileData.profileImage,
+          chatType: "private",
+        },
+      });
+    } catch (error) {
+      console.log("Error creating chat:", error);
+      if (error.response?.data?.data) {
+        router.push({
+          pathname: "../pages/ChatsScreen",
+          params: {
+            chatID: error.response.data.data[0].chatID,
+            receiverID: profileData.userID,
+            receiverName: profileData.username,
+            receiverProfilePic: profileData.profileImage,
+            chatType: "private",
+          },
+        });
+      }
+    } finally {
+      setCreatingChat(false);
+    }
+  };
+
   if (!profileData) {
     return (
       <View style={styles.loaderContainer}>
@@ -132,125 +177,114 @@ export default function OtherProfileScreen() {
   }
 
   return (
-  <>
-    <Header />
-    <View style={styles.container}>
-      <View style={styles.profileContainer}>
-        <Image
-          source={
-            profileData.profileImage.startsWith("set-default")
-              ? profileData.profileImage === "set-default-2"
-                ? require("../../assets/images/profile-female.jpg")
-                : require("../../assets/images/profile.jpg")
-              : { uri: profileData.profileImage }
-          }
-          style={styles.profileImage}
-        />
+    <>
+      <Header />
+      <View style={styles.container}>
+        <View style={styles.profileContainer}>
+          <Image
+            source={
+              profileData.profileImage.startsWith("set-default")
+                ? profileData.profileImage === "set-default-2"
+                  ? require("../../assets/images/profile-female.jpg")
+                  : require("../../assets/images/profile.jpg")
+                : { uri: profileData.profileImage }
+            }
+            style={styles.profileImage}
+          />
 
-        <View style={styles.statsContainer}>
-          <TouchableOpacity>
-            <Text style={styles.statsText}>
-              {profileData.posts}
-              {"\n"}Posts
+          <View style={styles.statsContainer}>
+            <TouchableOpacity>
+              <Text style={styles.statsText}>
+                {profileData.posts}
+                {"\n"}Posts
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() =>
+                router.push({
+                  pathname: "../pages/followers",
+                  params: { userID: profileData.userID },
+                })
+              }
+            >
+              <Text style={styles.statsText}>
+                {profileData.followers}
+                {"\n"}Followers
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() =>
+                router.push({
+                  pathname: "../pages/UserFollowing",
+                  params: { userID: profileData.userID },
+                })
+              }
+            >
+              <Text style={styles.statsText}>
+                {profileData.following}
+                {"\n"}Following
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.bioContainer}>
+          <Text style={styles.username}>{profileData.username}</Text>
+          <Text style={styles.bio}>{profileData.bio}</Text>
+        </View>
+
+        <View style={styles.profileButtonContainer}>
+          <TouchableOpacity 
+            onPress={isFollowing ? unfollowUser : followUser}
+            style={styles.followButton}
+          >
+            <Text style={styles.buttonText}>
+              {isFollowing ? "Unfollow" : "Follow"}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() =>
-              router.push({
-                pathname: "../pages/followers",
-                params: { userID: profileData.userID },
-              })
-            }
+            onPress={createNewChat}
+            style={styles.messageButton}
+            disabled={creatingChat}
           >
-            <Text style={styles.statsText}>
-              {profileData.followers}
-              {"\n"}Followers
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() =>
-              router.push({
-                pathname: "../pages/UserFollowing",
-                params: { userID: profileData.userID },
-              })
-            }
-          >
-            <Text style={styles.statsText}>
-              {profileData.following}
-              {"\n"}Following
-            </Text>
+            {creatingChat ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.buttonTextt}>Message</Text>
+            )}
           </TouchableOpacity>
         </View>
-      </View>
 
-      <View style={styles.bioContainer}>
-        <Text style={styles.username}>{profileData.username}</Text>
-        <Text style={styles.bio}>{profileData.bio}</Text>
-      </View>
-
-      <View style={styles.profileButtonContainer}>
-        <TouchableOpacity onPress={isFollowing ? unfollowUser : followUser}>
-          <Text style={styles.uploadButton}>
-            {isFollowing ? "Unfollow" : "Follow"}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() =>
-            router.push({
-              pathname: "../pages/ChatsScreen",
-              params: {
-                id: currentUserID,
-                name: profileUserName,
-                profilePic: profileData.profileImage,
-                gender: userGender,
-              },
-            })
-          }
-        >
-          <Text style={styles.uploadButton}>Message</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View
-        style={{
-          //display: props.userID ? "flex" : "none",
-          flexDirection: "row",
-          alignItems: "center",
-          marginTop: 10,
-        }}
-      >
-        <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
-        <View>
-          <Text
-            style={{ ...styles.text, ...{ width: 70, textAlign: "center" } }}
-          >
-            Posts
-          </Text>
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>Posts</Text>
+          <View style={styles.dividerLine} />
         </View>
-        <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
-      </View>
 
-      <View style={styles.containerVideo}>
-        <VideoCards userID={profileData.userID} />
+        <View style={styles.containerVideo}>
+          <VideoCards userID={profileData.userID} />
+        </View>
       </View>
-    </View>
-    <Footer />
+      <Footer />
     </>
   );
 }
 
-// Styles
 const styles = StyleSheet.create({
   containerVideo: {
     justifyContent: "center",
     alignItems: "center",
-    height: "60%", // or any appropriate fixed height
+    height: "60%",
   },
-
   container: {
     flex: 1,
     backgroundColor: "#fff",
     padding: 10,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   profileContainer: {
     flexDirection: "row",
@@ -280,199 +314,56 @@ const styles = StyleSheet.create({
   },
   bioContainer: {
     paddingHorizontal: 15,
-    paddingBottom: 20, // ensures space at bottom
+    paddingBottom: 20,
     marginTop: 10,
-    flexShrink: 1, // allows container to shrink if needed
   },
   bio: {
     fontSize: 14,
     textAlign: "left",
-    lineHeight: 20, // improves readability and avoids clipping
-    flexWrap: "wrap",
+    lineHeight: 20,
     marginTop: 4,
-  },
-  website: {
-    fontSize: 14,
-    color: "blue",
-    textAlign: "left",
-    marginBottom: 10,
-  },
-  postImage: {
-    width: 100,
-    height: 100,
-    margin: 2,
-  },
-  centeredView: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalView: {
-    marginTop: 100,
-    marginLeft: 20,
-    marginRight: 20,
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 75,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  modalTitle: {
-    fontSize: 18,
-    marginBottom: 10,
-    fontWeight: "bold",
-  },
-  input: {
-    width: "100%",
-    height: 40,
-    borderColor: "gray",
-    borderWidth: 1,
-    marginBottom: 15,
-    paddingLeft: 10,
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-evenly", // Better spacing between buttons
-    alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 5,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-  },
-
-  uploadButton: {
-    marginTop: 10,
-    fontSize: 20,
-    borderColor: "black",
-    padding: 10,
-    width: 150,
-    borderRadius: 10,
-    textAlign: "center",
-    backgroundColor: "#d8d9da",
-    color: "#000",
-  },
-
-  overlay: {
-    flex: 1,
-    backgroundColor: "#00000077",
-    justifyContent: "flex-end",
-  },
-  bottomSheet: {
-    backgroundColor: "#fff",
-    padding: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  option: {
-    padding: 15,
-    borderBottomColor: "#ccc",
-    borderBottomWidth: 1,
-  },
-  optionText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  postCancelButton: {
-    fontSize: 20,
-    marginBottom: 10,
-    padding: 10,
-    borderRadius: 15,
-    textAlign: "center",
-    backgroundColor: "#d91859",
-    color: "white",
-  },
-  cancelText: {
-    color: "white",
-    fontSize: 20,
-  },
-  modalOverlay: {
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-  modalView: {
-    backgroundColor: "white",
-    padding: 25,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    maxHeight: "80%", // You can reduce this
-    height: "100%", // Add this line for fixed height
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  shareText: {
-    color: "#0095f6",
-    fontWeight: "600",
-    fontSize: 20,
-  },
-  imageRow: {
-    flexDirection: "row",
-    marginTop: 25,
-  },
-  imagePreviewBox: {
-    marginRight: 10,
-    marginBottom: 20,
-    left: 50,
-    padding: 10,
-    justifyContent: "center",
-  },
-  imagePreview: {
-    width: 250,
-    height: 400,
-    borderRadius: 10,
-    backgroundColor: "#eee",
-  },
-  addMoreButton: {
-    width: 150,
-    height: 200,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  captionInput: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    paddingVertical: 10,
-    fontSize: 16,
-    marginBottom: 15,
-  },
-  optionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  optionText: {
-    fontSize: 16,
-    marginLeft: 10,
-  },
-  loadingPanel: {
-    position: "absolute",
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-    sizeMode: "cover",
-    top: 10,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
   },
   profileButtonContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
+    marginTop: 10,
+  },
+  followButton: {
+    backgroundColor: "#e91e63",
+    padding: 10,
+    borderRadius: 25,
+    width: 150,
+    alignItems: "center",
+  },
+  messageButton: {
+    backgroundColor: "transparent",
+    padding: 10,
+    borderColor: "#e91e63",
+    borderWidth: 1,
+    borderRadius: 25,
+    width: 150,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  buttonTextt: {
+    color: "#333",
+    fontWeight: "bold",
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "black",
+  },
+  dividerText: {
+    width: 70,
+    textAlign: "center",
   },
 });

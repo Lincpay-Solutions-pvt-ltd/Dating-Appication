@@ -62,7 +62,7 @@ export default function ReelsComponent(props) {
           const parsedUser = JSON.parse(user);
           const userID = parsedUser.userID;
           setCurrentUserID(userID);
-          setUserPic(parsedUser.profilePic);
+          setUserPic(parsedUser?.profilePic);
           console.log("Current User ID = ", userID);
         }
       } catch (err) {

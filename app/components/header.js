@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -6,37 +6,47 @@ import {
   Image,
   Animated,
   Dimensions,
+  ActivityIndicator,
   StyleSheet,
+  Linking,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import EntypoIcons from "react-native-vector-icons/Entypo";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter, usePathname } from "expo-router";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { logout } from "../Redux/authSlice";
-import { Linking } from "react-native";
-import { setTotal } from "../Redux/coinSlice";
+import { setTotal, requestRefresh, completeRefresh } from "../Redux/coinSlice";
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function HeaderForm({ isTransparent = false }) {
+  // UI State
   const [menuOpen, setMenuOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
-  const [user, setUser] = useState({});
-  const [userCoins, setUserCoins] = useState(0);
   const [error, setError] = useState(null);
-  const translateX = useState(new Animated.Value(-screenWidth))[0];
-  const translateZ = useState(new Animated.Value(screenWidth))[0];
+  
+  // Refs for animations
+  const translateX = useRef(new Animated.Value(-screenWidth)).current;
+  const translateZ = useRef(new Animated.Value(screenWidth)).current;
 
+  // Redux state
+  const dispatch = useDispatch();
+  const totalCoins = useSelector((state) => state.coins?.total ?? null);
+  const shouldRefresh = useSelector((state) => state.coins?.shouldRefresh ?? false);
+  const user = useSelector((state) => state.auth?.user ?? null);
+  const coinsStatus = useSelector((state) => state.coins?.status ?? 'idle');
+
+  // Router
   const router = useRouter();
   const pathname = usePathname();
-  const dispatch = useDispatch();
-  const appURL = "https://play.google.com/store/search?q=tango&c=apps&hl=en_US"
+  const appURL = "https://play.google.com/store/search?q=tango&c=apps&hl=en_US";
 
   const isActive = (route) => pathname === route;
 
+  // Animation handlers
   const toggleMenu = () => {
     Animated.timing(translateX, {
       toValue: menuOpen ? -screenWidth : 0,
@@ -55,51 +65,77 @@ export default function HeaderForm({ isTransparent = false }) {
     setNotificationOpen(!notificationOpen);
   };
 
+  // Coin management
   const fetchUserCoins = async (userID) => {
+    if (!userID) return;
+    
     try {
       const token = await AsyncStorage.getItem("accessToken");
-      if (!token) throw new Error("No access token found");
+      if (!token) return;
 
       const response = await axios.get(
         `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/user-total-coin/${userID}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.data?.status) {
         const coins = response.data.data || [];
-        const totalCount =
-          coins.length > 0 ? coins[coins.length - 1].totalCount : 0;
-
-        setUserCoins(totalCount);
+        const totalCount = coins.length > 0 ? coins[coins.length - 1].totalCount : 0;
         dispatch(setTotal(totalCount));
       }
     } catch (error) {
-      console.error("Error fetching user coins:", error.message);
+      console.error("Error fetching user coins:", error);
       setError(error.message);
+    } finally {
+      dispatch(completeRefresh());
     }
   };
 
+  // Initial load
   useEffect(() => {
-    const getUser = async () => {
+    const loadInitialData = async () => {
+
+      
       try {
+        // First try to get user from Redux
+        if (user?.userID) {        
+          await fetchUserCoins(user.userID);
+          return;
+        }
+        
+        // Fallback to AsyncStorage if Redux user not available
         const storedUser = await AsyncStorage.getItem("User");
         if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
           if (parsedUser?.userID) {
-            fetchUserCoins(parsedUser.userID);
+            await fetchUserCoins(parsedUser.userID);
           }
         }
       } catch (e) {
-        console.error("Error loading user from AsyncStorage:", e);
+        console.error("Initial load error:", e);
       }
     };
-    getUser();
+
+    loadInitialData();
   }, []);
+
+  // Refresh when shouldRefresh changes
+  useEffect(() => {
+    if (shouldRefresh && user?.userID) {
+      fetchUserCoins(user.userID);
+    }
+  }, [shouldRefresh, user?.userID]);
+
+  // Display loading state if needed
+  if (coinsStatus === 'loading') {
+    return (
+      <View style={isTransparent ? stylesHeader.headerTransparent : stylesHeader.header}>
+        <ActivityIndicator size="small" color="#c62828" />
+      </View>
+    );
+  }
+
+
   return (
     <>
       {/* Header */}
@@ -114,7 +150,7 @@ export default function HeaderForm({ isTransparent = false }) {
             onPress={toggleMenu}
             style={stylesHeader.profileContainer}
           >
-            {user.profilePic ? (
+            {user?.profilePic ? (
               <Image
                 source={{
                   uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${user.profilePic}`,
@@ -129,21 +165,23 @@ export default function HeaderForm({ isTransparent = false }) {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={stylesHeader.addButton}
-            onPress={() => router.push("./coinScreen")}
-          >
-            <View style={stylesHeader.coinContainer}>
-              <Ionicons name="star" size={16} color="gold" />
-              <Text style={stylesHeader.coinText}>{userCoins}</Text>
-              <Ionicons
-                style={stylesHeader.plusIcon}
-                name="add"
-                size={16}
-                color="black"
-              />
-            </View>
-          </TouchableOpacity>
+          {totalCoins !== null && (
+            <TouchableOpacity
+              style={stylesHeader.addButton}
+              onPress={() => router.push("./coinScreen")}
+            >
+              <View style={stylesHeader.coinContainer}>
+                <Ionicons name="star" size={16} color="gold" />
+                <Text style={stylesHeader.coinText}>{totalCoins}</Text>
+                <Ionicons
+                  style={stylesHeader.plusIcon}
+                  name="add"
+                  size={16}
+                  color="black"
+                />
+              </View>
+            </TouchableOpacity>
+          )}
         </View>
 
         <TouchableOpacity
@@ -178,7 +216,7 @@ export default function HeaderForm({ isTransparent = false }) {
                 router.replace("../pages/home");
               }}
             >
-              {user.profilePic ? (
+              {user?.profilePic ? (
                 <Image
                   source={{
                     uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${user.profilePic}`,
@@ -193,7 +231,7 @@ export default function HeaderForm({ isTransparent = false }) {
               )}
               <View style={stylesHeader.profileInfoContainer}>
                 <Text style={stylesHeader.profileName}>
-                  {user.userFirstName + " "}
+                  {user?.userFirstName + " "}
                 </Text>
                 <View style={stylesHeader.statsRow}>
                   <Ionicons name="diamond-outline" size={16} color="gray" />
@@ -206,9 +244,9 @@ export default function HeaderForm({ isTransparent = false }) {
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity style={stylesHeader.broadcastButton}>
+            {/* <TouchableOpacity style={stylesHeader.broadcastButton}>
               <Ionicons name="videocam" size={24} color="#fff" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         </View>
 
@@ -295,7 +333,7 @@ export default function HeaderForm({ isTransparent = false }) {
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={stylesHeader.notificationText}>Notifications</Text>
-        {user.profilePic ? (
+        {user?.profilePic ? (
           <Image
             source={{
               uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${user.profilePic}`,

@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   ActivityIndicator,
+  Animated,
+  Easing,
   TouchableOpacity,
   Image,
   SafeAreaView,
@@ -52,14 +54,14 @@ const ChatList = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/chats/get-chat-list/${user.userID}`
+        `${BASE_URL}/api/v1/chats/get-chat-list/${user.userID}`
       );
 
       const chatsWithUnreadCounts = await Promise.all(
         response.data.data.map(async (chat) => {
           try {
             const messagesResponse = await axios.get(
-              `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/chats/get-messages/${chat.chatID}`
+              `${BASE_URL}/api/v1/chats/get-messages/${chat.chatID}`
             );
 
             const unreadCount = messagesResponse.data.data.reduce(
@@ -102,7 +104,7 @@ const ChatList = () => {
   const markMessagesAsRead = async (chatID) => {
     try {
       await axios.patch(
-        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/chats/mark-as-read`,
+        `${BASE_URL}/api/v1/chats/mark-as-read`,
         { chatID, userID: user.userID }
       );
 
@@ -114,6 +116,39 @@ const ChatList = () => {
     } catch (error) {
       console.log("Error marking messages as read:", error);
     }
+  };
+
+  const FloatingNewChatButton = () => {
+    const [showText, setShowText] = useState(true);
+    const fadeAnim = useRef(new Animated.Value(1)).current;
+
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 500,
+          easing: Easing.ease,
+          useNativeDriver: true,
+        }).start(() => setShowText(false));
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }, []);
+
+    return (
+      <TouchableOpacity
+        style={styles.floatingButton}
+        onPress={() => router.push("../pages/NewChatScreen")}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="add" size={24} color="white" />
+        {showText && (
+          <Animated.View style={{ opacity: fadeAnim, marginLeft: 8 }}>
+            <Text style={styles.floatingButtonText}>New Chat</Text>
+          </Animated.View>
+        )}
+      </TouchableOpacity>
+    );
   };
 
   const renderChatItem = ({ item }) => {
@@ -128,11 +163,11 @@ const ChatList = () => {
               chatID: item.chatID,
               receiverID: item.receiverUserID || item.chatWith,
               receiverName: item.chatName,
-              receiverProfilePic: item.profilePic 
+              receiverProfilePic: item?.profilePic 
                 ? `${BASE_URL}${item.profilePic}`
                 : "https://i.pravatar.cc/150?img=3",
               chatType: item.chatType,
-              },
+            },
           });
         }}
       >
@@ -178,50 +213,54 @@ const ChatList = () => {
   };
 
   return (
-    <>
-      <SafeAreaView style={styles.safeArea}>
-        <Header title="Messages" showBackButton={false} />
-        <View style={styles.container}>
-          {loading && chatList.length === 0 ? (
-            <ActivityIndicator
-              size="large"
-              color="#FF7F50"
-              style={styles.loader}
-            />
-          ) : chatList.length > 0 ? (
-            <FlatList
-              data={chatList}
-              keyExtractor={(item) => item.chatID}
-              renderItem={renderChatItem}
-              contentContainerStyle={styles.listContent}
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={onRefresh}
-                  colors={["#FF7F50"]}
-                  tintColor="#FF7F50"
-                />
-              }
-              ListFooterComponent={<View style={styles.footerSpacer} />}
-            />
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Ionicons
-                name="chatbubbles-outline"
-                size={80}
-                color="#D3D3D3"
-                style={styles.emptyIcon}
+    <SafeAreaView style={styles.safeArea}>
+      <Header title="Messages" showBackButton={false} />
+      
+      <View style={styles.container}>
+        {loading && chatList.length === 0 ? (
+          <ActivityIndicator
+            size="large"
+            color="#FF7F50"
+            style={styles.loader}
+          />
+        ) : chatList.length > 0 ? (
+          <FlatList
+            data={chatList}
+            keyExtractor={(item) => item.chatID}
+            renderItem={renderChatItem}
+            contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#FF7F50"]}
+                tintColor="#FF7F50"
               />
-              <Text style={styles.emptyTitle}>No messages yet</Text>
-              <Text style={styles.emptySubtitle}>
-                Start a conversation with your friends
-              </Text>
-            </View>
-          )}
-        </View>
-        <Footer />
-      </SafeAreaView>
-    </>
+            }
+            ListFooterComponent={<View style={styles.footerSpacer} />}
+          />
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Ionicons
+              name="chatbubbles-outline"
+              size={80}
+              color="#D3D3D3"
+              style={styles.emptyIcon}
+            />
+            <Text style={styles.emptyTitle}>No messages yet</Text>
+            <Text style={styles.emptySubtitle}>
+              Start a conversation with your friends
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.floatingButtonContainer}>
+        <FloatingNewChatButton />
+      </View>
+
+      <Footer />
+    </SafeAreaView>
   );
 };
 
@@ -339,6 +378,31 @@ const styles = StyleSheet.create({
   },
   footerSpacer: {
     height: 20,
+  },
+  floatingButtonContainer: {
+    position: "absolute",
+    right: 20,
+    bottom: 80,
+    zIndex: 1,
+  },
+  floatingButton: {
+    backgroundColor: "#FF7F50",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 30,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  floatingButtonText: {
+    color: "white",
+    fontWeight: "500",
+    fontSize: 14,
   },
 });
 

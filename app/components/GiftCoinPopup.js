@@ -10,8 +10,11 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useToast } from 'react-native-toast-notifications'; // make sure you wrap your app with ToastProvider
+import { useDispatch } from 'react-redux';
+import { requestRefresh, updateFromTransaction } from '../Redux/coinSlice';
 
 const GiftCoinPopup = ({ visible, onClose, receiverId }) => {
+  const dispatch = useDispatch();
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
@@ -74,10 +77,17 @@ const GiftCoinPopup = ({ visible, onClose, receiverId }) => {
           type: 'success',
           placement: 'top',
         });
+        
+        // Update balance immediately if API returns new balance
+        if (response.data.updatedBalance !== undefined) {
+          dispatch(updateFromTransaction(response.data.updatedBalance));
+        } else {
+          // Fallback to refresh if no balance in response
+          dispatch(requestRefresh());
+        }
+        
         setSelectedAmount(null);
         onClose();
-      } else {
-        throw new Error(response.data.msg || "Failed to send coins");
       }
 
     } catch (error) {

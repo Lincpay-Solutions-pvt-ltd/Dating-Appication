@@ -312,13 +312,14 @@ export default function ChatsScreen() {
   };
 
   // Scroll to bottom helper
-  const scrollToBottom = () => {
-    if (flatListRef.current && messages.length > 0) {
-      setTimeout(() => {
-        flatListRef.current.scrollToEnd({ animated: false });
-      }, 100);
-    }
-  };
+    const scrollToBottom = () => {
+      if (flatListRef.current && messages.length > 0) {
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: false });
+        }, 100);
+      }
+    };
+
 
   // Render message item
   const renderMessage = ({ item }) => {

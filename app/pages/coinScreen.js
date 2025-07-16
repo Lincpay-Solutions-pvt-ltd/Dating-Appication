@@ -16,13 +16,15 @@ import axios from "axios";
 import { useToast } from "react-native-toast-notifications";
 import { useRouter } from "expo-router";
 import { WebView } from "react-native-webview";
+import { useDispatch, useSelector } from "react-redux";
+import { requestRefresh, updateFromTransaction } from "../Redux/coinSlice";
 
 const CoinScreen = () => {
   const router = useRouter();
   const toast = useToast();
+  const dispatch = useDispatch();
 
   const [offers, setOffers] = useState([]);
-  const [userCoins, setUserCoins] = useState(0);
   const [loading, setLoading] = useState(true);
   const [paymentURL, setPaymentURL] = useState(null);
   const [user, setUser] = useState({});
@@ -30,16 +32,21 @@ const CoinScreen = () => {
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
+  // Get coins from Redux store instead of local state
+  const totalCoins = useSelector((state) => state.coins?.total ?? 0);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const userData = await AsyncStorage.getItem("User");
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
-        await Promise.all([
-          fetchOffers(),
-          fetchUserCoins(parsedUser?.userID)
-        ]);
+        await fetchOffers();
+        
+        // Trigger initial refresh of coins through Redux
+        if (parsedUser?.userID) {
+          dispatch(requestRefresh());
+        }
       } catch (error) {
         console.error("Error in fetchData:", error);
         Alert.alert("Error", "Failed to load data.");
@@ -60,22 +67,6 @@ const CoinScreen = () => {
       }
     } catch (error) {
       console.error("Error fetching offers:", error);
-    }
-  };
-
-  const fetchUserCoins = async (userID) => {
-    try {
-      const response = await axios.get(
-        `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/coins/user-total-coin/${userID}`
-      );
-      
-      if (response.data?.status) {
-        const coins = response.data.data || [];
-        const totalCount = coins.length > 0 ? coins[coins.length - 1].totalCount : 0;
-        setUserCoins(totalCount);
-      }
-    } catch (error) {
-      console.error("Error fetching user coins:", error);
     }
   };
 
@@ -106,7 +97,15 @@ const CoinScreen = () => {
 
       if (response.data?.status) {
         toast.show(`✅ Purchased ${offer.coinAmount} coins!`, { type: "success" });
-        await fetchUserCoins(user.userID);
+        
+        // Update balance immediately if API returns new balance
+        if (response.data.updatedBalance !== undefined) {
+          dispatch(updateFromTransaction(response.data.updatedBalance));
+        } else {
+          // Fallback to refresh if no balance in response
+          dispatch(requestRefresh());
+        }
+        
         setShowSuccessModal(true);
       } else {
         toast.show(`❌ ${response.data?.msg || "Purchase failed"}`, { type: "danger" });
@@ -144,17 +143,19 @@ const CoinScreen = () => {
         <Text style={styles.balanceLabel}>Your Balance</Text>
         <View style={styles.balanceRow}>
           <Image style={styles.coinIcon} source={require("../../assets/images/coin.png")} />
-          <Text style={styles.coinBalance}>{userCoins}</Text>
+          <Text style={styles.coinBalance}>{totalCoins}</Text>
         </View>
       </View>
+
       <View style={styles.balanceContainer}>
-      <TouchableOpacity
-        style={styles.historyButton}
-        onPress={() => router.push("../components/TransactionHistoryScreen")}
-      >
-        <Text style={styles.historyButtonText}>View Transaction History</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.historyButton}
+          onPress={() => router.push("../components/TransactionHistoryScreen")}
+        >
+          <Text style={styles.historyButtonText}>View Transaction History</Text>
+        </TouchableOpacity>
       </View>
+
       <Text style={styles.sectionTitle}>Available Packages</Text>
 
       {offers.length === 0 ? (

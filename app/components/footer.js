@@ -26,7 +26,10 @@ export default function Footer() {
           size={28}
           color={isActive("/pages/home") ? "#e91e63" : "#fff"}
         />
-        <Text style={styles.footerText}>Home</Text>
+        <Text style={[
+          styles.footerText,
+          isActive("/pages/home") && styles.activeText
+        ]}>Home</Text>
       </TouchableOpacity>
 
       {/* Following */}
@@ -40,7 +43,7 @@ export default function Footer() {
           size={28}
           color={isActive("/pages/Following") ? "#e91e63" : "#fff"}
         />
-        <Text style={styles.footerText}>Following</Text>
+        <Text style={[styles.footerText, isActive("/pages/Following") && styles.activeText]}>Following</Text>
       </TouchableOpacity>
 
       {/* Explore */}
@@ -54,14 +57,14 @@ export default function Footer() {
           size={28}
           color={isActive("/pages/explore") ? "#e91e63" : "#fff"}
         />
-        <Text style={styles.footerText}>Explore</Text>
+        <Text style={[styles.footerText, isActive("/pages/explore") && styles.activeText]}>Explore</Text>
       </TouchableOpacity>
 
       {/* Reels / Moments */}
       {pathname === "/pages/reels" ? (
         <View style={styles.item}>
           <EntypoIcons style={styles.icon} name="folder-video" size={28} color="#e91e63" />
-          <Text style={styles.footerText}>Moments</Text>
+          <Text style={[styles.footerText, isActive("/pages/reels") && styles.activeText]}>Moments</Text>
         </View>
       ) : (
         <TouchableOpacity
@@ -74,11 +77,11 @@ export default function Footer() {
             size={28}
             color="#fff"
           />
-          <Text style={styles.footerText}>Moments</Text>
+          <Text style={[styles.footerText, isActive("/pages/profile") && styles.activeText]}>Moments</Text>
         </TouchableOpacity>
       )}
 
-      {/* Chat List */}
+      {/* Profile */}
       <TouchableOpacity
         style={styles.item}
         onPress={() => router.push("../pages/profile")}
@@ -111,12 +114,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   icon: {
-    marginBottom: 2,
+    marginBottom: 4,
   },
   footerText: {
-    color: "#fff",
+    color: '#fff', // Default text color
     fontSize: 12,
     fontWeight: "bold",
     textAlign: "center",
+  },
+  activeText: {
+    color: '#e91e63',
   },
 });

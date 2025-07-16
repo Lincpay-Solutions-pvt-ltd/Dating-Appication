@@ -28,10 +28,10 @@ export default function HomeScreen() {
       <Footer />
       <View style={styles.imageWrapper}>
        <TouchableOpacity onPress={() => console.log("Video call button pressed")}>
-        <Image
+        {/* <Image
           source={require("../../assets/images/video-camera.png")}
           style={styles.Videoimage}
-        />
+        /> */}
        </TouchableOpacity>
       </View>
     </>
