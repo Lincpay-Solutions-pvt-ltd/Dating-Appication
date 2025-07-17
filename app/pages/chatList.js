@@ -12,11 +12,12 @@ import {
   SafeAreaView,
   RefreshControl,
 } from "react-native";
-import Header from "../components/header";
+// import Header from "../components/header";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
+import Icon from "react-native-vector-icons/MaterialIcons";
 
 const ChatList = () => {
   const [user, setUser] = useState({});
@@ -143,7 +144,7 @@ const ChatList = () => {
         <Ionicons name="add" size={24} color="white" />
         {showText && (
           <Animated.View style={{ opacity: fadeAnim, marginLeft: 8 }}>
-            <Text style={styles.floatingButtonText}>New Chat</Text>
+            <Text style={styles.floatingButtonText}>Chat List</Text>
           </Animated.View>
         )}
       </TouchableOpacity>
@@ -213,7 +214,19 @@ const ChatList = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <Header title="Messages" showBackButton={false} />
+      {/* <Header title="Messages" showBackButton={false} /> */}
+            <View style={styles.header}>
+              <TouchableOpacity onPress={() => router.back()}>
+                <Icon name="arrow-back" size={24} color="#333" />
+              </TouchableOpacity>
+              <View style={styles.headerCenter}>
+                <Text style={styles.title}>Chat List</Text>
+                {/* <Text style={styles.totalFollowers}>
+                  Total Followers: {totalCount}
+                </Text> */}
+              </View>
+              <View style={{ width: 24 }} />
+            </View>
       
       <View style={styles.container}>
         {loading && chatList.length === 0 ? (
@@ -400,6 +413,29 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "500",
     fontSize: 14,
+  },
+    header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#EEE",
+  },
+  headerCenter: {
+    alignItems: "center",
+    flex: 1,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+  },
+  totalFollowers: {
+    fontSize: 14,
+    marginTop: 4,
+    color: "#666",
   },
 });
 

@@ -125,15 +125,6 @@ export default function HeaderForm({ isTransparent = false }) {
     }
   }, [shouldRefresh, user?.userID]);
 
-  // Display loading state if needed
-  if (coinsStatus === 'loading') {
-    return (
-      <View style={isTransparent ? stylesHeader.headerTransparent : stylesHeader.header}>
-        <ActivityIndicator size="small" color="#c62828" />
-      </View>
-    );
-  }
-
 
   return (
     <>

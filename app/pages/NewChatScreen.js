@@ -14,8 +14,6 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { useRouter } from "expo-router";
-import Header from "../components/header";
-import Footer from "../components/footer";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
 const NewChatScreen = () => {
@@ -251,7 +249,6 @@ const renderItem = ({ item }) => (
           }
         />
       </View>
-      <Footer />
     </SafeAreaView>
     </>
   );
