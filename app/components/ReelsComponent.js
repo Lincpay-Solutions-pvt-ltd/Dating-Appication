@@ -56,14 +56,14 @@ export default function ReelsComponent(props) {
     const getUser = async () => {
       try {
         const user = await AsyncStorage.getItem("User");
-        console.log("getUser called = ", user);
+        // console.log("getUser called = ", user);
 
         if (user) {
           const parsedUser = JSON.parse(user);
           const userID = parsedUser.userID;
           setCurrentUserID(userID);
           setUserPic(parsedUser?.profilePic);
-          console.log("Current User ID = ", userID);
+          // console.log("Current User ID = ", userID);
         }
       } catch (err) {
         console.error("Error parsing user from AsyncStorage", err);
@@ -109,6 +109,7 @@ export default function ReelsComponent(props) {
   };
 
   const ReelItem = ({ item, shouldPlay, openShareOptions }) => {
+    
     const toast = useToast(); 
 
     const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -163,7 +164,6 @@ export default function ReelsComponent(props) {
       setTotalLikes(item.likes || 0);
       setTotalComments(item.comments || 0);
       setReelUserProfilePic(item.profilePic || null);
-      console.log("item = >>>>>>", item.profilePic);
     }, []);
 
     useEffect(() => {
@@ -556,25 +556,34 @@ export default function ReelsComponent(props) {
           </View>
 
           <View style={styles.profileContainer}>
+          <TouchableOpacity onPress={() => router.push("../pages/profile")}>
             <Image
-              source={{
-                uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
-              }}
+              source={
+                item.profilePic
+                  ? {
+                      uri: `${process.env.EXPO_PUBLIC_API_BASE_URL}${item.profilePic}`,
+                    }
+                  : item.userGender === 2
+                  ? require("../../assets/images/profile-female.jpg")
+                  : require("../../assets/images/profile.jpg")
+              }
               style={styles.profileImage}
             />
+          </TouchableOpacity>
             <View style={styles.profileInfo}>
-              <Text style={styles.username}>{item.userName}</Text>
-
+               <Text style={[styles.username, {color: '#fff'}]}>
+                  {item?.userName || item?.userFirstName || 'Default Text'}
+                </Text>
               <TouchableOpacity onPress={() => setExpanded(!expanded)}>
                 <Text
                   style={styles.truncatedDescription}
                   numberOfLines={expanded ? 0 : 2}
-                  ellipsizeMode="tail"
+                  // ellipsizeMode="tail"
                 >
                   <Text style={styles.momentDsc}>
                     {!expanded && item.description.length > 30 ? (
                       <>
-                        {item.description.slice(0, 40)}
+                        {item.description.slice(0, 20)}
                         <Text style={styles.desc}> Read more...</Text>
                       </>
                     ) : (
@@ -989,8 +998,9 @@ const styles = StyleSheet.create({
   },
   profileInfo: {
     paddingLeft: 20,
+    width: 250,
   },
-  description: { color: "#eaeaea", fontSize: 13, marginTop: 6},
+  description: { color: "#eaeaea", fontSize: 13, marginTop: 6 },
   iconContainer: {
     position: "absolute",
     bottom: 160,
@@ -1299,8 +1309,6 @@ const styles = StyleSheet.create({
     color: "#eaeaea",
     fontSize: 13,
     marginTop: 4,
-    marginLeft: 20,
-    width: 200
   },
   
 }});

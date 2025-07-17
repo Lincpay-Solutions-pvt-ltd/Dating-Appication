@@ -103,29 +103,7 @@ const VideoList = (props) => {
     }
   }, [haveMoreReels, pageNumber, props.userID, fetchReel]);
 
-  // Memoize header to render only once per call
-  // const staticHeader = useMemo(
-  //   () => (
-  //     <View
-  //       style={{
-  //         //display: props.userID ? "flex" : "none",
-  //         flexDirection: "row",
-  //         alignItems: "center",
-  //       }}
-  //     >
-  //       <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
-  //       <View>
-  //         <Text
-  //           style={{ ...styles.text, ...{ width: 70, textAlign: "center" } }}
-  //         >
-  //           Posts
-  //         </Text>
-  //       </View>
-  //       <View style={{ flex: 1, height: 1, backgroundColor: "black" }} />
-  //     </View>
-  //   ),
-  //   [props.userID]
-  // );
+
 
   const screenWidth = Dimensions.get("screen").width;
 

@@ -192,6 +192,7 @@ const renderItem = ({ item }) => (
           setFollowers([...followers]);
         }}
       />
+
       <View style={styles.textContainer}>
         <Text style={styles.contactName}>
           {item.userFirstName} {item.userSurname}
