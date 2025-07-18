@@ -9,6 +9,10 @@ import {
   ScrollView,
   Modal,
   Pressable,
+  KeyboardAvoidingView,
+  Platform,
+  Animated,
+  Easing
 } from "react-native";
 import { useRouter } from "expo-router";
 import axios from "axios";
@@ -16,38 +20,73 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import FontistoIcons from "react-native-vector-icons/Fontisto";
 import { Ionicons } from "@expo/vector-icons";
+import { ActivityIndicator } from "react-native-paper";
+import { login } from "../Redux/authSlice";
+import { useDispatch } from "react-redux";
+import { useToast } from "react-native-toast-notifications";
+
 
 export default function SignUpScreen() {
   const router = useRouter();
-  const [userFirstName, setFirstName] = useState(null);
-  const [userSurname, setSurname] = useState(null);
-  const [userEmail, setUserEmail] = useState(null);
-  const [userPassword, setUserPassword] = useState(null);
-  const [userConfirmPassword, setUserConfirmPassword] = useState(null);
+  const [userFirstName, setFirstName] = useState("");
+  const [userSurname, setSurname] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [userPassword, setUserPassword] = useState("");
+  const [userConfirmPassword, setUserConfirmPassword] = useState("");
   const [userGenderID, setUserGenderID] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setError] = useState(null);
   const [isValidating, setIsValidating] = useState(false);
   const [userDateOfBirth, setUserDateOfBirth] = useState("");
   const [showCalendar, setShowCalendar] = useState(false);
-
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [shakeAnimation] = useState(new Animated.Value(0));
+  const dispatch = useDispatch();
+  const toast = useToast();
 
   useEffect(() => {
     if (selectedDay && selectedMonth !== null && selectedYear) {
-      const formattedDate = `${("0" + selectedDay).slice(-2)}-${(
+      const formattedDate = `${selectedYear}-${(
         "0" +
         (selectedMonth + 1)
-      ).slice(-2)}-${selectedYear}`;
+      ).slice(-2)}-${("0" + selectedDay).slice(-2)}`;
       setUserDateOfBirth(formattedDate);
     }
   }, [selectedDay, selectedMonth, selectedYear]);
+
+  const triggerShake = () => {
+    Animated.sequence([
+      Animated.timing(shakeAnimation, {
+        toValue: 10,
+        duration: 50,
+        easing: Easing.linear,
+        useNativeDriver: true
+      }),
+      Animated.timing(shakeAnimation, {
+        toValue: -10,
+        duration: 50,
+        useNativeDriver: true
+      }),
+      Animated.timing(shakeAnimation, {
+        toValue: 10,
+        duration: 50,
+        useNativeDriver: true
+      }),
+      Animated.timing(shakeAnimation, {
+        toValue: 0,
+        duration: 50,
+        useNativeDriver: true
+      })
+    ]).start();
+  };
+
   const handleSignUp = async () => {
     setIsValidating(true);
+
     if (
       !userFirstName ||
       !userSurname ||
@@ -56,23 +95,33 @@ export default function SignUpScreen() {
       !userConfirmPassword
     ) {
       setError("All fields are required");
+      triggerShake();
       setIsValidating(false);
       return;
     }
     if (!userEmail.includes("@")) {
-      setError("Invalid email address");
+      setError("Please enter a valid email address");
+      triggerShake();
       setIsValidating(false);
       return;
     } else if (userPassword.length < 6) {
       setError("Password must be at least 6 characters");
+      triggerShake();
       setIsValidating(false);
       return;
     } else if (userPassword !== userConfirmPassword) {
       setError("Passwords do not match");
+      triggerShake();
       setIsValidating(false);
       return;
     } else if (!userDateOfBirth) {
-      setError("Enter proper date");
+      setError("Please select your date of birth");
+      triggerShake();
+      setIsValidating(false);
+      return;
+    } else if (!userGenderID) {
+      setError("Please select your gender");
+      triggerShake();
       setIsValidating(false);
       return;
     } else {
@@ -104,16 +153,22 @@ export default function SignUpScreen() {
         )
         .then(async (response) => {
           if (response.data.status === true) {
-            Alert.alert("Sign Up Successful", "please wait while logging in");
+            toast.show(`🎉 Sign Up Successful!`, { type: "success", placement: "top" });
             await login_(userEmail, userPassword);
           }
         })
         .catch((error) => {
-          Alert.alert("Sign Up Failed", error.toString());
+          if (error.response.data.msg) {
+            Alert.alert("Sign Up Failed", error.response.data.msg);
+          } else if (error.response.data.data.message) {
+            Alert.alert("Sign Up Failed", error.response.data.message);
+          } else {
+            Alert.alert("Sign Up Failed", error.toString());
+          }
           setIsValidating(false);
         });
     } catch (err) {
-      console.log("Cache", err);
+      console.log("Error:", err);
     }
     setIsValidating(false);
     setLoading(false);
@@ -147,9 +202,10 @@ export default function SignUpScreen() {
             "User",
             JSON.stringify(response.data.data.UserData)
           );
+          dispatch(login(response.data.data.UserData));
           router.replace("./home");
         } else {
-          Alert.alert("Login Failed", "Invalid email or password");
+          toast.show(`❌ Login Failed!`, { type: "danger", placement: "top" });
         }
         setIsValidating(false);
       })
@@ -159,178 +215,245 @@ export default function SignUpScreen() {
       });
   };
 
+  const getCurrentAge = () => {
+    if (!selectedYear) return null;
+    return new Date().getFullYear() - selectedYear;
+  };
+
   return (
     <LinearGradient
       colors={["#fdf2f8", "#ffffff", "#fef7ed"]}
       style={styles.container}
     >
-      <ScrollView
-        scrollEnabled={false}
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
       >
-        <View style={styles.formBox}>
-          <View style={styles.header}>
-            <View style={styles.iconContainer}>
-              <FontistoIcons name="person" size={28} color="#fff" />
-            </View>
-            <Text style={styles.title}>Create Account</Text>
-          </View>
-
-          <View style={styles.formContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="First Name"
-              placeholderTextColor="#9ca3af"
-              value={userFirstName}
-              onChangeText={setFirstName}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Surname"
-              placeholderTextColor="#9ca3af"
-              value={userSurname}
-              onChangeText={setSurname}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Email Address"
-              placeholderTextColor="#9ca3af"
-              keyboardType="email-address"
-              value={userEmail}
-              onChangeText={setUserEmail}
-            />
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={styles.passwordInput}
-                placeholder="Password"
-                placeholderTextColor="#9ca3af"
-                secureTextEntry={!showPassword}
-                value={userPassword}
-                onChangeText={setUserPassword}
-              />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Ionicons
-                  name={showPassword ? "eye-off" : "eye"}
-                  size={20}
-                  color="#9ca3af"
-                />
-              </TouchableOpacity>
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Animated.View style={[styles.formBox, { transform: [{ translateX: shakeAnimation }] }]}>
+            <View style={styles.header}>
+              <View style={styles.iconContainer}>
+                <FontistoIcons name="person" size={28} color="#fff" />
+              </View>
+              <Text style={styles.title}>Create Account</Text>
+              <Text style={styles.subtitle}>Join our community today</Text>
             </View>
 
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={styles.passwordInput}
-                placeholder="Confirm Password"
-                placeholderTextColor="#9ca3af"
-                secureTextEntry={!showConfirmPassword}
-                value={userConfirmPassword}
-                onChangeText={setUserConfirmPassword}
-              />
-              <TouchableOpacity
-                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                <Ionicons
-                  name={showConfirmPassword ? "eye-off" : "eye"}
-                  size={20}
-                  color="#9ca3af"
-                />
-              </TouchableOpacity>
-            </View>
+            <View style={styles.formContainer}>
+              <View style={styles.nameContainer}>
+                <View style={[styles.inputContainer, { flex: 1, marginRight: 10 }]}>
+                  <Text style={styles.inputLabel}>First Name</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="John"
+                    placeholderTextColor="#9ca3af"
+                    value={userFirstName}
+                    onChangeText={setFirstName}
+                    autoCapitalize="words"
+                  />
+                </View>
+                <View style={[styles.inputContainer, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>Last Name</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Doe"
+                    placeholderTextColor="#9ca3af"
+                    value={userSurname}
+                    onChangeText={setSurname}
+                    autoCapitalize="words"
+                  />
+                </View>
+              </View>
 
-            <TouchableOpacity onPress={() => setShowCalendar(true)}>
-              <View pointerEvents="none">
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Email Address</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Date of Birth (DD-MM-YYYY)"
+                  placeholder="your@email.com"
                   placeholderTextColor="#9ca3af"
-                  value={userDateOfBirth}
-                  editable={false}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={userEmail}
+                  onChangeText={setUserEmail}
                 />
               </View>
-            </TouchableOpacity>
 
-            <View style={styles.genderContainer}>
-              <Text style={styles.genderLabel}>Gender</Text>
-              <View style={styles.genderButtons}>
-                <TouchableOpacity
-                  style={[
-                    styles.genderButton,
-                    userGenderID === 1 && styles.genderButtonSelected,
-                  ]}
-                  onPress={() => setUserGenderID(1)}
-                >
-                  <Ionicons
-                    name="male"
-                    size={30}
-                    color={userGenderID === 1 ? "#fff" : "#000"}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Password</Text>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={styles.passwordInput}
+                    placeholder="••••••••"
+                    placeholderTextColor="#9ca3af"
+                    secureTextEntry={!showPassword}
+                    value={userPassword}
+                    onChangeText={setUserPassword}
                   />
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeIcon}
+                  >
+                    <Ionicons
+                      name={showPassword ? "eye-off" : "eye"}
+                      size={20}
+                      color="#9ca3af"
+                    />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.passwordHint}>Must be at least 6 characters</Text>
+              </View>
 
-                <TouchableOpacity
-                  style={[
-                    styles.genderButton,
-                    userGenderID === 2 && styles.genderButtonSelected,
-                  ]}
-                  onPress={() => setUserGenderID(2)}
-                >
-                  <Ionicons
-                    name="female"
-                    size={30}
-                    color={userGenderID === 2 ? "#fff" : "#000"}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Confirm Password</Text>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={styles.passwordInput}
+                    placeholder="••••••••"
+                    placeholderTextColor="#9ca3af"
+                    secureTextEntry={!showConfirmPassword}
+                    value={userConfirmPassword}
+                    onChangeText={setUserConfirmPassword}
                   />
+                  <TouchableOpacity
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={styles.eyeIcon}
+                  >
+                    <Ionicons
+                      name={showConfirmPassword ? "eye-off" : "eye"}
+                      size={20}
+                      color="#9ca3af"
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Date of Birth</Text>
+                <TouchableOpacity
+                  onPress={() => setShowCalendar(true)}
+                  style={styles.dateInput}
+                >
+                  <Text style={userDateOfBirth ? styles.dateText : styles.datePlaceholder}>
+                    {userDateOfBirth || "YYYY-MM-dd"}
+                  </Text>
+                  <Ionicons name="calendar" size={20} color="#9ca3af" />
                 </TouchableOpacity>
+                {selectedYear && (
+                  <Text style={styles.ageText}>You'll be {getCurrentAge()} years old</Text>
+                )}
               </View>
-            </View>
 
-            {err && (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{err}</Text>
+              <View style={styles.genderContainer}>
+                <Text style={styles.inputLabel}>Gender</Text>
+                <View style={styles.genderButtons}>
+                  <TouchableOpacity
+                    style={[
+                      styles.genderButton,
+                      userGenderID === 1 && styles.genderButtonSelected,
+                    ]}
+                    onPress={() => setUserGenderID(1)}
+                  >
+                    <Ionicons
+                      name="male"
+                      size={24}
+                      color={userGenderID === 1 ? "#fff" : "#f472b6"}
+                    />
+                    <Text style={[
+                      styles.genderButtonText,
+                      userGenderID === 1 && styles.genderButtonTextSelected
+                    ]}>
+                      Male
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.genderButton,
+                      userGenderID === 2 && styles.genderButtonSelected,
+                    ]}
+                    onPress={() => setUserGenderID(2)}
+                  >
+                    <Ionicons
+                      name="female"
+                      size={24}
+                      color={userGenderID === 2 ? "#fff" : "#f472b6"}
+                    />
+                    <Text style={[
+                      styles.genderButtonText,
+                      userGenderID === 2 && styles.genderButtonTextSelected
+                    ]}>
+                      Female
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            )}
 
-            <TouchableOpacity
-              style={[
-                styles.signUpButton,
-                (loading || isValidating) && styles.signUpButtonDisabled,
-              ]}
-              onPress={handleSignUp}
-              disabled={loading || isValidating}
-            >
-              <LinearGradient
-                colors={["#f472b6", "#ec4899"]}
-                style={styles.buttonGradient}
+              {err && (
+                <View style={styles.errorContainer}>
+                  <Ionicons name="warning" size={16} color="#dc2626" />
+                  <Text style={styles.errorText}>{err}</Text>
+                </View>
+              )}
+
+              <TouchableOpacity
+                style={[
+                  styles.signUpButton,
+                  (loading || isValidating) && styles.signUpButtonDisabled,
+                ]}
+                onPress={handleSignUp}
+                disabled={loading || isValidating}
               >
-                <Text style={styles.signUpButtonText}>
-                  {loading || isValidating ? "Signing Up..." : "Sign Up"}
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            <View style={styles.loginContainer}>
-              <Text style={styles.loginText}>Already have an account? </Text>
-              <TouchableOpacity onPress={() => router.push("../pages/login")}>
-                <Text style={styles.loginLink}>Log in</Text>
+                <LinearGradient
+                  colors={["#f472b6", "#ec4899"]}
+                  style={styles.buttonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  {loading || isValidating ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.signUpButtonText}>Create Account</Text>
+                  )}
+                </LinearGradient>
               </TouchableOpacity>
+
+              <View style={styles.loginContainer}>
+                <Text style={styles.loginText}>Already have an account? </Text>
+                <TouchableOpacity
+                  onPress={() => router.push("../pages/login")}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.loginLink}>Log in</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        </View>
-      </ScrollView>
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Calendar Modal */}
       <Modal
-        animationType="fade"
+        animationType="slide"
         transparent={true}
         visible={showCalendar}
         onRequestClose={() => setShowCalendar(false)}
       >
         <View style={styles.modalOverlay}>
+          <Pressable
+            style={styles.modalBackdrop}
+            onPress={() => setShowCalendar(false)}
+          />
           <View style={styles.modalContainer}>
             <View style={styles.calendarContainer}>
-              {/* Header with gradient */}
               <LinearGradient
-                colors={["#f472b6", "#f472b6"]}
+                colors={["#f472b6", "#ec4899"]}
                 style={styles.modalHeader}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
               >
                 <Text style={styles.modalTitle}>Select Date of Birth</Text>
                 <TouchableOpacity
@@ -341,7 +464,6 @@ export default function SignUpScreen() {
                 </TouchableOpacity>
               </LinearGradient>
 
-              {/* Month Selector */}
               <View style={styles.selectorSection}>
                 <Text style={styles.selectorLabel}>Month</Text>
                 <ScrollView
@@ -362,7 +484,7 @@ export default function SignUpScreen() {
                       <LinearGradient
                         colors={
                           selectedMonth === i
-                            ? ["#f472b6", "#f472b6"]
+                            ? ["#f472b6", "#ec4899"]
                             : ["#f5f5f5", "#f5f5f5"]
                         }
                         style={styles.scrollItemGradient}
@@ -384,7 +506,6 @@ export default function SignUpScreen() {
                 </ScrollView>
               </View>
 
-              {/* Year Selector */}
               <View style={styles.selectorSection}>
                 <Text style={styles.selectorLabel}>Year</Text>
                 <ScrollView
@@ -407,7 +528,7 @@ export default function SignUpScreen() {
                         <LinearGradient
                           colors={
                             selectedYear === year
-                              ? ["#f472b6", "#f472b6"]
+                              ? ["#f472b6", "#ec4899"]
                               : ["#f5f5f5", "#f5f5f5"]
                           }
                           style={styles.scrollItemGradient}
@@ -428,7 +549,6 @@ export default function SignUpScreen() {
                 </ScrollView>
               </View>
 
-              {/* Day Grid */}
               <View style={styles.daySection}>
                 <Text style={styles.selectorLabel}>Day</Text>
                 <View style={styles.calendarGrid}>
@@ -453,7 +573,7 @@ export default function SignUpScreen() {
                         <LinearGradient
                           colors={
                             selectedDay === day
-                              ? ["#f472b6", "#f472b6"]
+                              ? ["#f472b6", "#ec4899"]
                               : ["#f0f0f0", "#fafafa"]
                           }
                           style={styles.dayButtonGradient}
@@ -473,17 +593,18 @@ export default function SignUpScreen() {
                 </View>
               </View>
 
-              {/* Done Button */}
               <TouchableOpacity
                 style={styles.modalDoneBtn}
                 onPress={() => setShowCalendar(false)}
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={["#f472b6", "#f472b6"]}
+                  colors={["#f472b6", "#ec4899"]}
                   style={styles.doneButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
                 >
-                  <Text style={styles.modalDoneBtnText}>Done</Text>
+                  <Text style={styles.modalDoneBtnText}>Confirm Date</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -502,12 +623,12 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     paddingHorizontal: 20,
-    paddingVertical: 1,
+    paddingVertical: 20,
   },
   formBox: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    backgroundColor: "rgba(255, 255, 255, 0.97)",
     borderRadius: 24,
-    padding: 32,
+    padding: 24,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -519,17 +640,17 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    marginBottom: 5,
+    marginBottom: 16,
   },
   iconContainer: {
-    width: 54,
-    height: 54,
-    borderRadius: 32,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: "#f472b6",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
-    shadowColor: "#fff",
+    shadowColor: "#f472b6",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -538,105 +659,148 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  iconText: {
-    fontSize: 32,
-    color: "white",
-  },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "bold",
-    color: "#000",
-    marginBottom: 8,
+    color: "#111827",
+    marginBottom: 4,
     textAlign: "center",
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#6b7280",
     textAlign: "center",
   },
   formContainer: {
-    gap: 14,
+    gap: 16,
   },
-  input: {
-    height: 56,
-    borderWidth: 2,
-    borderColor: "#fce7f3",
-    borderRadius: 28,
-    paddingHorizontal: 20,
-    fontSize: 16,
-    backgroundColor: "#ffffff",
-    color: "#374151",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+  nameContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
-  genderContainer: {
-    marginVertical: 8,
+  inputContainer: {
+    marginBottom: 8,
   },
-  genderLabel: {
-    fontSize: 16,
+  inputLabel: {
+    fontSize: 14,
     fontWeight: "600",
     color: "#374151",
-    marginBottom: 12,
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+  input: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    fontSize: 15,
+    backgroundColor: "#ffffff",
+    color: "#111827",
+  },
+  dateInput: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    fontSize: 15,
+    backgroundColor: "#ffffff",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  dateText: {
+    color: "#111827",
+    fontSize: 15,
+  },
+  datePlaceholder: {
+    color: "#9ca3af",
+    fontSize: 15,
+  },
+  ageText: {
+    fontSize: 12,
+    color: "#6b7280",
+    marginTop: 4,
+    marginLeft: 4,
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: 50,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    backgroundColor: "#ffffff",
+  },
+  passwordInput: {
+    flex: 1,
+    fontSize: 15,
+    color: "#111827",
+    paddingVertical: 0,
+  },
+  eyeIcon: {
+    padding: 8,
+    marginLeft: 4,
+  },
+  passwordHint: {
+    fontSize: 12,
+    color: "#6b7280",
+    marginTop: 4,
+    marginLeft: 4,
+  },
+  genderContainer: {
+    marginBottom: 8,
   },
   genderButtons: {
     flexDirection: "row",
     gap: 12,
+    marginTop: 8,
   },
   genderButton: {
     flex: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 28,
-    borderWidth: 2,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1,
     borderColor: "#fce7f3",
     backgroundColor: "#ffffff",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
   },
   genderButtonSelected: {
     backgroundColor: "#f472b6",
     borderColor: "#f472b6",
-    shadowColor: "#f472b6",
-    shadowOpacity: 0.3,
   },
   genderButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#374151",
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#f472b6",
   },
   genderButtonTextSelected: {
     color: "#ffffff",
   },
   errorContainer: {
     backgroundColor: "#fef2f2",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 28,
+    padding: 12,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: "#fecaca",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   errorText: {
     color: "#dc2626",
     fontSize: 14,
-    textAlign: "center",
     fontWeight: "500",
   },
   signUpButton: {
-    borderRadius: 28,
+    borderRadius: 14,
     overflow: "hidden",
+    marginTop: 8,
     shadowColor: "#f472b6",
     shadowOffset: {
       width: 0,
@@ -647,16 +811,16 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   signUpButtonDisabled: {
-    opacity: 0.6,
+    opacity: 0.7,
   },
   buttonGradient: {
-    paddingVertical: 18,
+    paddingVertical: 16,
     alignItems: "center",
   },
   signUpButtonText: {
     color: "#ffffff",
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "600",
   },
   loginContainer: {
     flexDirection: "row",
@@ -665,47 +829,40 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   loginText: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#6b7280",
   },
   loginLink: {
-    fontSize: 20,
+    fontSize: 14,
     color: "#f472b6",
     fontWeight: "600",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContainer: {
-    width: "90%",
-    maxWidth: 400,
+    width: "100%",
     maxHeight: "80%",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: "hidden",
   },
   calendarContainer: {
     backgroundColor: "#ffffff",
-    borderRadius: 24,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 15,
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 20,
-    paddingBottom: 16,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
     color: "#ffffff",
   },
@@ -717,43 +874,34 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  closeButtonText: {
-    fontSize: 18,
-    color: "#ffffff",
-    fontWeight: "bold",
-  },
   selectorSection: {
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f3f4f6",
   },
   selectorLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     color: "#374151",
     marginBottom: 12,
-  },
-  scrollRow: {
-    height: 50,
   },
   scrollContent: {
     paddingHorizontal: 8,
   },
   scrollItem: {
     marginHorizontal: 4,
-    borderRadius: 25,
+    borderRadius: 12,
     overflow: "hidden",
   },
   scrollItemGradient: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    minWidth: 60,
+    minWidth: 70,
     alignItems: "center",
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderRadius: 12,
   },
   selectedScrollItem: {
-    transform: [{ scale: 1.05 }],
     shadowColor: "#f472b6",
     shadowOffset: {
       width: 0,
@@ -775,7 +923,7 @@ const styles = StyleSheet.create({
   },
   daySection: {
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingVertical: 16,
   },
   calendarGrid: {
     flexDirection: "row",
@@ -786,18 +934,15 @@ const styles = StyleSheet.create({
   dayButton: {
     width: "13%",
     aspectRatio: 1,
-    borderRadius: 20,
+    borderRadius: 12,
     overflow: "hidden",
-    marginBottom: 8,
   },
   dayButtonGradient: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 20,
   },
   daySelected: {
-    transform: [{ scale: 1.1 }],
     shadowColor: "#f472b6",
     shadowOffset: {
       width: 0,
@@ -818,51 +963,24 @@ const styles = StyleSheet.create({
   },
   modalDoneBtn: {
     margin: 20,
-    borderRadius: 28,
+    borderRadius: 14,
     overflow: "hidden",
     shadowColor: "#f472b6",
     shadowOffset: {
       width: 0,
-      height: 6,
+      height: 4,
     },
     shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 10,
+    shadowRadius: 8,
+    elevation: 8,
   },
   doneButtonGradient: {
     paddingVertical: 16,
     alignItems: "center",
   },
   modalDoneBtnText: {
-    fontSize: 18,
-    fontWeight: "bold",
     color: "#ffffff",
-  },
-  passwordContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    height: 56,
-    borderWidth: 2,
-    borderColor: "#fce7f3",
-    borderRadius: 28,
-    paddingHorizontal: 20,
     fontSize: 16,
-    backgroundColor: "#ffffff",
-    color: "#374151",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-
-  passwordInput: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingRight: 10, // ensure text doesn't collide with the icon
-    color: "#111827",
+    fontWeight: "600",
   },
 });

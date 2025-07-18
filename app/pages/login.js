@@ -13,24 +13,42 @@ import {
   Image,
   Animated,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import axios from "axios";
 import { LinearGradient } from 'expo-linear-gradient';
-import FontAwesome6BrandsIcons from "react-native-vector-icons/FontAwesome6";
 import FontistoIcons from 'react-native-vector-icons/Fontisto';
+import { ActivityIndicator } from "react-native-paper";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState("testing@dev.com");
-  const [password, setPassword] = useState("testing@dev.com");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [error, setError] = useState("");
+  const [isFocused, setIsFocused] = useState({
+    email: false,
+    password: false
+  });
   const dispatch = useDispatch();
+
+  const handleFocus = (field) => {
+    setIsFocused({ ...isFocused, [field]: true });
+  };
+
+  const handleBlur = (field) => {
+    setIsFocused({ ...isFocused, [field]: false });
+  };
 
   const validateLogin = async () => {
     setIsValidating(true);
+    Keyboard.dismiss();
+
     if (!email.includes("@")) {
       setError("Invalid email address");
       setIsValidating(false);
@@ -44,18 +62,15 @@ export default function LoginScreen() {
     try {
       await login_(email, password);
     } catch (err) {
-      //  console.error("Something is wrong = ", err);
       Alert.alert("Error", "Something went wrong. Please try again.");
     }
   };
 
   const login_ = async (userEmail, userPassword) => {
-    //here data means what value the user is passing
     let data = JSON.stringify({
       userEmail: userEmail,
       userPassword: userPassword,
     });
-    console.log("Login data = ", data);
 
     await axios
       .post(`${process.env.EXPO_PUBLIC_API_BASE_URL}/api/v1/users/login`, data, {
@@ -78,11 +93,9 @@ export default function LoginScreen() {
             "User",
             JSON.stringify(response.data.data.UserData)
           );
-          console.log("REDIXUSer = ", { user: response.data.data.UserData, isAuthenticated: true });
 
-          dispatch(login(response.data.data.UserData)); // Enable this if you're using Redux state
+          dispatch(login(response.data.data.UserData));
           router.replace("./home");
-
         }
         setIsValidating(false);
       })
@@ -90,148 +103,189 @@ export default function LoginScreen() {
         if (error.response.status === 400) {
           setError(error.response.data.msg);
         }
-        console.log("Error = ", error.response);
         setIsValidating(false);
       });
   };
 
-  /*Forgot password implementation via api*/
   const forgotPassword = async () => {
     //console.log("OTP sent to your number");
   }
 
   return (
-    <LinearGradient
-      colors={['#fdf2f8', '#ffffff', '#fef7ed']}
-      style={styles.container}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <LinearGradient
+        colors={['#fdf2f8', '#ffffff', '#fef7ed']}
+        style={styles.container}
       >
-        <View style={styles.formBox}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.iconContainer}>
-              <FontistoIcons name="person" size={40} color="#fff" />
-            </View>
-            <Text style={styles.welcomeText}>Welcome Back!</Text>
-            <Text style={styles.title}>Sign In</Text>
-            <Text style={styles.subtitle}>Please login to continue </Text>
-          </View>
-
-          {/* Form Fields */}
-          <View style={styles.formContainer}>
-            {/* Email Input */}
-            <View style={styles.inputContainer}>
-              <Ionicons name="mail" size={20} color="#f472b6" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Email Address"
-                placeholderTextColor="#9ca3af"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  setError("");
-                }}
-              />
-            </View>
-
-            {/* Password Input */}
-            <View style={styles.inputContainer}>
-              <Ionicons name="key" size={20} color="#f472b6" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                placeholderTextColor="#9ca3af"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  setError("");
-                }}
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeIcon}
-              >
-                <Ionicons
-                  name={showPassword ? "eye-off" : "eye"}
-                  size={20}
-                  color="#9ca3af"
-                />
-              </TouchableOpacity>
-            </View>
-
-            {/* Error Message */}
-            {error ? (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoidingView}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.formBox}>
+              {/* Header */}
+              <View style={styles.header}>
+                <Animated.View style={styles.iconContainer}>
+                  <FontistoIcons name="person" size={40} color="#fff" />
+                </Animated.View>
+                <Text style={styles.welcomeText}>Welcome Back!</Text>
+                <Text style={styles.title}>Sign In</Text>
               </View>
-            ) : null}
 
-            {/* Login Button */}
-            <TouchableOpacity
-              style={[styles.loginButton, isValidating && styles.loginButtonDisabled]}
-              onPress={validateLogin}
-              disabled={isValidating}
-            >
-              <LinearGradient
-                colors={['#f472b6', '#ec4899']}
-                style={styles.buttonGradient}
-              >
-                <Text style={styles.buttonText}>
-                  {isValidating ? "Signing In..." : "Sign In"}
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
+              {/* Form Fields */}
+              <View style={styles.formContainer}>
+                {/* Email Input */}
+                <View style={[
+                  styles.inputContainer,
+                  isFocused.email && styles.inputContainerFocused
+                ]}>
+                  <Ionicons
+                    name="mail"
+                    size={20}
+                    color={isFocused.email ? '#ec4899' : '#f472b6'}
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Email Address"
+                    placeholderTextColor="#9ca3af"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    value={email}
+                    onChangeText={(text) => {
+                      setEmail(text);
+                      setError("");
+                    }}
+                    onFocus={() => handleFocus('email')}
+                    onBlur={() => handleBlur('email')}
+                  />
+                </View>
 
-            {/* Forgot Password */}
-            <TouchableOpacity
-              style={styles.forgotContainer}
-              onPress={() => router.push("../pages/forgotPassword")}
-            >
-              <Text style={styles.forgotText}>Forgot Password?</Text>
-            </TouchableOpacity>
+                {/* Password Input */}
+                <View style={[
+                  styles.inputContainer,
+                  isFocused.password && styles.inputContainerFocused
+                ]}>
+                  <Ionicons
+                    name="key"
+                    size={20}
+                    color={isFocused.password ? '#ec4899' : '#f472b6'}
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Password"
+                    placeholderTextColor="#9ca3af"
+                    secureTextEntry={!showPassword}
+                    value={password}
+                    onChangeText={(text) => {
+                      setPassword(text);
+                      setError("");
+                    }}
+                    onFocus={() => handleFocus('password')}
+                    onBlur={() => handleBlur('password')}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeIcon}
+                  >
+                    <Ionicons
+                      name={showPassword ? "eye-off" : "eye"}
+                      size={20}
+                      color={isFocused.password ? '#ec4899' : '#9ca3af'}
+                    />
+                  </TouchableOpacity>
+                </View>
 
-            {/* Divider */}
-            <View style={styles.dividerContainer}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
+                {/* Error Message */}
+                {error ? (
+                  <Animated.View
+                    style={styles.errorContainer}
+                    entering={Animated.spring(
+                      { opacity: 1, translateY: 0 },
+                      { useNativeDriver: true }
+                    )}
+                  >
+                    <Ionicons name="alert-circle" size={16} color="#dc2626" />
+                    <Text style={styles.errorText}>{error}</Text>
+                  </Animated.View>
+                ) : null}
+
+                {/* Login Button */}
+                <TouchableOpacity
+                  style={[styles.loginButton, isValidating && styles.loginButtonDisabled]}
+                  onPress={validateLogin}
+                  disabled={isValidating}
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient
+                    colors={['#f472b6', '#ec4899']}
+                    style={styles.buttonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    {isValidating ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.buttonText}>Sign In</Text>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                {/* Forgot Password */}
+                <TouchableOpacity
+                  style={styles.forgotContainer}
+                  onPress={() => router.push("../pages/forgotPassword")}
+                  activeOpacity={0.6}
+                >
+                  <Text style={styles.forgotText}>Forgot Password?</Text>
+                </TouchableOpacity>
+
+                {/* Divider */}
+                <View style={styles.dividerContainer}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>or</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+
+                {/* Social Login Buttons */}
+                <View style={styles.socialContainer}>
+                  <TouchableOpacity
+                    style={styles.socialButton}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="logo-google" size={30} color="#ea4335" />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Sign Up Link */}
+                <View style={styles.signUpContainer}>
+                  <Text style={styles.signUpText}>Don't have an account? </Text>
+                  <TouchableOpacity
+                    onPress={() => router.push("./signUp")}
+                    activeOpacity={0.6}
+                  >
+                    <Text style={styles.signUpLink}>Create Account</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
-
-            {/* Social Login Buttons */}
-            <View style={styles.socialContainer}>
-              <TouchableOpacity style={styles.socialButton}>
-                <Ionicons name="logo-google" size={30} color="#ea4335" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.socialButton}>
-                <Ionicons name="logo-facebook" size={30} color="#4267B2" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.socialButton}>
-                <FontAwesome6BrandsIcons name="x-twitter" size={24} color="#000" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Sign Up Link */}
-            <View style={styles.signUpContainer}>
-              <Text style={styles.signUpText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => router.push("./signUp")}>
-                <Text style={styles.signUpLink}>Create Account</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-    </LinearGradient>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  keyboardAvoidingView: {
     flex: 1,
   },
   scrollContainer: {
@@ -241,7 +295,7 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   formBox: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
     borderRadius: 24,
     padding: 32,
     shadowColor: '#000',
@@ -258,9 +312,9 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     backgroundColor: '#f472b6',
     justifyContent: 'center',
     alignItems: 'center',
@@ -279,6 +333,7 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     marginBottom: 4,
     textAlign: 'center',
+    fontFamily: 'sans-serif-medium',
   },
   title: {
     fontSize: 32,
@@ -286,11 +341,13 @@ const styles = StyleSheet.create({
     color: '#374151',
     marginBottom: 8,
     textAlign: 'center',
+    fontFamily: 'sans-serif-medium',
   },
   subtitle: {
     fontSize: 16,
     color: '#6b7280',
     textAlign: 'center',
+    fontFamily: 'sans-serif',
   },
   formContainer: {
     gap: 20,
@@ -312,6 +369,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+    transitionProperty: 'border-color',
+    transitionDuration: '300ms',
+  },
+  inputContainerFocused: {
+    borderColor: '#ec4899',
+    shadowColor: '#ec4899',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   inputIcon: {
     marginRight: 12,
@@ -320,23 +390,28 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: '#374151',
+    fontFamily: 'sans-serif',
   },
   eyeIcon: {
     padding: 4,
   },
   errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#fef2f2',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 28,
     borderWidth: 1,
     borderColor: '#fecaca',
+    gap: 8,
   },
   errorText: {
     color: '#dc2626',
     fontSize: 14,
     textAlign: 'center',
     fontWeight: '500',
+    fontFamily: 'sans-serif-medium',
   },
   loginButton: {
     borderRadius: 28,
@@ -351,16 +426,20 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   loginButtonDisabled: {
-    opacity: 0.6,
+    opacity: 0.7,
   },
   buttonGradient: {
     paddingVertical: 18,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
   },
   buttonText: {
     color: '#ffffff',
     fontSize: 18,
     fontWeight: 'bold',
+    fontFamily: 'sans-serif-medium',
   },
   forgotContainer: {
     alignItems: 'center',
@@ -370,11 +449,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#f472b6',
     fontWeight: '600',
+    fontFamily: 'sans-serif-medium',
   },
   dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 24,
+    marginVertical: 15,
   },
   dividerLine: {
     flex: 1,
@@ -383,9 +463,10 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     marginHorizontal: 16,
-    fontSize: 24,
+    fontSize: 14,
     color: '#9ca3af',
     fontWeight: '500',
+    fontFamily: 'sans-serif-medium',
   },
   socialContainer: {
     flexDirection: 'row',
@@ -419,10 +500,12 @@ const styles = StyleSheet.create({
   signUpText: {
     fontSize: 16,
     color: '#6b7280',
+    fontFamily: 'sans-serif',
   },
   signUpLink: {
     fontSize: 16,
     color: '#f472b6',
     fontWeight: '600',
+    fontFamily: 'sans-serif-medium',
   },
 });

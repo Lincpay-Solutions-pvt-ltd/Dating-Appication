@@ -221,7 +221,7 @@ export default function HeaderForm({ isTransparent = false }) {
               )}
               <View style={stylesHeader.profileInfoContainer}>
                 <Text style={stylesHeader.profileName}>
-                  {user?.userFirstName + " "}
+                  {user?.userFirstName + " " + user?.userSurname}
                 </Text>
                 <View style={stylesHeader.statsRow}>
                   <Ionicons name="diamond-outline" size={16} color="gray" />

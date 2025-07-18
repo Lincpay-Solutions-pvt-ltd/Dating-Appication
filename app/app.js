@@ -14,7 +14,7 @@ export default function App() {
         const IsAuthenticated = await AsyncStorage.getItem("Authenticated");
         const User = await AsyncStorage.getItem("User");
 
-        if (IsAuthenticated !== null && User !== null) {
+        if (IsAuthenticated !== null && User !== null && JSON.parse(User)) {
           dispatch(login(JSON.parse(User))); // Enable this if you're using Redux state
           router.replace("./pages/home");
         } else {
