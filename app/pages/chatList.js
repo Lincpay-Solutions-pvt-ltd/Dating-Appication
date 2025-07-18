@@ -267,9 +267,9 @@ const ChatList = () => {
         )}
       </View>
 
-      <View style={styles.floatingButtonContainer}>
+      {/* <View style={styles.floatingButtonContainer}>
         <FloatingNewChatButton />
-      </View>
+      </View> */}
     </SafeAreaView>
   );
 };
